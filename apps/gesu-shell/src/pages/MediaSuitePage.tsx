@@ -37,6 +37,13 @@ const NETWORK_PROFILES = [
     { value: 'gaspol', label: 'Gaspol (Max Speed)' }
 ];
 
+const CONVERT_TARGET_FORMATS = [
+    { value: 'mp3', label: 'MP3 Audio' },
+    { value: 'wav', label: 'WAV Audio' },
+    { value: 'mp4', label: 'MP4 Video' },
+    { value: 'mkv', label: 'MKV Video' },
+];
+
 const CONVERT_CATEGORIES = ['Audio', 'Video', 'Image', 'Document'];
 
 // --- Helper Components ---
@@ -77,9 +84,10 @@ export function MediaSuitePage() {
     const [netProfile, setNetProfile] = useState(NETWORK_PROFILES[1].value);
 
     // Converter Form State
+    // Converter Form State
     const [filePath, setFilePath] = useState('');
     const [category, setCategory] = useState(CONVERT_CATEGORIES[1]);
-    const [convPreset, setConvPreset] = useState('Proxy 720p');
+    const [targetFormat, setTargetFormat] = useState(CONVERT_TARGET_FORMATS[0].value);
 
     // Job Actions via IPC
     const refreshJobs = async () => {
@@ -153,8 +161,11 @@ export function MediaSuitePage() {
         if (category === 'Image') engine = 'image-magick';
         if (category === 'Document') engine = 'libreoffice';
 
-        const payload = { filePath, category, preset: convPreset };
-        enqueueJob('convert', `Conv: ${filePath.split('\\').pop()}`, engine, payload);
+        // Simplify ID for UI
+        const simpleName = filePath.split(/[/\\]/).pop();
+
+        const payload = { inputPath: filePath, category, targetFormat };
+        enqueueJob('convert', `Conv: ${simpleName} -> .${targetFormat}`, engine, payload);
     };
 
     return (
@@ -280,15 +291,13 @@ export function MediaSuitePage() {
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Preset</label>
+                                        <label className="text-sm font-medium text-gray-300">Target Format</label>
                                         <select
-                                            value={convPreset}
-                                            onChange={(e) => setConvPreset(e.target.value)}
+                                            value={targetFormat}
+                                            onChange={(e) => setTargetFormat(e.target.value)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
                                         >
-                                            <option>Proxy 720p</option>
-                                            <option>Distribution 1080p</option>
-                                            <option>Audio Only (MP3)</option>
+                                            {CONVERT_TARGET_FORMATS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -351,6 +360,11 @@ export function MediaSuitePage() {
                                             {job.type === 'download' && (
                                                 <span className="text-gray-600">
                                                     {(job.payload as any).preset} • {(job.payload as any).networkProfile}
+                                                </span>
+                                            )}
+                                            {job.type === 'convert' && (
+                                                <span className="text-gray-600">
+                                                    {(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .{(job.payload as any).targetFormat}
                                                 </span>
                                             )}
                                             {job.errorMessage && (

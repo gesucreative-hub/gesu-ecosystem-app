@@ -122,8 +122,13 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
     const type = payload.type || 'unknown';
 
     // Validation
+    // Validation
     if (type === 'download' && !payload.payload?.url) {
         throw new Error('Missing URL for download job');
+    }
+    if (type === 'convert') {
+        if (!payload.payload?.inputPath) throw new Error('Missing inputPath for convert job');
+        if (!payload.payload?.targetFormat) throw new Error('Missing targetFormat for convert job');
     }
 
     const newJob = {
@@ -141,6 +146,8 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
     // Dispatch processing
     if (type === 'download') {
         processDownloadJob(newJob.id, payload.payload);
+    } else if (type === 'convert') {
+        processConvertJob(newJob.id, payload.payload);
     } else if (type === 'test') {
         processMockJob(newJob.id);
     }
@@ -231,4 +238,29 @@ function processMockJob(jobId) {
         }, 3000); // 3s execution time
 
     }, 1000); // 1s queue time
+}
+
+function processConvertJob(jobId, payload) {
+    const { targetFormat } = payload;
+
+    // 1. Start "Running"
+    setTimeout(() => {
+        const job = jobs.find(j => j.id === jobId);
+        if (!job) return;
+
+        job.status = 'running';
+        job.updatedAt = new Date().toISOString();
+
+        // 2. Mock Conversion Work
+        setTimeout(() => {
+            const finishedJob = jobs.find(j => j.id === jobId);
+            if (!finishedJob) return;
+
+            finishedJob.status = 'success';
+            finishedJob.updatedAt = new Date().toISOString();
+            // Optional: add a result message if we decide to add that field later
+            // finishedJob.resultMessage = `Converted to ${targetFormat} (mock)`;
+        }, 2500);
+
+    }, 500);
 }

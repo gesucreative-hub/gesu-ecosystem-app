@@ -363,8 +363,11 @@ export function MediaSuitePage() {
                                                 </span>
                                             )}
                                             {job.type === 'convert' && (
-                                                <span className="text-gray-600">
-                                                    {(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .{(job.payload as any).targetFormat}
+                                                <span className="text-gray-600 block truncate max-w-[200px]" title={(job.payload as any).outputPath}>
+                                                    {(job.payload as any).outputPath
+                                                        ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
+                                                        : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).targetFormat}`
+                                                    }
                                                 </span>
                                             )}
                                             {job.errorMessage && (

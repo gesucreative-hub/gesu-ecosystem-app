@@ -51,6 +51,22 @@ function buildNetworkArgs(network) {
     }
 }
 
+function resolveFfmpegExecutable(settings) {
+    const configured = settings?.engines?.ffmpegPath;
+
+    // If configured looks like a path and exists, use as-is
+    if (configured && configured.trim() !== '' && fs.existsSync(configured)) {
+        console.log('[Electron] Using configured FFmpeg:', configured);
+        return configured;
+    }
+
+    // Otherwise, fall back to 'ffmpeg' (from PATH)
+    if (configured) {
+        console.warn('[Electron] Configured FFmpeg path invalid or not found, falling back to PATH:', configured);
+    }
+    return 'ffmpeg';
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const preloadPath = path.join(__dirname, 'preload.cjs');
@@ -273,27 +289,64 @@ function processMockJob(jobId) {
     }, 1000); // 1s queue time
 }
 
-function processConvertJob(jobId, payload) {
-    const { targetFormat } = payload;
+async function processConvertJob(jobId, payload) {
+    const { inputPath, targetFormat } = payload;
 
-    // 1. Start "Running"
-    setTimeout(() => {
-        const job = jobs.find(j => j.id === jobId);
-        if (!job) return;
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
 
-        job.status = 'running';
-        job.updatedAt = new Date().toISOString();
+    job.status = 'running';
+    job.updatedAt = new Date().toISOString();
 
-        // 2. Mock Conversion Work
-        setTimeout(() => {
-            const finishedJob = jobs.find(j => j.id === jobId);
-            if (!finishedJob) return;
+    // 1. Resolve FFmpeg Path
+    const settings = await loadSettingsFromDisk();
+    const ffmpegBin = resolveFfmpegExecutable(settings);
 
+    // 2. Determine Output Path
+    const dir = path.dirname(inputPath);
+    const name = path.basename(inputPath, path.extname(inputPath));
+    const outputPath = path.join(dir, `${name}.${targetFormat}`);
+
+    const args = [
+        '-y',               // Overwrite output
+        '-i', inputPath,    // Input
+        outputPath          // Output
+    ];
+
+    console.log(`[Job:${jobId}] Spawning FFmpeg: "${ffmpegBin}" with args:`, args);
+
+    const child = spawn(ffmpegBin, args, { shell: false, windowsHide: true });
+
+    let stderr = '';
+
+    child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+    });
+
+    child.on('close', (code) => {
+        const finishedJob = jobs.find(j => j.id === jobId);
+        if (!finishedJob) return;
+
+        finishedJob.updatedAt = new Date().toISOString();
+
+        if (code === 0) {
             finishedJob.status = 'success';
-            finishedJob.updatedAt = new Date().toISOString();
-            // Optional: add a result message if we decide to add that field later
-            // finishedJob.resultMessage = `Converted to ${targetFormat} (mock)`;
-        }, 2500);
+            finishedJob.errorMessage = undefined;
+            // Optionally store the output path in the job payload or a new result field
+            finishedJob.payload.outputPath = outputPath;
+        } else {
+            finishedJob.status = 'error';
+            const shortError = stderr.split('\n').slice(-3).join(' ').trim();
+            finishedJob.errorMessage = `FFmpeg exited with code ${code}. ${shortError}`;
+        }
+    });
 
-    }, 500);
+    child.on('error', (err) => {
+        const errorJob = jobs.find(j => j.id === jobId);
+        if (!errorJob) return;
+
+        errorJob.status = 'error';
+        errorJob.errorMessage = `Failed to start FFmpeg: ${err.message}`;
+        errorJob.updatedAt = new Date().toISOString();
+    });
 }

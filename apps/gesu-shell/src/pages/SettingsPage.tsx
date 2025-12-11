@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { GesuSettings } from '../types/settings';
 import { Link } from 'react-router-dom';
 
 
@@ -148,6 +149,38 @@ export function SettingsPage() {
     const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
     const [isCheckingTools, setIsCheckingTools] = useState(false);
 
+    // Load settings on mount
+    useEffect(() => {
+        if (window.gesu?.settings) {
+            window.gesu.settings.load().then(loaded => {
+                if (loaded) {
+                    console.log('Loaded settings:', loaded);
+                    // Hydrate state
+                    setSettings({
+                        paths: loaded.paths,
+                        appearance: loaded.appearance
+                    });
+
+                    if (loaded.installPreference) {
+                        setInstallPreference(loaded.installPreference);
+                    }
+
+                    // Hydrate engines
+                    setEngines(prev => prev.map(e => {
+                        // Map specific engine paths from loaded settings
+                        let newPath = e.path;
+                        if (e.id === 'ytDlp') newPath = loaded.engines.ytDlpPath || '';
+                        if (e.id === 'ffmpeg') newPath = loaded.engines.ffmpegPath || '';
+                        if (e.id === 'imageMagick') newPath = loaded.engines.imageMagickPath || '';
+                        if (e.id === 'libreOffice') newPath = loaded.engines.libreOfficePath || '';
+
+                        return { ...e, path: newPath };
+                    }));
+                }
+            }).catch(err => console.error('Failed to load settings:', err));
+        }
+    }, []);
+
     // Handlers
     const handleTestDesktopBridge = async () => {
         if (!window.gesu?.ping) {
@@ -250,18 +283,36 @@ export function SettingsPage() {
     };
 
     // Global Actions
-    const handleSave = () => {
-        const payload = {
-            timestamp: new Date().toISOString(),
-            settings,
-            engineManager: {
-                installPreference,
-                engines
-            }
+    const handleSave = async () => {
+        // Construct GesuSettings object
+        const payload: GesuSettings = {
+            paths: settings.paths,
+            appearance: settings.appearance,
+            engines: {
+                ytDlpPath: engines.find(e => e.id === 'ytDlp')?.path || null,
+                ffmpegPath: engines.find(e => e.id === 'ffmpeg')?.path || null,
+                imageMagickPath: engines.find(e => e.id === 'imageMagick')?.path || null,
+                libreOfficePath: engines.find(e => e.id === 'libreOffice')?.path || null
+            },
+            installPreference
         };
-        console.log("Settings Saved (Mock):", payload);
-        alert("Settings saved successfully (Mock). Check console for payload.");
-        setIsDirty(false);
+
+        if (window.gesu?.settings) {
+            try {
+                await window.gesu.settings.save(payload);
+                console.log("Settings Saved to Disk:", payload);
+                alert("Settings saved successfully to disk!");
+                setIsDirty(false);
+            } catch (err) {
+                console.error(err);
+                alert("Failed to save settings to key file.");
+                // Fallback mock alert if save failed or logic is weird
+            }
+        } else {
+            console.log("Settings Saved (Mock - No Bridge):", payload);
+            alert("Settings saved successfully (Mock - No Bridge).");
+            setIsDirty(false);
+        }
     };
 
     const handleReset = () => {

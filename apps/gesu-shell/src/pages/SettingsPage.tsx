@@ -3,11 +3,7 @@ import { Link } from 'react-router-dom';
 
 // --- Types & Interfaces ---
 
-interface ToolConfig {
-    path: string;
-    status: 'valid' | 'invalid' | 'unknown';
-}
-
+// Workspace & Appearance
 interface SettingsState {
     paths: {
         workflowRoot: string;
@@ -19,12 +15,23 @@ interface SettingsState {
         accentColor: string;
         glassmorphism: boolean;
     };
-    tools: {
-        ytDlp: string;
-        ffmpeg: string;
-        soffice: string;
-        integrationEnabled: boolean;
-    };
+}
+
+// Engine Manager
+type EngineId = 'ytDlp' | 'ffmpeg' | 'imageMagick' | 'libreOffice';
+type EngineStatus = 'unknown' | 'ok' | 'missing' | 'error';
+type InstallMethod = 'manual' | 'winget' | 'choco' | 'scoop';
+
+interface EngineConfig {
+    id: EngineId;
+    label: string;
+    description: string;
+    path: string;
+    status: EngineStatus;
+    version?: string;
+    lastCheckedAt?: string;
+    defaultPath: string; // Used for "Detect" mock
+    installHint: Partial<Record<InstallMethod, string>>;
 }
 
 // --- Defaults ---
@@ -39,14 +46,63 @@ const DEFAULT_SETTINGS: SettingsState = {
         theme: 'dark',
         accentColor: 'cyan',
         glassmorphism: true
-    },
-    tools: {
-        ytDlp: String.raw`C:\Tools\yt-dlp\yt-dlp.exe`,
-        ffmpeg: String.raw`C:\Tools\ffmpeg\bin\ffmpeg.exe`,
-        soffice: String.raw`C:\Program Files\LibreOffice\program\soffice.exe`,
-        integrationEnabled: true
     }
 };
+
+const DEFAULT_ENGINES: EngineConfig[] = [
+    {
+        id: 'ytDlp',
+        label: 'yt-dlp',
+        description: 'Command-line audio/video downloader.',
+        path: String.raw`C:\Tools\yt-dlp\yt-dlp.exe`,
+        status: 'unknown',
+        defaultPath: String.raw`C:\Tools\yt-dlp\yt-dlp.exe`,
+        installHint: {
+            winget: 'winget install -e --id yt-dlp.yt-dlp',
+            choco: 'choco install yt-dlp',
+            scoop: 'scoop install yt-dlp'
+        }
+    },
+    {
+        id: 'ffmpeg',
+        label: 'FFmpeg',
+        description: 'Hyper-fast multimedia processing suite.',
+        path: String.raw`C:\Tools\ffmpeg\bin\ffmpeg.exe`,
+        status: 'unknown',
+        defaultPath: String.raw`C:\Tools\ffmpeg\bin\ffmpeg.exe`,
+        installHint: {
+            winget: 'winget install -e --id Gyan.FFmpeg',
+            choco: 'choco install ffmpeg',
+            scoop: 'scoop install ffmpeg'
+        }
+    },
+    {
+        id: 'imageMagick',
+        label: 'ImageMagick',
+        description: 'Image processing and conversion tool.',
+        path: '',
+        status: 'unknown',
+        defaultPath: String.raw`C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe`,
+        installHint: {
+            winget: 'winget install -e --id ImageMagick.ImageMagick',
+            choco: 'choco install imagemagick',
+            scoop: 'scoop install imagemagick'
+        }
+    },
+    {
+        id: 'libreOffice',
+        label: 'LibreOffice',
+        description: 'For document conversion (headless mode).',
+        path: String.raw`C:\Program Files\LibreOffice\program\soffice.exe`,
+        status: 'unknown',
+        defaultPath: String.raw`C:\Program Files\LibreOffice\program\soffice.exe`,
+        installHint: {
+            winget: 'winget install -e --id TheDocumentFoundation.LibreOffice',
+            choco: 'choco install libreoffice',
+            scoop: 'scoop install libreoffice'
+        }
+    }
+];
 
 const ACCENT_COLORS = [
     { id: 'cyan', label: 'Cyan', class: 'bg-cyan-500' },
@@ -56,26 +112,96 @@ const ACCENT_COLORS = [
     { id: 'orange', label: 'Orange', class: 'bg-orange-500' }
 ];
 
+// --- Helper Components ---
+
+const StatusBadge = ({ status, version }: { status: EngineStatus; version?: string }) => {
+    const styles = {
+        unknown: 'bg-gray-700 text-gray-300 border-gray-600',
+        ok: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
+        missing: 'bg-red-900/50 text-red-300 border-red-500/30',
+        error: 'bg-amber-900/50 text-amber-300 border-amber-500/30'
+    };
+
+    const labels = {
+        unknown: 'Unknown',
+        ok: 'Ready',
+        missing: 'Missing',
+        error: 'Error'
+    };
+
+    return (
+        <div className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-2 w-fit ${styles[status]}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'unknown' ? 'bg-gray-400' : 'bg-red-400'}`}></span>
+            <span>{labels[status]}</span>
+            {version && status === 'ok' && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
+        </div>
+    );
+};
+
 export function SettingsPage() {
     const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
+    const [engines, setEngines] = useState<EngineConfig[]>(DEFAULT_ENGINES);
+    const [installPreference, setInstallPreference] = useState<InstallMethod>('manual');
+    const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
 
-    // Handlers
-    const updatedNestedState = (section: keyof SettingsState, key: string, value: any) => {
+    // Settings Handlers
+    const updateSettings = (section: keyof SettingsState, key: string, value: any) => {
         setSettings(prev => ({
             ...prev,
-            [section]: {
-                ...prev[section],
-                [key]: value
-            }
+            [section]: { ...prev[section], [key]: value }
         }));
         setIsDirty(true);
     };
 
+    // Engine Handlers
+    const updateEnginePath = (id: EngineId, path: string) => {
+        setEngines(prev => prev.map(e => e.id === id ? { ...e, path, status: 'unknown' } : e));
+        setIsDirty(true);
+    };
+
+    const detectEngine = (id: EngineId) => {
+        setEngines(prev => prev.map(e => {
+            if (e.id === id) {
+                return {
+                    ...e,
+                    path: e.path || e.defaultPath, // Use default if empty
+                    status: 'ok',
+                    version: 'auto-detected (mock)',
+                    lastCheckedAt: new Date().toISOString()
+                };
+            }
+            return e;
+        }));
+        setIsDirty(true);
+    };
+
+    const checkAllTools = () => {
+        const updated = engines.map(e => ({
+            ...e,
+            status: e.path.trim() ? 'ok' as const : 'missing' as const,
+            version: e.path.trim() ? 'mock-1.0.0' : undefined,
+            lastCheckedAt: new Date().toISOString()
+        }));
+        setEngines(updated);
+
+        console.log('[EngineManagerCheck]', {
+            checkedAt: new Date().toISOString(),
+            installPreference,
+            engines: updated
+        });
+        alert("Tools check complete (mock). See console.");
+    };
+
+    // Global Actions
     const handleSave = () => {
         const payload = {
             timestamp: new Date().toISOString(),
-            config: settings
+            settings,
+            engineManager: {
+                installPreference,
+                engines
+            }
         };
         console.log("Settings Saved (Mock):", payload);
         alert("Settings saved successfully (Mock). Check console for payload.");
@@ -85,16 +211,10 @@ export function SettingsPage() {
     const handleReset = () => {
         if (confirm("Reset all settings to defaults?")) {
             setSettings(DEFAULT_SETTINGS);
+            setEngines(DEFAULT_ENGINES);
+            setInstallPreference('manual');
             setIsDirty(true);
         }
-    };
-
-    const handleToolsCheck = () => {
-        console.log("Running Tools Check (Mock):", {
-            tools: settings.tools,
-            checkTime: new Date().toISOString()
-        });
-        alert("Tools check initiated (Mock).");
     };
 
     return (
@@ -126,7 +246,7 @@ export function SettingsPage() {
                             <input
                                 type="text"
                                 value={settings.paths.workflowRoot}
-                                onChange={(e) => updatedNestedState('paths', 'workflowRoot', e.target.value)}
+                                onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
                                 className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
                             />
                             <p className="text-xs text-gray-500">Root folder for the entire Gesu ecosystem database.</p>
@@ -137,7 +257,7 @@ export function SettingsPage() {
                             <input
                                 type="text"
                                 value={settings.paths.projectsRoot}
-                                onChange={(e) => updatedNestedState('paths', 'projectsRoot', e.target.value)}
+                                onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
                                 className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
                             />
                             <p className="text-xs text-gray-500">Directory where new projects will be initialized.</p>
@@ -148,28 +268,117 @@ export function SettingsPage() {
                             <input
                                 type="text"
                                 value={settings.paths.backupRoot}
-                                onChange={(e) => updatedNestedState('paths', 'backupRoot', e.target.value)}
+                                onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
                                 className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Appearance */}
-                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit">
+                {/* Engine Manager */}
+                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                                Engine Manager
+                            </h2>
+                            <p className="text-sm text-gray-400 mt-1">Configure paths and check the status of external tools used by Gesu.</p>
+                        </div>
+
+                        {/* Preference Selector */}
+                        <div className="text-right">
+                            <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Preferred Installer</div>
+                            <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
+                                {['Manual', 'Winget', 'Choco', 'Scoop'].map((method) => (
+                                    <button
+                                        key={method}
+                                        onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
+                                        className={`px-3 py-1 rounded text-xs font-medium transition-all ${installPreference === method.toLowerCase()
+                                                ? 'bg-orange-600 text-white shadow-sm'
+                                                : 'text-gray-400 hover:text-gray-200'
+                                            }`}
+                                    >
+                                        {method}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {engines.map((engine) => (
+                            <div key={engine.id} className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 flex flex-col gap-3">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-semibold text-gray-200">{engine.label}</div>
+                                        <div className="text-xs text-gray-500">{engine.description}</div>
+                                    </div>
+                                    <StatusBadge status={engine.status} version={engine.version} />
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={engine.path}
+                                        onChange={(e) => updateEnginePath(engine.id, e.target.value)}
+                                        placeholder="Enter absolute path..."
+                                        className="flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/30 font-mono text-xs"
+                                    />
+                                    <button
+                                        onClick={() => detectEngine(engine.id)}
+                                        className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                    >
+                                        Detect (Mock)
+                                    </button>
+                                </div>
+
+                                <div className="flex justify-between items-center mt-1">
+                                    <div className="text-xs text-gray-500">
+                                        Last check: {engine.lastCheckedAt ? new Date(engine.lastCheckedAt).toLocaleTimeString() : 'Never'}
+                                    </div>
+                                    {installPreference !== 'manual' && engine.installHint[installPreference] && (
+                                        <button
+                                            onClick={() => setShowInstallHints(!showInstallHints)}
+                                            className="text-xs text-orange-400 hover:text-orange-300 underline decoration-dotted"
+                                        >
+                                            {showInstallHints ? 'Hide command' : 'Install command'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {showInstallHints && installPreference !== 'manual' && engine.installHint[installPreference] && (
+                                    <div className="mt-1 bg-black/40 p-2 rounded border border-gray-700/50 font-mono text-xs text-gray-400 select-all">
+                                        &gt; {engine.installHint[installPreference]}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={checkAllTools}
+                        className="mt-6 w-full py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Run Global Tools Check (Mock)
+                    </button>
+                </div>
+
+                {/* Appearance (Moved to bottom or kept side-by-side if space allows, usually bottom in single col or side in grid. Here sticking to grid flow) */}
+                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit">
                     <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
                         Appearance
                     </h2>
 
-                    <div className="flex flex-col gap-6">
+                    <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex flex-col gap-3">
                             <label className="text-sm font-medium text-gray-300">Color Theme</label>
                             <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700 w-fit">
                                 {['System', 'Dark', 'Light'].map((mode) => (
                                     <button
                                         key={mode}
-                                        onClick={() => updatedNestedState('appearance', 'theme', mode.toLowerCase())}
+                                        onClick={() => updateSettings('appearance', 'theme', mode.toLowerCase())}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${settings.appearance.theme === mode.toLowerCase()
                                                 ? 'bg-gray-600 text-white shadow-sm'
                                                 : 'text-gray-400 hover:text-gray-200'
@@ -187,7 +396,7 @@ export function SettingsPage() {
                                 {ACCENT_COLORS.map(color => (
                                     <button
                                         key={color.id}
-                                        onClick={() => updatedNestedState('appearance', 'accentColor', color.id)}
+                                        onClick={() => updateSettings('appearance', 'accentColor', color.id)}
                                         className={`w-8 h-8 rounded-full ${color.class} transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-gray-400 ${settings.appearance.accentColor === color.id ? 'ring-2 ring-white scale-110' : ''
                                             }`}
                                         title={color.label}
@@ -196,63 +405,15 @@ export function SettingsPage() {
                             </div>
                         </div>
 
-                        <label className="flex items-center gap-3 cursor-pointer group">
+                        <label className="flex items-center gap-3 cursor-pointer group mt-auto mb-2">
                             <input
                                 type="checkbox"
                                 checked={settings.appearance.glassmorphism}
-                                onChange={(e) => updatedNestedState('appearance', 'glassmorphism', e.target.checked)}
+                                onChange={(e) => updateSettings('appearance', 'glassmorphism', e.target.checked)}
                                 className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500/40"
                             />
                             <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Enable glassmorphism effects</span>
                         </label>
-                    </div>
-                </div>
-
-                {/* Tools & Integrations */}
-                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit">
-                    <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                        Tools & Integrations
-                    </h2>
-
-                    <div className="flex flex-col gap-5">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-300">yt-dlp Path</label>
-                            <input
-                                type="text"
-                                value={settings.tools.ytDlp}
-                                onChange={(e) => updatedNestedState('tools', 'ytDlp', e.target.value)}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-mono text-xs"
-                            />
-                            <span className="text-xs text-orange-400/80">⚠️ Not validated (Mock)</span>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-300">ffmpeg Path</label>
-                            <input
-                                type="text"
-                                value={settings.tools.ffmpeg}
-                                onChange={(e) => updatedNestedState('tools', 'ffmpeg', e.target.value)}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/50 font-mono text-xs"
-                            />
-                        </div>
-
-                        <label className="flex items-center gap-3 cursor-pointer group mt-2">
-                            <input
-                                type="checkbox"
-                                checked={settings.tools.integrationEnabled}
-                                onChange={(e) => updatedNestedState('tools', 'integrationEnabled', e.target.checked)}
-                                className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500/40"
-                            />
-                            <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Enable Antigravity integration</span>
-                        </label>
-
-                        <button
-                            onClick={handleToolsCheck}
-                            className="mt-2 w-full py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg text-sm transition-colors"
-                        >
-                            Run Tools Check (Mock)
-                        </button>
                     </div>
                 </div>
 

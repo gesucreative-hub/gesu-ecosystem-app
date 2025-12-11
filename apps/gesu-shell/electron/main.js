@@ -3,6 +3,15 @@ import { runGlobalToolsCheck } from './tools-check.js';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import { spawn } from 'node:child_process';
+
+const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
+if (!fs.existsSync(DOWNLOADS_DIR)) {
+    fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
+}
+
+const YTDLP_BIN = 'yt-dlp'; // Assumes PATH access
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,13 +100,72 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
 
     jobs.unshift(newJob); // Add to top
 
-    // Mock Processing Logic based on Type
-    if (type === 'download' || type === 'test') {
+    // Dispatch processing
+    if (type === 'download') {
+        processDownloadJob(newJob.id, payload.payload);
+    } else if (type === 'test') {
         processMockJob(newJob.id);
     }
 
     return newJob;
 });
+
+function processDownloadJob(jobId, payload) {
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    job.status = 'running';
+    job.updatedAt = new Date().toISOString();
+
+    const url = payload.url;
+    // Default preset hardcoded for now as per requirements
+    // const preset = payload.preset || 'audio-mp3';
+
+    const args = [
+        '-x', '--audio-format', 'mp3', // Simple audio extraction preset
+        '-o', path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s'),
+        url,
+    ];
+
+    console.log(`[Job:${jobId}] Spawning yt-dlp with args:`, args);
+
+    const child = spawn(YTDLP_BIN, args, { shell: false, windowsHide: true });
+
+    let stderr = '';
+
+    // Optional: capture stdout for progress parsing later
+    child.stdout.on('data', () => { });
+
+    child.stderr.on('data', (chunk) => {
+        stderr += chunk.toString();
+    });
+
+    child.on('close', (code) => {
+        const finishedJob = jobs.find(j => j.id === jobId);
+        if (!finishedJob) return;
+
+        finishedJob.updatedAt = new Date().toISOString();
+
+        if (code === 0) {
+            finishedJob.status = 'success';
+            finishedJob.errorMessage = undefined;
+        } else {
+            finishedJob.status = 'error';
+            // simple short error
+            const shortError = stderr.split('\n').slice(0, 3).join(' ').trim();
+            finishedJob.errorMessage = `yt-dlp exited with code ${code}. ${shortError}`;
+        }
+    });
+
+    child.on('error', (err) => {
+        const errorJob = jobs.find(j => j.id === jobId);
+        if (!errorJob) return;
+
+        errorJob.status = 'error';
+        errorJob.errorMessage = `Failed to start yt-dlp: ${err.message}`;
+        errorJob.updatedAt = new Date().toISOString();
+    });
+}
 
 function processMockJob(jobId) {
     // 1. Start "Running"

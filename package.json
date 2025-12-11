@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "pnpm --filter gesu-shell dev",
+    "dev:desktop": "pnpm --filter gesu-shell dev:electron",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck"

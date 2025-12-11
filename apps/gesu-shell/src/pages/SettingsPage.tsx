@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 declare global {
     interface Window {
         gesu?: {
-            ping: (payload: unknown) => Promise<{
-                message: string;
-                receivedAt: string;
-                payload: unknown;
-            }>;
+            ping: (payload: unknown) => Promise<any>;
+            checkTools?: (payload: {
+                ffmpegPath?: string | null;
+                ytDlpPath?: string | null;
+                imageMagickPath?: string | null;
+                libreOfficePath?: string | null;
+            }) => Promise<any>;
         };
     }
 }
@@ -157,6 +159,7 @@ export function SettingsPage() {
     const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
+    const [isCheckingTools, setIsCheckingTools] = useState(false);
 
     // Handlers
     const handleTestDesktopBridge = async () => {
@@ -207,21 +210,56 @@ export function SettingsPage() {
         setIsDirty(true);
     };
 
-    const checkAllTools = () => {
-        const updated = engines.map(e => ({
-            ...e,
-            status: e.path.trim() ? 'ok' as const : 'missing' as const,
-            version: e.path.trim() ? 'mock-1.0.0' : undefined,
-            lastCheckedAt: new Date().toISOString()
-        }));
-        setEngines(updated);
+    const checkAllTools = async () => {
+        if (!window.gesu?.checkTools) {
+            alert("Desktop bridge not available. Run inside Electron to perform real checks.");
+            return;
+        }
 
-        console.log('[EngineManagerCheck]', {
-            checkedAt: new Date().toISOString(),
-            installPreference,
-            engines: updated
-        });
-        alert("Tools check complete (mock). See console.");
+        setIsCheckingTools(true);
+        try {
+            // Map engine array to payload
+            const payload = {
+                ytDlpPath: engines.find(e => e.id === 'ytDlp')?.path,
+                ffmpegPath: engines.find(e => e.id === 'ffmpeg')?.path,
+                imageMagickPath: engines.find(e => e.id === 'imageMagick')?.path,
+                libreOfficePath: engines.find(e => e.id === 'libreOffice')?.path
+            };
+
+            const result = await window.gesu.checkTools(payload);
+            console.log('[GlobalToolsCheck]', result);
+
+            // Map result back to engines state
+            setEngines(prev => prev.map(e => {
+                let res = null;
+                if (e.id === 'ytDlp') res = result.ytDlp;
+                if (e.id === 'ffmpeg') res = result.ffmpeg;
+                if (e.id === 'imageMagick') res = result.imageMagick;
+                if (e.id === 'libreOffice') res = result.libreOffice;
+
+                if (!res) return e;
+
+                let status: EngineStatus = 'unknown';
+                if (res.status === 'installed') status = 'ok';
+                if (res.status === 'not_found') status = 'missing';
+                if (res.status === 'error') status = 'error';
+
+                return {
+                    ...e,
+                    status,
+                    path: res.resolvedPath || e.path, // Enable auto-fix if found in path
+                    version: res.version || undefined,
+                    lastCheckedAt: res.lastCheckedAt
+                };
+            }));
+
+            alert("Global tools check complete. Statuses updated.");
+        } catch (err) {
+            console.error(err);
+            alert("Error running tools check.");
+        } finally {
+            setIsCheckingTools(false);
+        }
     };
 
     // Global Actions
@@ -389,9 +427,10 @@ export function SettingsPage() {
 
                     <button
                         onClick={checkAllTools}
-                        className="mt-6 w-full py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                        disabled={isCheckingTools}
+                        className="mt-6 w-full py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
                     >
-                        Run Global Tools Check (Mock)
+                        {isCheckingTools ? 'Checking System...' : 'Run Global Tools Check'}
                     </button>
                 </div>
 

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { runGlobalToolsCheck } from './tools-check.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -54,4 +55,10 @@ ipcMain.handle('ping', async (event, payload) => {
         receivedAt: new Date().toISOString(),
         payload,
     };
+});
+
+ipcMain.handle('tools:check', async (event, payload) => {
+    const input = payload || {};
+    const result = await runGlobalToolsCheck(input);
+    return result;
 });

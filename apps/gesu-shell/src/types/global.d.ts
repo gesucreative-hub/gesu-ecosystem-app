@@ -1,3 +1,5 @@
+import { GesuSettings } from './settings';
+
 export { };
 
 declare global {
@@ -35,6 +37,10 @@ declare global {
             ping: (payload: unknown) => Promise<any>;
             checkTools?: (payload: GesuToolsCheckPayload) => Promise<any>;
             jobs?: GesuJobsAPI;
+            settings?: {
+                load: () => Promise<GesuSettings | null>;
+                save: (settings: GesuSettings) => Promise<void>;
+            };
         };
     }
 }

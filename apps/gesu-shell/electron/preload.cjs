@@ -7,4 +7,8 @@ contextBridge.exposeInMainWorld('gesu', {
         enqueue: (payload) => ipcRenderer.invoke('jobs:enqueue', payload),
         list: () => ipcRenderer.invoke('jobs:list'),
     },
+    settings: {
+        load: () => ipcRenderer.invoke('gesu:settings:load'),
+        save: (settings) => ipcRenderer.invoke('gesu:settings:save', settings),
+    },
 });

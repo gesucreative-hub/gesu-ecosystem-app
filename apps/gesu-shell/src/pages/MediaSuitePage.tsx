@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+
 // --- Types & Interfaces ---
 
 type Tab = 'downloader' | 'converter';
@@ -75,45 +76,66 @@ export function MediaSuitePage() {
     const [category, setCategory] = useState(CONVERT_CATEGORIES[1]);
     const [convPreset, setConvPreset] = useState('Proxy 720p');
 
-    // Job Helpers
-    const createJob = (type: JobType, label: string, engine: JobEngine, payload: Record<string, unknown>): Job => ({
-        id: crypto.randomUUID().slice(0, 8),
-        type,
-        label,
-        engine,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'queued',
-        payload
-    });
-
-    const updateJobStatus = (id: string, status: JobStatus, updates: Partial<Job> = {}) => {
-        setJobs(prev => prev.map(job => {
-            if (job.id === id) {
-                const updatedJob = { ...job, status, ...updates, updatedAt: new Date().toISOString() };
-                console.log('[MediaSuiteJobUpdate]', updatedJob);
-                return updatedJob;
-            }
-            return job;
-        }));
+    // Job Actions via IPC
+    const refreshJobs = async () => {
+        if (!window.gesu?.jobs) return;
+        try {
+            const remoteJobs = await window.gesu.jobs.list();
+            // Map GesuJob (global) to Job (local)
+            const mappedJobs: Job[] = remoteJobs.map((j: any) => ({
+                id: j.id,
+                type: j.type as JobType,
+                label: j.label,
+                engine: (j.payload?.engine || 'combo') as JobEngine,
+                createdAt: j.createdAt,
+                updatedAt: j.updatedAt,
+                status: j.status as JobStatus,
+                payload: j.payload || {},
+                errorMessage: j.errorMessage,
+                progress: j.payload?.progress
+            }));
+            setJobs(mappedJobs);
+        } catch (err) {
+            console.error('Failed to fetch jobs:', err);
+        }
     };
 
-    const removeJob = (id: string) => {
-        setJobs(prev => prev.filter(j => j.id !== id));
+    const enqueueJob = async (type: JobType, label: string, engine: JobEngine, payload: Record<string, unknown>) => {
+        if (!window.gesu?.jobs) {
+            // Fallback for browser-only dev (mock)
+            const mockJob: Job = {
+                id: crypto.randomUUID().slice(0, 8),
+                type, label, engine, payload,
+                status: 'queued',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            setJobs(prev => [mockJob, ...prev]);
+            alert('Job queued (Mock - No Electron)');
+            return;
+        }
+
+        try {
+            // We pass 'engine' inside payload for now, as main process skeleton only expects generic payload
+            await window.gesu.jobs.enqueue({
+                type,
+                label,
+                payload: { ...payload, engine }
+            });
+            refreshJobs(); // Refresh list immediately
+            alert('Job sent to backend!');
+        } catch (err) {
+            console.error(err);
+            alert('Failed to enqueue job');
+        }
     };
 
     // User Actions
     const handleQueueDownload = () => {
         if (!url) return;
-
         const payload = { url, preset: dlPreset, networkProfile: netProfile };
-        const newJob = createJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
-
-        setJobs(prev => [newJob, ...prev]);
-        console.log('[MediaSuiteJobQueued]', newJob);
-
-        setUrl(''); // Reset input
-        alert(`Download queued: ${newJob.id}`);
+        enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
+        setUrl('');
     };
 
     const handleConvert = () => {
@@ -124,12 +146,7 @@ export function MediaSuitePage() {
         if (category === 'Document') engine = 'libreoffice';
 
         const payload = { filePath, category, preset: convPreset };
-        const newJob = createJob('convert', `Conv: ${filePath.split('\\').pop()}`, engine, payload);
-
-        setJobs(prev => [newJob, ...prev]);
-        console.log('[MediaSuiteJobQueued]', newJob);
-
-        alert(`Conversion queued: ${newJob.id}`);
+        enqueueJob('convert', `Conv: ${filePath.split('\\').pop()}`, engine, payload);
     };
 
     return (
@@ -290,6 +307,7 @@ export function MediaSuitePage() {
                         <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700">
                             {jobs.length} jobs
                         </span>
+                        <button onClick={refreshJobs} className="ml-2 text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
                     </div>
 
                     {jobs.length === 0 ? (
@@ -326,17 +344,9 @@ export function MediaSuitePage() {
                                         </span>
                                     </div>
 
-                                    {/* Actions Row */}
+                                    {/* Actions Row (Read Only for now) */}
                                     <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-700/50">
-                                        <button onClick={() => updateJobStatus(job.id, 'running', { progress: 0 })} className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-2 py-1 rounded transition-colors">Run</button>
-                                        {(job.status === 'running') && (
-                                            <button onClick={() => updateJobStatus(job.id, 'running', { progress: (job.progress || 0) + 25 })} className="text-xs bg-blue-900/50 hover:bg-blue-800/50 text-blue-300 border border-blue-800 px-2 py-1 rounded transition-colors">+25%</button>
-                                        )}
-                                        <button onClick={() => updateJobStatus(job.id, 'success', { progress: 100 })} className="text-xs bg-emerald-900/30 hover:bg-emerald-800/30 text-emerald-400 border border-emerald-800/50 px-2 py-1 rounded transition-colors">Success</button>
-                                        <button onClick={() => updateJobStatus(job.id, 'error', { errorMessage: 'Mock Error' })} className="text-xs bg-red-900/30 hover:bg-red-800/30 text-red-400 border border-red-800/50 px-2 py-1 rounded transition-colors">Fail</button>
-                                        <div className="ml-auto">
-                                            <button onClick={() => removeJob(job.id)} className="text-xs text-gray-500 hover:text-red-400 px-1 py-1 transition-colors">Remove</button>
-                                        </div>
+                                        <div className="text-xs text-gray-500 italic">Processing managed by backend...</div>
                                     </div>
                                 </div>
                             ))}

@@ -1,19 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-declare global {
-    interface Window {
-        gesu?: {
-            ping: (payload: unknown) => Promise<any>;
-            checkTools?: (payload: {
-                ffmpegPath?: string | null;
-                ytDlpPath?: string | null;
-                imageMagickPath?: string | null;
-                libreOfficePath?: string | null;
-            }) => Promise<any>;
-        };
-    }
-}
 
 // --- Types & Interfaces ---
 

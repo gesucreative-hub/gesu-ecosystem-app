@@ -1,0 +1,40 @@
+export { };
+
+declare global {
+    interface GesuToolsCheckPayload {
+        ffmpegPath?: string | null;
+        ytDlpPath?: string | null;
+        imageMagickPath?: string | null;
+        libreOfficePath?: string | null;
+    }
+
+    interface GesuJobEnqueuePayload {
+        type: string;
+        label: string;
+        payload: any;
+    }
+
+    interface GesuJob {
+        id: string;
+        type: string;
+        label: string;
+        status: string;
+        createdAt: string;
+        updatedAt: string;
+        payload: any;
+        errorMessage?: string;
+    }
+
+    interface GesuJobsAPI {
+        enqueue: (payload: GesuJobEnqueuePayload) => Promise<GesuJob>;
+        list: () => Promise<GesuJob[]>;
+    }
+
+    interface Window {
+        gesu?: {
+            ping: (payload: unknown) => Promise<any>;
+            checkTools?: (payload: GesuToolsCheckPayload) => Promise<any>;
+            jobs?: GesuJobsAPI;
+        };
+    }
+}

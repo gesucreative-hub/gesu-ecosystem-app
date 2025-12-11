@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { runGlobalToolsCheck } from './tools-check.js';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,4 +62,46 @@ ipcMain.handle('tools:check', async (event, payload) => {
     const input = payload || {};
     const result = await runGlobalToolsCheck(input);
     return result;
+});
+
+// --- Job System (In-Memory Skeleton) ---
+let jobs = [];
+
+ipcMain.handle('jobs:list', async () => {
+    return jobs;
+});
+
+ipcMain.handle('jobs:enqueue', async (event, payload) => {
+    const newJob = {
+        id: randomUUID().slice(0, 8),
+        type: payload.type || 'unknown',
+        label: payload.label || 'Untitled Job',
+        status: 'queued',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        payload: payload.payload || {},
+    };
+
+    jobs.unshift(newJob); // Add to top
+
+    // Simulate scheduling/running
+    setTimeout(() => {
+        const jobIndex = jobs.findIndex(j => j.id === newJob.id);
+        if (jobIndex !== -1) {
+            jobs[jobIndex].status = 'running';
+            jobs[jobIndex].updatedAt = new Date().toISOString();
+        }
+
+        // Simulate completion
+        setTimeout(() => {
+            const jobIndex = jobs.findIndex(j => j.id === newJob.id);
+            if (jobIndex !== -1) {
+                jobs[jobIndex].status = 'success';
+                jobs[jobIndex].updatedAt = new Date().toISOString();
+            }
+        }, 3000); // 3 seconds to complete
+
+    }, 1000); // 1 second to start
+
+    return newJob;
 });

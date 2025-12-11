@@ -26,11 +26,15 @@ interface Job {
 // --- Constants ---
 
 const DOWNLOAD_PRESETS = [
-    'Music MP3', 'Best Audio', 'Video 720p', 'Video 1080p', 'Best Video'
+    { value: 'music-mp3', label: 'Music MP3' },
+    { value: 'video-1080p', label: 'Video 1080p' },
+    { value: 'video-best', label: 'Best Video' }
 ];
 
 const NETWORK_PROFILES = [
-    'Hemat (Low Bandwidth)', 'Normal', 'Gaspol (Max Speed)'
+    { value: 'hemat', label: 'Hemat (Low Bandwidth)' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'gaspol', label: 'Gaspol (Max Speed)' }
 ];
 
 const CONVERT_CATEGORIES = ['Audio', 'Video', 'Image', 'Document'];
@@ -67,9 +71,10 @@ export function MediaSuitePage() {
     const [jobs, setJobs] = useState<Job[]>([]);
 
     // Downloader Form State
+    // Downloader Form State
     const [url, setUrl] = useState('');
-    const [dlPreset, setDlPreset] = useState(DOWNLOAD_PRESETS[0]);
-    const [netProfile, setNetProfile] = useState(NETWORK_PROFILES[1]);
+    const [dlPreset, setDlPreset] = useState(DOWNLOAD_PRESETS[0].value);
+    const [netProfile, setNetProfile] = useState(NETWORK_PROFILES[1].value);
 
     // Converter Form State
     const [filePath, setFilePath] = useState('');
@@ -217,7 +222,7 @@ export function MediaSuitePage() {
                                             onChange={(e) => setDlPreset(e.target.value)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
                                         >
-                                            {DOWNLOAD_PRESETS.map(p => <option key={p} value={p}>{p}</option>)}
+                                            {DOWNLOAD_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-2">
@@ -227,7 +232,7 @@ export function MediaSuitePage() {
                                             onChange={(e) => setNetProfile(e.target.value)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
                                         >
-                                            {NETWORK_PROFILES.map(p => <option key={p} value={p}>{p}</option>)}
+                                            {NETWORK_PROFILES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                                         </select>
                                     </div>
                                 </div>

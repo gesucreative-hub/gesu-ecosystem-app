@@ -13,6 +13,44 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
 
 const YTDLP_BIN = 'yt-dlp'; // Assumes PATH access
 
+function buildPresetArgs(preset, downloadsDir) {
+    const outputTemplate = path.join(downloadsDir, '%(title)s.%(ext)s');
+
+    switch (preset) {
+        case 'music-mp3':
+            return [
+                '-x',
+                '--audio-format', 'mp3',
+                '-o', outputTemplate,
+            ];
+        case 'video-1080p':
+            return [
+                '-f', 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
+                '--merge-output-format', 'mp4',
+                '-o', outputTemplate,
+            ];
+        case 'video-best':
+        default:
+            return [
+                '-f', 'bestvideo+bestaudio/best',
+                '--merge-output-format', 'mp4',
+                '-o', outputTemplate,
+            ];
+    }
+}
+
+function buildNetworkArgs(network) {
+    switch (network) {
+        case 'hemat':
+            return ['--limit-rate', '250K'];
+        case 'gaspol':
+            return ['--limit-rate', '5M'];
+        case 'normal':
+        default:
+            return [];
+    }
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const preloadPath = path.join(__dirname, 'preload.cjs');
@@ -118,12 +156,15 @@ function processDownloadJob(jobId, payload) {
     job.updatedAt = new Date().toISOString();
 
     const url = payload.url;
-    // Default preset hardcoded for now as per requirements
-    // const preset = payload.preset || 'audio-mp3';
+    const preset = payload.preset || 'video-best';
+    const network = payload.network || 'normal';
+
+    const presetArgs = buildPresetArgs(preset, DOWNLOADS_DIR);
+    const networkArgs = buildNetworkArgs(network);
 
     const args = [
-        '-x', '--audio-format', 'mp3', // Simple audio extraction preset
-        '-o', path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s'),
+        ...presetArgs,
+        ...networkArgs,
         url,
     ];
 

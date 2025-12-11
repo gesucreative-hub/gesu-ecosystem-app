@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+declare global {
+    interface Window {
+        gesu?: {
+            ping: (payload: unknown) => Promise<{
+                message: string;
+                receivedAt: string;
+                payload: unknown;
+            }>;
+        };
+    }
+}
+
 // --- Types & Interfaces ---
 
 // Workspace & Appearance
@@ -144,6 +156,25 @@ export function SettingsPage() {
     const [installPreference, setInstallPreference] = useState<InstallMethod>('manual');
     const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
+
+    // Handlers
+    const handleTestDesktopBridge = async () => {
+        if (!window.gesu?.ping) {
+            setDesktopPingResult('Desktop bridge is not available. (Are you in Electron?)');
+            return;
+        }
+
+        try {
+            setDesktopPingResult('Pinging...');
+            const result = await window.gesu.ping({ source: 'SettingsPage' });
+            setDesktopPingResult(`Recv: "${result.message}" @ ${result.receivedAt}`);
+            console.log('[SettingsPingResult]', result);
+        } catch (error) {
+            console.error('[SettingsPingError]', error);
+            setDesktopPingResult('Ping failed. See console.');
+        }
+    };
 
     // Settings Handlers
     const updateSettings = (section: keyof SettingsState, key: string, value: any) => {
@@ -295,8 +326,8 @@ export function SettingsPage() {
                                         key={method}
                                         onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
                                         className={`px-3 py-1 rounded text-xs font-medium transition-all ${installPreference === method.toLowerCase()
-                                                ? 'bg-orange-600 text-white shadow-sm'
-                                                : 'text-gray-400 hover:text-gray-200'
+                                            ? 'bg-orange-600 text-white shadow-sm'
+                                            : 'text-gray-400 hover:text-gray-200'
                                             }`}
                                     >
                                         {method}
@@ -364,6 +395,28 @@ export function SettingsPage() {
                     </button>
                 </div>
 
+                {/* Desktop Bridge Test (Dev) */}
+                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                            Desktop Bridge Test
+                        </h2>
+                        <p className="text-sm text-gray-400 mt-1">Verify IPC communication between React and Electron.</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="font-mono text-xs text-gray-400 bg-black/30 px-3 py-1.5 rounded border border-gray-700/50">
+                            {desktopPingResult || 'No ping yet'}
+                        </span>
+                        <button
+                            onClick={handleTestDesktopBridge}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded-lg text-sm transition-colors"
+                        >
+                            Test Bridge
+                        </button>
+                    </div>
+                </div>
+
                 {/* Appearance (Moved to bottom or kept side-by-side if space allows, usually bottom in single col or side in grid. Here sticking to grid flow) */}
                 <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit">
                     <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -380,8 +433,8 @@ export function SettingsPage() {
                                         key={mode}
                                         onClick={() => updateSettings('appearance', 'theme', mode.toLowerCase())}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${settings.appearance.theme === mode.toLowerCase()
-                                                ? 'bg-gray-600 text-white shadow-sm'
-                                                : 'text-gray-400 hover:text-gray-200'
+                                            ? 'bg-gray-600 text-white shadow-sm'
+                                            : 'text-gray-400 hover:text-gray-200'
                                             }`}
                                     >
                                         {mode}

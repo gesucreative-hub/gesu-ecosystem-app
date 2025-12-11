@@ -72,9 +72,16 @@ ipcMain.handle('jobs:list', async () => {
 });
 
 ipcMain.handle('jobs:enqueue', async (event, payload) => {
+    const type = payload.type || 'unknown';
+
+    // Validation
+    if (type === 'download' && !payload.payload?.url) {
+        throw new Error('Missing URL for download job');
+    }
+
     const newJob = {
         id: randomUUID().slice(0, 8),
-        type: payload.type || 'unknown',
+        type,
         label: payload.label || 'Untitled Job',
         status: 'queued',
         createdAt: new Date().toISOString(),
@@ -84,24 +91,35 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
 
     jobs.unshift(newJob); // Add to top
 
-    // Simulate scheduling/running
-    setTimeout(() => {
-        const jobIndex = jobs.findIndex(j => j.id === newJob.id);
-        if (jobIndex !== -1) {
-            jobs[jobIndex].status = 'running';
-            jobs[jobIndex].updatedAt = new Date().toISOString();
-        }
-
-        // Simulate completion
-        setTimeout(() => {
-            const jobIndex = jobs.findIndex(j => j.id === newJob.id);
-            if (jobIndex !== -1) {
-                jobs[jobIndex].status = 'success';
-                jobs[jobIndex].updatedAt = new Date().toISOString();
-            }
-        }, 3000); // 3 seconds to complete
-
-    }, 1000); // 1 second to start
+    // Mock Processing Logic based on Type
+    if (type === 'download' || type === 'test') {
+        processMockJob(newJob.id);
+    }
 
     return newJob;
 });
+
+function processMockJob(jobId) {
+    // 1. Start "Running"
+    setTimeout(() => {
+        const idx = jobs.findIndex(j => j.id === jobId);
+        if (idx === -1) return;
+
+        jobs[idx].status = 'running';
+        jobs[idx].updatedAt = new Date().toISOString();
+
+        // 2. Finish "Success" or "Error"
+        setTimeout(() => {
+            const idx2 = jobs.findIndex(j => j.id === jobId);
+            if (idx2 === -1) return;
+
+            // 90% chance of success
+            const isSuccess = Math.random() > 0.1;
+            jobs[idx2].status = isSuccess ? 'success' : 'error';
+            if (!isSuccess) jobs[idx2].errorMessage = "Simulated download failure (random).";
+            jobs[idx2].updatedAt = new Date().toISOString();
+
+        }, 3000); // 3s execution time
+
+    }, 1000); // 1s queue time
+}

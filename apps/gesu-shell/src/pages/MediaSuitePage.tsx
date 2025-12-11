@@ -132,7 +132,10 @@ export function MediaSuitePage() {
 
     // User Actions
     const handleQueueDownload = () => {
-        if (!url) return;
+        if (!url.trim()) {
+            alert("Please enter a valid URL");
+            return;
+        }
         const payload = { url, preset: dlPreset, networkProfile: netProfile };
         enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
         setUrl('');
@@ -336,9 +339,21 @@ export function MediaSuitePage() {
                                     </div>
 
                                     <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                                        <span className="flex items-center gap-1">
-                                            ⚙️ {job.engine}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="flex items-center gap-1">
+                                                ⚙️ {job.engine}
+                                            </span>
+                                            {job.type === 'download' && (
+                                                <span className="text-gray-600">
+                                                    {(job.payload as any).preset} • {(job.payload as any).networkProfile}
+                                                </span>
+                                            )}
+                                            {job.errorMessage && (
+                                                <span className="text-red-400 font-mono text-[10px]">
+                                                    Error: {job.errorMessage}
+                                                </span>
+                                            )}
+                                        </div>
                                         <span>
                                             {new Date(job.createdAt).toLocaleTimeString()}
                                         </span>

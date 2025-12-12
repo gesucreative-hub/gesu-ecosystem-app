@@ -14,5 +14,6 @@ contextBridge.exposeInMainWorld('gesu', {
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),
+        pickSourceFile: () => ipcRenderer.invoke('mediaSuite:pickSourceFile'),
     },
 });

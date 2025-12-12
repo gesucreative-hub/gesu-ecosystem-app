@@ -29,11 +29,18 @@ declare global {
 
     type MediaOutputTarget = 'shell' | 'workflow';
 
+    type MediaConvertPresetId =
+        | 'audio-mp3-320'
+        | 'audio-mp3-192'
+        | 'video-mp4-1080p';
+
     interface MediaSuiteJob {
         id: string;
-        url: string;
+        type: 'download' | 'convert';
+        url?: string;
+        inputPath?: string;
         preset: string;
-        network: string;
+        network?: string;
         target?: MediaOutputTarget;
         status: 'queued' | 'spawned' | 'success' | 'failed';
         timestamp: string;
@@ -58,6 +65,7 @@ declare global {
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;
+                pickSourceFile: () => Promise<string | null>;
             };
         };
     }

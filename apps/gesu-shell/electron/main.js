@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import { runGlobalToolsCheck } from './tools-check.js';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -192,7 +192,7 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
     }
     if (type === 'convert') {
         if (!payload.payload?.inputPath) throw new Error('Missing inputPath for convert job');
-        if (!payload.payload?.targetFormat) throw new Error('Missing targetFormat for convert job');
+        if (!payload.payload?.preset) throw new Error('Missing preset for convert job');
     }
 
     const newJob = {
@@ -241,6 +241,19 @@ ipcMain.handle('mediaSuite:openFolder', async (event, target) => {
         return { success: true };
     }
     return { success: false, error: 'Directory does not exist' };
+    return { success: false, error: 'Directory does not exist' };
+});
+
+ipcMain.handle('mediaSuite:pickSourceFile', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [
+            { name: 'Media Files', extensions: ['mp4', 'mkv', 'mp3', 'wav', 'flac', 'avi', 'mov'] },
+            { name: 'All Files', extensions: ['*'] }
+        ]
+    });
+    if (canceled || filePaths.length === 0) return null;
+    return filePaths[0];
 });
 
 function processDownloadJob(jobId, payload) {
@@ -381,39 +394,115 @@ function processMockJob(jobId) {
     }, 1000); // 1s queue time
 }
 
-async function processConvertJob(jobId, payload) {
-    const { inputPath, targetFormat } = payload;
+// --- Media Suite Helpers ---
 
+const CONVERT_PRESETS = {
+    'audio-mp3-320': {
+        category: 'audio',
+        label: 'Audio MP3 – 320 kbps',
+        extension: 'mp3',
+        args: ['-vn', '-acodec', 'libmp3lame', '-b:a', '320k']
+    },
+    'audio-mp3-192': {
+        category: 'audio',
+        label: 'Audio MP3 – 192 kbps',
+        extension: 'mp3',
+        args: ['-vn', '-acodec', 'libmp3lame', '-b:a', '192k']
+    },
+    'video-mp4-1080p': {
+        category: 'video',
+        label: 'Video MP4 – 1080p',
+        extension: 'mp4',
+        args: ['-vf', 'scale=-2:1080', '-c:v', 'libx264', '-c:a', 'copy']
+    }
+};
+
+async function processConvertJob(jobId, payload) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
     job.status = 'running';
     job.updatedAt = new Date().toISOString();
 
-    // 1. Resolve FFmpeg Path
-    const settings = await loadSettingsFromDisk();
-    const ffmpegBin = resolveFfmpegExecutable(settings);
+    const inputPath = payload.inputPath;
+    const preset = payload.preset;
+    const target = payload.target || 'shell';
+
+    // 1. Validate Preset
+    const presetCfg = CONVERT_PRESETS[preset];
+    if (!presetCfg) {
+        const errMsg = `Unknown convert preset: ${preset}`;
+        job.status = 'failed';
+        job.errorMessage = errMsg;
+        appendJobLog({
+            id: job.id, type: 'convert', sourcePath: inputPath, preset, target,
+            status: 'failed', errorMessage: errMsg
+        });
+        return;
+    }
 
     // 2. Determine Output Path
-    const dir = path.dirname(inputPath);
-    const name = path.basename(inputPath, path.extname(inputPath));
-    const outputPath = path.join(dir, `${name}.${targetFormat}`);
+    const outputDir = getDownloadOutputDir(target);
+    const parsed = path.parse(inputPath);
+    // Explicitly use extension from map
+    const outputName = `${parsed.name}.${presetCfg.extension}`;
+    const outputPath = path.join(outputDir, outputName);
 
+    // Create output dir if needed
+    try {
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
+    } catch (e) {
+        console.error('Failed to create output dir', e);
+    }
+
+    console.log('[convert job]', {
+        id: job.id,
+        source: inputPath,
+        output: outputPath,
+        preset
+    });
+
+    const settings = await loadSettingsFromDisk();
+    const ffmpegPath = resolveFfmpegExecutable(settings);
+
+    if (!ffmpegPath) {
+        const errMsg = 'FFmpeg not found in PATH or config';
+        job.status = 'failed';
+        job.errorMessage = errMsg;
+
+        appendJobLog({
+            id: job.id, type: 'convert', sourcePath: inputPath, preset, target,
+            status: 'failed', errorMessage: errMsg
+        });
+        return;
+    }
+
+    // 3. Build FFmpeg args
     const args = [
         '-y',               // Overwrite output
         '-i', inputPath,    // Input
+        ...presetCfg.args,  // Preset specific args
         outputPath          // Output
     ];
 
-    console.log(`[Job:${jobId}] Spawning FFmpeg: "${ffmpegBin}" with args:`, args);
+    console.log(`[Job:${jobId}] Spawning ffmpeg with args:`, args);
 
-    const child = spawn(ffmpegBin, args, { shell: false, windowsHide: true });
+    // LOG: Spawned
+    appendJobLog({
+        id: job.id,
+        type: 'convert',
+        sourcePath: inputPath,
+        preset, target,
+        status: 'spawned',
+        args
+    });
+
+    const child = spawn(ffmpegPath, args, { shell: false, windowsHide: true });
 
     let stderr = '';
-
-    child.stderr.on('data', (chunk) => {
-        stderr += chunk.toString();
-    });
+    child.stderr.on('data', (d) => { stderr += d.toString(); });
 
     child.on('close', (code) => {
         const finishedJob = jobs.find(j => j.id === jobId);
@@ -423,22 +512,47 @@ async function processConvertJob(jobId, payload) {
 
         if (code === 0) {
             finishedJob.status = 'success';
-            finishedJob.errorMessage = undefined;
-            // Optionally store the output path in the job payload or a new result field
-            finishedJob.payload.outputPath = outputPath;
+            finishedJob.payload = { ...finishedJob.payload, outputPath };
+
+            // LOG: Success
+            appendJobLog({
+                id: finishedJob.id,
+                type: 'convert',
+                sourcePath: inputPath,
+                preset, target,
+                outputPath, // Log output path
+                status: 'success'
+            });
         } else {
-            finishedJob.status = 'error';
-            const shortError = stderr.split('\n').slice(-3).join(' ').trim();
-            finishedJob.errorMessage = `FFmpeg exited with code ${code}. ${shortError}`;
+            finishedJob.status = 'failed';
+            const shortError = stderr.split('\n').slice(-5).join(' ').trim();
+            finishedJob.errorMessage = `ffmpeg exited with code ${code}. ${shortError}`;
+
+            // LOG: Failed
+            appendJobLog({
+                id: finishedJob.id,
+                type: 'convert',
+                sourcePath: inputPath,
+                preset, target,
+                status: 'failed',
+                errorMessage: finishedJob.errorMessage
+            });
         }
     });
 
     child.on('error', (err) => {
         const errorJob = jobs.find(j => j.id === jobId);
         if (!errorJob) return;
+        errorJob.status = 'failed';
+        errorJob.errorMessage = `Failed to start ffmpeg: ${err.message}`;
 
-        errorJob.status = 'error';
-        errorJob.errorMessage = `Failed to start FFmpeg: ${err.message}`;
-        errorJob.updatedAt = new Date().toISOString();
+        appendJobLog({
+            id: errorJob.id,
+            type: 'convert',
+            sourcePath: inputPath,
+            preset, target,
+            status: 'failed',
+            errorMessage: errorJob.errorMessage
+        });
     });
 }

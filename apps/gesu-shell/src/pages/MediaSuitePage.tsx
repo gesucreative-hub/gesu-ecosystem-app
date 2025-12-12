@@ -11,6 +11,7 @@ type JobStatus = 'queued' | 'running' | 'success' | 'error' | 'canceled';
 type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
 
 type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
+type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'video-mp4-1080p';
 type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
 type MediaOutputTarget = 'shell' | 'workflow';
 
@@ -47,14 +48,11 @@ const NETWORK_LABELS: Record<NetworkProfile, string> = {
     'gaspol': 'gaspol · ~5 MB/s'
 };
 
-const CONVERT_TARGET_FORMATS = [
-    { value: 'mp3', label: 'MP3 Audio' },
-    { value: 'wav', label: 'WAV Audio' },
-    { value: 'mp4', label: 'MP4 Video' },
-    { value: 'mkv', label: 'MKV Video' },
+const CONVERT_PRESETS: { value: ConvertPreset; label: string }[] = [
+    { value: 'audio-mp3-320', label: 'Audio MP3 – 320 kbps' },
+    { value: 'audio-mp3-192', label: 'Audio MP3 – 192 kbps' },
+    { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p' }
 ];
-
-const CONVERT_CATEGORIES = ['Audio', 'Video', 'Image', 'Document'];
 
 // --- Helper Components ---
 
@@ -104,10 +102,8 @@ export function MediaSuitePage() {
     };
 
     // Converter Form State
-    // Converter Form State
-    const [filePath, setFilePath] = useState('');
-    const [category, setCategory] = useState(CONVERT_CATEGORIES[1]);
-    const [targetFormat, setTargetFormat] = useState(CONVERT_TARGET_FORMATS[0].value);
+    const [convertFilePath, setConvertFilePath] = useState('');
+    const [convertPreset, setConvertPreset] = useState<ConvertPreset>('audio-mp3-320');
 
     // Job Actions via IPC
     const refreshJobs = async () => {
@@ -186,18 +182,39 @@ export function MediaSuitePage() {
         setUrl('');
     };
 
-    const handleConvert = () => {
-        if (!filePath) return;
+    const handleBrowseFile = async () => {
+        if (!window.gesu?.mediaSuite?.pickSourceFile) {
+            showToast("File picker not supported in browser mode", 'error');
+            return;
+        }
+        try {
+            const path = await window.gesu.mediaSuite.pickSourceFile();
+            if (path) setConvertFilePath(path);
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to pick file", 'error');
+        }
+    };
 
-        let engine: JobEngine = 'ffmpeg';
-        if (category === 'Image') engine = 'image-magick';
-        if (category === 'Document') engine = 'libreoffice';
+    const handleQueueConvert = () => {
+        if (!convertFilePath) {
+            showToast("Please select a source file", 'error');
+            return;
+        }
 
         // Simplify ID for UI
-        const simpleName = filePath.split(/[/\\]/).pop();
+        const simpleName = convertFilePath.split(/[/\\]/).pop();
 
-        const payload = { inputPath: filePath, category, targetFormat };
-        enqueueJob('convert', `Conv: ${simpleName} -> .${targetFormat}`, engine, payload);
+        const payload = {
+            kind: 'convert',
+            inputPath: convertFilePath,
+            preset: convertPreset,
+            target: outputTarget
+        };
+
+        enqueueJob('convert', `Conv: ${simpleName}`, 'ffmpeg', payload);
+        setConvertFilePath('');
+        showToast('Convert job queued', 'success');
     };
 
     const handleOpenFolder = async (target: MediaOutputTarget) => {
@@ -355,46 +372,58 @@ export function MediaSuitePage() {
                             </h2>
                             <div className="flex flex-col gap-5">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-gray-300">File Path</label>
+                                    <label className="text-sm font-medium text-gray-300">Source File</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
-                                            value={filePath}
-                                            onChange={(e) => setFilePath(e.target.value)}
-                                            placeholder="D:\Media\file.mkv"
-                                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 font-mono text-sm"
+                                            value={convertFilePath}
+                                            readOnly
+                                            placeholder="No file selected..."
+                                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none font-mono text-sm opacity-70 cursor-not-allowed"
                                         />
-                                        <button className="px-4 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm border border-gray-600">Browse...</button>
+                                        <button
+                                            onClick={handleBrowseFile}
+                                            className="px-4 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm border border-gray-600 transition-colors"
+                                        >
+                                            Browse...
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Category</label>
+                                        <label className="text-sm font-medium text-gray-300">Preset</label>
                                         <select
-                                            value={category}
-                                            onChange={(e) => setCategory(e.target.value)}
+                                            value={convertPreset}
+                                            onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
                                         >
-                                            {CONVERT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                            {CONVERT_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Target Format</label>
-                                        <select
-                                            value={targetFormat}
-                                            onChange={(e) => setTargetFormat(e.target.value)}
-                                            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
-                                        >
-                                            {CONVERT_TARGET_FORMATS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                        </select>
+                                        <label className="text-sm font-medium text-gray-300">Save to</label>
+                                        <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
+                                            <button
+                                                onClick={() => setOutputTarget('shell')}
+                                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-cyan-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                            >
+                                                Gesu Shell
+                                            </button>
+                                            <button
+                                                onClick={() => setOutputTarget('workflow')}
+                                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                            >
+                                                WorkFlow DB
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button
-                                    onClick={handleConvert}
-                                    disabled={!filePath}
+                                    onClick={handleQueueConvert}
+                                    disabled={!convertFilePath}
                                     className="mt-2 w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg shadow-purple-900/40 transition-all active:scale-[0.98]"
                                 >
-                                    Convert (Mock)
+                                    Queue Convert Job
                                 </button>
                             </div>
                         </div>

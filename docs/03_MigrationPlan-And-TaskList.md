@@ -594,6 +594,11 @@ useEffect(() => {
 - [x] Backend: Output directory selection logic (local `downloads/` vs `WorkFlowDatabase path`)
 - [x] Logging & History: `target` field persisted in logs and displayed in History tab ("Shell" vs "WF DB")
 
+#### 2.8: Downloader UX / QoL Refinements ✅ DONE
+- [x] Notifications: Replaced blocking alerts with non-blocking toast notifications
+- [x] Labels: Human-readable network profiles (e.g. "gaspol · ~5 MB/s")
+- [x] Actions: "Open Shell Folder" and "Open WF DB Folder" buttons wired to `shell.openPath`
+
 **Milestone**: Job system now has persistence logging and UI visibility
 
 ---

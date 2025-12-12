@@ -34,7 +34,9 @@ declare global {
         | 'audio-mp3-192'
         | 'audio-wav-48k'
         | 'audio-aac-256'
-        | 'video-mp4-1080p';
+        | 'video-mp4-1080p'
+        | 'video-mp4-720p'
+        | 'video-mp4-540p-lite';
 
     interface MediaSuiteJob {
         id: string;

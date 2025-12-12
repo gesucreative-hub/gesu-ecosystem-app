@@ -605,6 +605,16 @@ useEffect(() => {
 - [x] UI/UX: Converter tab with file picker, preset selection, and output routing
 - [x] Integration: Convert jobs logged in JSONL and displayed in History
 
+#### 2.10: MS-7b: Audio Converter Presets (MP3/WAV/AAC) ✅ DONE
+- [x] Backend: Added FFmpeg args for WAV (48kHz) and AAC (256kbps)
+- [x] Types: Updated `MediaConvertPresetId` with new audio formats
+- [x] UI: Grouped preset selector (Audio/Video optgroups) for better organization
+
+#### 2.11: MS-7c: Video Converter Presets (1080p / 720p / 540p-lite) ✅ DONE
+- [x] Backend: Added FFmpeg args for 720p and 540p-lite (optimized H.264 profiles)
+- [x] UI: Expanded video preset options (HQ, Standard, Lite)
+- [x] Validation: Confirmed successful MP4 encoding for all resolutions
+
 **Milestone**: Media Suite now supports both downloading and local conversion jobs
 
 ---

@@ -11,7 +11,7 @@ type JobStatus = 'queued' | 'running' | 'success' | 'error' | 'canceled';
 type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
 
 type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
-type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'audio-wav-48k' | 'audio-aac-256' | 'video-mp4-1080p';
+type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'audio-wav-48k' | 'audio-aac-256' | 'video-mp4-1080p' | 'video-mp4-720p' | 'video-mp4-540p-lite';
 type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
 type MediaOutputTarget = 'shell' | 'workflow';
 
@@ -53,7 +53,9 @@ const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: 'Audio' 
     { value: 'audio-mp3-192', label: 'Audio MP3 – 192 kbps', category: 'Audio' },
     { value: 'audio-aac-256', label: 'Audio AAC – 256 kbps', category: 'Audio' },
     { value: 'audio-wav-48k', label: 'Audio WAV – 48 kHz', category: 'Audio' },
-    { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p', category: 'Video' }
+    { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p (HQ)', category: 'Video' },
+    { value: 'video-mp4-720p', label: 'Video MP4 – 720p', category: 'Video' },
+    { value: 'video-mp4-540p-lite', label: 'Video MP4 – 540p (Lite)', category: 'Video' }
 ];
 
 // --- Helper Components ---

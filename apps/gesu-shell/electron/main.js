@@ -423,9 +423,21 @@ const CONVERT_PRESETS = {
     },
     'video-mp4-1080p': {
         category: 'video',
-        label: 'Video MP4 – 1080p',
+        label: 'Video MP4 – 1080p (HQ)',
         extension: 'mp4',
-        args: ['-vf', 'scale=-2:1080', '-c:v', 'libx264', '-c:a', 'copy']
+        args: ['-vf', 'scale=-2:1080', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-c:a', 'aac', '-b:a', '192k']
+    },
+    'video-mp4-720p': {
+        category: 'video',
+        label: 'Video MP4 – 720p',
+        extension: 'mp4',
+        args: ['-vf', 'scale=-2:720', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-c:a', 'aac', '-b:a', '160k']
+    },
+    'video-mp4-540p-lite': {
+        category: 'video',
+        label: 'Video MP4 – 540p (Lite)',
+        extension: 'mp4',
+        args: ['-vf', 'scale=-2:540', '-c:v', 'libx264', '-preset', 'faster', '-crf', '23', '-c:a', 'aac', '-b:a', '128k']
     }
 };
 

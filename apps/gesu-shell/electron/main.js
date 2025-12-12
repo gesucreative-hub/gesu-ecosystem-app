@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
+import { registerSettingsHandlers } from './settings-store.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -143,37 +144,8 @@ ipcMain.handle('tools:check', async (event, payload) => {
 });
 
 // --- Settings Persistence ---
-
-const SETTINGS_FILE_PATH = path.join(app.getPath('userData'), 'gesu-settings.json');
-
-async function loadSettingsFromDisk() {
-    try {
-        if (!fs.existsSync(SETTINGS_FILE_PATH)) return null;
-        const data = await fs.promises.readFile(SETTINGS_FILE_PATH, 'utf-8');
-        return JSON.parse(data);
-    } catch (err) {
-        console.error('Failed to load settings:', err);
-        return null;
-    }
-}
-
-async function saveSettingsToDisk(settings) {
-    try {
-        await fs.promises.writeFile(SETTINGS_FILE_PATH, JSON.stringify(settings, null, 2), 'utf-8');
-        console.log('Settings saved to:', SETTINGS_FILE_PATH);
-    } catch (err) {
-        console.error('Failed to save settings:', err);
-        throw err;
-    }
-}
-
-ipcMain.handle('gesu:settings:load', async () => {
-    return await loadSettingsFromDisk();
-});
-
-ipcMain.handle('gesu:settings:save', async (event, settings) => {
-    await saveSettingsToDisk(settings);
-});
+// Now handled by settings-store.js
+registerSettingsHandlers();
 
 // --- Job System (In-Memory Skeleton) ---
 let jobs = [];

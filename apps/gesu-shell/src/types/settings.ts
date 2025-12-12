@@ -16,4 +16,5 @@ export interface GesuSettings {
         glassmorphism: boolean;
     };
     installPreference?: 'manual' | 'winget' | 'choco' | 'scoop';
+    [key: string]: unknown;
 }

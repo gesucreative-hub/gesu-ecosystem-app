@@ -69,14 +69,36 @@ declare global {
         list: () => Promise<GesuJob[]>;
     }
 
+    interface GesuSettings {
+        paths: {
+            workflowRoot: string;
+            projectsRoot: string;
+            backupRoot: string;
+        };
+        engines: {
+            ytDlpPath: string | null;
+            ffmpegPath: string | null;
+            imageMagickPath: string | null;
+            libreOfficePath: string | null;
+            [key: string]: unknown;
+        };
+        appearance: {
+            theme: 'dark' | 'light' | 'system';
+            accentColor: string;
+            glassmorphism: boolean;
+        };
+        installPreference?: 'manual' | 'winget' | 'choco' | 'scoop';
+        [key: string]: unknown; // Allow legacy keys
+    }
+
     interface Window {
         gesu?: {
             ping: (payload: unknown) => Promise<any>;
             checkTools?: (payload: GesuToolsCheckPayload) => Promise<any>;
             jobs?: GesuJobsAPI;
             settings?: {
-                load: () => Promise<GesuSettings | null>;
-                save: (settings: GesuSettings) => Promise<void>;
+                load: () => Promise<GesuSettings>;
+                save: (settings: Partial<GesuSettings>) => Promise<GesuSettings>;
             };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;

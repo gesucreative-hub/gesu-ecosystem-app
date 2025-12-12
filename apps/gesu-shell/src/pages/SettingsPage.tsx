@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GesuSettings } from '../types/settings';
 import { Link } from 'react-router-dom';
 
@@ -149,16 +149,27 @@ export function SettingsPage() {
     const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
     const [isCheckingTools, setIsCheckingTools] = useState(false);
 
+    // StrictMode guard
+    const didLoadRef = useRef(false);
+
     // Load settings on mount
     useEffect(() => {
+        if (didLoadRef.current) return;
+        didLoadRef.current = true;
+
         if (window.gesu?.settings) {
             window.gesu.settings.load().then(loaded => {
                 if (loaded) {
-                    console.log('Loaded settings:', loaded);
+                    console.log('Loaded settings from bridge:', loaded);
+
+                    // Merge with defaults to be safe on frontend side too
+                    const mergedPaths = { ...DEFAULT_SETTINGS.paths, ...(loaded.paths || {}) };
+                    const mergedAppearance = { ...DEFAULT_SETTINGS.appearance, ...(loaded.appearance || {}) };
+
                     // Hydrate state
                     setSettings({
-                        paths: loaded.paths,
-                        appearance: loaded.appearance
+                        paths: mergedPaths,
+                        appearance: mergedAppearance
                     });
 
                     if (loaded.installPreference) {
@@ -166,16 +177,19 @@ export function SettingsPage() {
                     }
 
                     // Hydrate engines
-                    setEngines(prev => prev.map(e => {
-                        // Map specific engine paths from loaded settings
-                        let newPath = e.path;
-                        if (e.id === 'ytDlp') newPath = loaded.engines.ytDlpPath || '';
-                        if (e.id === 'ffmpeg') newPath = loaded.engines.ffmpegPath || '';
-                        if (e.id === 'imageMagick') newPath = loaded.engines.imageMagickPath || '';
-                        if (e.id === 'libreOffice') newPath = loaded.engines.libreOfficePath || '';
+                    // Note: 'engines' allows for missing keys provided we check them safely
+                    if (loaded.engines) {
+                        setEngines(prev => prev.map(e => {
+                            let newPath = e.path;
+                            // Safe access with optional chaining or default fallback
+                            if (e.id === 'ytDlp') newPath = loaded.engines?.ytDlpPath ?? '';
+                            if (e.id === 'ffmpeg') newPath = loaded.engines?.ffmpegPath ?? '';
+                            if (e.id === 'imageMagick') newPath = loaded.engines?.imageMagickPath ?? '';
+                            if (e.id === 'libreOffice') newPath = loaded.engines?.libreOfficePath ?? '';
 
-                        return { ...e, path: newPath };
-                    }));
+                            return { ...e, path: newPath };
+                        }));
+                    }
                 }
             }).catch(err => console.error('Failed to load settings:', err));
         }

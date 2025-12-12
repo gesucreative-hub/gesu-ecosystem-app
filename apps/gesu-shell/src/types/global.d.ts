@@ -32,6 +32,8 @@ declare global {
     type MediaConvertPresetId =
         | 'audio-mp3-320'
         | 'audio-mp3-192'
+        | 'audio-wav-48k'
+        | 'audio-aac-256'
         | 'video-mp4-1080p';
 
     interface MediaSuiteJob {

@@ -11,7 +11,7 @@ type JobStatus = 'queued' | 'running' | 'success' | 'error' | 'canceled';
 type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
 
 type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
-type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'video-mp4-1080p';
+type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'audio-wav-48k' | 'audio-aac-256' | 'video-mp4-1080p';
 type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
 type MediaOutputTarget = 'shell' | 'workflow';
 
@@ -48,10 +48,12 @@ const NETWORK_LABELS: Record<NetworkProfile, string> = {
     'gaspol': 'gaspol · ~5 MB/s'
 };
 
-const CONVERT_PRESETS: { value: ConvertPreset; label: string }[] = [
-    { value: 'audio-mp3-320', label: 'Audio MP3 – 320 kbps' },
-    { value: 'audio-mp3-192', label: 'Audio MP3 – 192 kbps' },
-    { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p' }
+const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: 'Audio' | 'Video' }[] = [
+    { value: 'audio-mp3-320', label: 'Audio MP3 – 320 kbps', category: 'Audio' },
+    { value: 'audio-mp3-192', label: 'Audio MP3 – 192 kbps', category: 'Audio' },
+    { value: 'audio-aac-256', label: 'Audio AAC – 256 kbps', category: 'Audio' },
+    { value: 'audio-wav-48k', label: 'Audio WAV – 48 kHz', category: 'Audio' },
+    { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p', category: 'Video' }
 ];
 
 // --- Helper Components ---
@@ -397,7 +399,12 @@ export function MediaSuitePage() {
                                             onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
                                         >
-                                            {CONVERT_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                            <optgroup label="Audio">
+                                                {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                            </optgroup>
+                                            <optgroup label="Video">
+                                                {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                            </optgroup>
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-2">

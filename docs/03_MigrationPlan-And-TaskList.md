@@ -599,7 +599,13 @@ useEffect(() => {
 - [x] Labels: Human-readable network profiles (e.g. "gaspol · ~5 MB/s")
 - [x] Actions: "Open Shell Folder" and "Open WF DB Folder" buttons wired to `shell.openPath`
 
-**Milestone**: Job system now has persistence logging and UI visibility
+#### 2.9: Converter Pipeline Baseline (MS-7a) ✅ DONE
+- [x] Backend: Implemented `processConvertJob` with FFmpeg spawning
+- [x] Presets: Added `CONVERT_PRESETS` map (Audio MP3 320/192, Video MP4 1080p)
+- [x] UI/UX: Converter tab with file picker, preset selection, and output routing
+- [x] Integration: Convert jobs logged in JSONL and displayed in History
+
+**Milestone**: Media Suite now supports both downloading and local conversion jobs
 
 ---
 

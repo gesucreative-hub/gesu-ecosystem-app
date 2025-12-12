@@ -409,6 +409,18 @@ const CONVERT_PRESETS = {
         extension: 'mp3',
         args: ['-vn', '-acodec', 'libmp3lame', '-b:a', '192k']
     },
+    'audio-wav-48k': {
+        category: 'audio',
+        label: 'Audio WAV – 48 kHz',
+        extension: 'wav',
+        args: ['-vn', '-acodec', 'pcm_s16le', '-ar', '48000', '-ac', '2']
+    },
+    'audio-aac-256': {
+        category: 'audio',
+        label: 'Audio AAC – 256 kbps',
+        extension: 'm4a',
+        args: ['-vn', '-c:a', 'aac', '-b:a', '256k']
+    },
     'video-mp4-1080p': {
         category: 'video',
         label: 'Video MP4 – 1080p',

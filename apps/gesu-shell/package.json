@@ -6,7 +6,8 @@
     "main": "electron/main.js",
     "scripts": {
         "dev": "vite",
-        "dev:electron": "concurrently \"pnpm dev\" \"wait-on http://localhost:5173 && electron .\"",
+        "dev:electron": "concurrently \"pnpm dev\" \"wait-on http://localhost:5173 && pnpm exec electron .\"",
+        "dev:watch": "concurrently \"pnpm dev\" \"wait-on http://localhost:5173 && nodemon --watch electron --ext js,cjs,json --exec .\\scripts\\run-electron.cmd\"",
         "build": "tsc && vite build",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview"
@@ -26,6 +27,7 @@
         "eslint": "^8.55.0",
         "eslint-plugin-react-hooks": "^4.6.0",
         "eslint-plugin-react-refresh": "^0.4.5",
+        "nodemon": "^3.0.0",
         "postcss": "^8.4.32",
         "tailwindcss": "^3.4.0",
         "typescript": "^5.9.3",

@@ -829,8 +829,9 @@ ipcMain.handle('dialog:pick-folder', async () => {
 
 - [x] `gesu.config.json` centralized at workspace root (Using `Gesu.GlobalSettings.json` with legacy support)
 - [x] GesuSettings React UI built
-- [x] Config read/write IPC handlers working
-- [ ] File picker dialogs functional
+- [x] Config read/write IPC handlers working (atomic write)
+- [x] Auto-restart Electron main/preload in dev (dev:desktop:watch)
+- [ ] File picker dialogs functional (Settings UI browse)
 - [ ] Refactor Media Suite to read tool paths from Settings
 - [ ] Manual test: Edit config, restart app, verify changes persist
 
@@ -1403,3 +1404,19 @@ This migration plan provides a **safe, incremental path** from PowerShell + WPF 
 **First working app**: **3 weeks** (GesuLauncher + GesuRefocus)
 
 **Next Step**: Begin Phase 0 (Repository Setup) 🚀
+
+---
+
+## Developer Notes
+
+### Electron Auto-Restart Workflow
+To speed up development when working on backend files (`electron/main.js`, `preload.cjs`, `settings-store.js`), use the auto-restart watcher:
+
+- **Run Command**: `pnpm dev:desktop:watch`
+- **Behavior**:
+  - Automatically restarts the Electron process when backend files change.
+  - Keeps the React dev server running (UI uses standard HMR).
+  - Uses `scripts/run-electron.cmd` to safely launch in Windows.
+- **Troubleshooting**:
+  - **Port 5173**: Vite is now configured to strict port 5173. If it fails to start, check if another process is using the port and terminate it.
+  - **Dependencies**: Ensure you run `pnpm install` if you haven't recently.

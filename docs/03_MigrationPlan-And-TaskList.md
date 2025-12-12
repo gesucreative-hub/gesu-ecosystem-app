@@ -615,7 +615,13 @@ useEffect(() => {
 - [x] UI: Expanded video preset options (HQ, Standard, Lite)
 - [x] Validation: Confirmed successful MP4 encoding for all resolutions
 
-**Milestone**: Media Suite now supports both downloading and local conversion jobs
+#### 2.12: MS-7d: Advanced Converter Mode ✅ DONE
+- [x] UI: Added "Simple" vs "Advanced" mode toggle
+- [x] Features: Custom resolution, CRF quality, and audio profile selection
+- [x] Backend: Implemented `video-advanced` preset with dynamic FFmpeg args logic
+- [x] Logging: Extended job logger to capture `advancedOptions` payload
+
+**Milestone**: Media Suite now supports both downloading and local conversion jobs (Simple & Advanced)
 
 ---
 

@@ -107,7 +107,13 @@ export function MediaSuitePage() {
 
     // Converter Form State
     const [convertFilePath, setConvertFilePath] = useState('');
-    const [convertPreset, setConvertPreset] = useState<ConvertPreset>('audio-mp3-320');
+    const [convertPreset, setConvertPreset] = useState<ConvertPreset>('video-mp4-1080p');
+    const [convertMode, setConvertMode] = useState<'simple' | 'advanced'>('simple');
+
+    // Advanced Options State
+    const [advRes, setAdvRes] = useState<AdvancedVideoResolution>('1080p');
+    const [advQuality, setAdvQuality] = useState<AdvancedVideoQuality>('medium');
+    const [advAudio, setAdvAudio] = useState<AdvancedAudioProfile>('aac-192');
 
     // Job Actions via IPC
     const refreshJobs = async () => {
@@ -209,14 +215,26 @@ export function MediaSuitePage() {
         // Simplify ID for UI
         const simpleName = convertFilePath.split(/[/\\]/).pop();
 
-        const payload = {
+        let payload: any = {
             kind: 'convert',
             inputPath: convertFilePath,
-            preset: convertPreset,
             target: outputTarget
         };
 
-        enqueueJob('convert', `Conv: ${simpleName}`, 'ffmpeg', payload);
+        if (convertMode === 'simple') {
+            payload.preset = convertPreset;
+            enqueueJob('convert', `Conv: ${simpleName}`, 'ffmpeg', payload);
+        } else {
+            payload.preset = 'video-advanced';
+            payload.advancedOptions = {
+                resolution: advRes,
+                quality: advQuality,
+                audio: advAudio
+            };
+            const desc = `Adv: ${advRes} · ${advQuality} · ${advAudio}`;
+            enqueueJob('convert', `${simpleName} (${desc})`, 'ffmpeg', payload);
+        }
+
         setConvertFilePath('');
         showToast('Convert job queued', 'success');
     };
@@ -394,21 +412,79 @@ export function MediaSuitePage() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Preset</label>
-                                        <select
-                                            value={convertPreset}
-                                            onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
-                                            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
+                                    {/* Mode Toggle */}
+                                    <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 w-fit mb-4 h-11 items-center">
+                                        <button
+                                            onClick={() => setConvertMode('simple')}
+                                            className={`h-9 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center ${convertMode === 'simple' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
                                         >
-                                            <optgroup label="Audio">
-                                                {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                            </optgroup>
-                                            <optgroup label="Video">
-                                                {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                            </optgroup>
-                                        </select>
+                                            Simple
+                                        </button>
+                                        <button
+                                            onClick={() => setConvertMode('advanced')}
+                                            className={`h-9 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center ${convertMode === 'advanced' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
+                                        >
+                                            Advanced
+                                        </button>
                                     </div>
+
+                                    {convertMode === 'simple' ? (
+                                        <div className="flex flex-col gap-2">
+                                            <label className="text-sm font-medium text-gray-400">Preset</label>
+                                            <select
+                                                value={convertPreset}
+                                                onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
+                                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
+                                            >
+                                                <optgroup label="Audio">
+                                                    {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                                </optgroup>
+                                                <optgroup label="Video">
+                                                    {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/50">
+                                            <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
+                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Resolution</label>
+                                                <select
+                                                    value={advRes}
+                                                    onChange={(e) => setAdvRes(e.target.value as AdvancedVideoResolution)}
+                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
+                                                >
+                                                    <option value="source">Source (No Resize)</option>
+                                                    <option value="1080p">1080p</option>
+                                                    <option value="720p">720p</option>
+                                                    <option value="540p">540p</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Quality</label>
+                                                <select
+                                                    value={advQuality}
+                                                    onChange={(e) => setAdvQuality(e.target.value as AdvancedVideoQuality)}
+                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
+                                                >
+                                                    <option value="high">High (CRF 18)</option>
+                                                    <option value="medium">Medium (CRF 20)</option>
+                                                    <option value="lite">Lite (CRF 23)</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Audio</label>
+                                                <select
+                                                    value={advAudio}
+                                                    onChange={(e) => setAdvAudio(e.target.value as AdvancedAudioProfile)}
+                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
+                                                >
+                                                    <option value="copy">Copy (Passthrough)</option>
+                                                    <option value="aac-192">AAC 192k</option>
+                                                    <option value="aac-128">AAC 128k</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="flex flex-col gap-2">
                                         <label className="text-sm font-medium text-gray-300">Save to</label>
                                         <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">

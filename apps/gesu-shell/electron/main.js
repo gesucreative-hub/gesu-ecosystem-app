@@ -438,6 +438,12 @@ const CONVERT_PRESETS = {
         label: 'Video MP4 – 540p (Lite)',
         extension: 'mp4',
         args: ['-vf', 'scale=-2:540', '-c:v', 'libx264', '-preset', 'faster', '-crf', '23', '-c:a', 'aac', '-b:a', '128k']
+    },
+    'video-advanced': {
+        category: 'video',
+        label: 'Video (Advanced)',
+        extension: 'mp4',
+        dynamic: true
     }
 };
 
@@ -504,10 +510,44 @@ async function processConvertJob(jobId, payload) {
     }
 
     // 3. Build FFmpeg args
+    let convertArgs = [];
+
+    if (preset === 'video-advanced') {
+        const opts = payload.advancedOptions || {};
+        console.log('[convert job] Building advanced args for:', opts);
+
+        // Resolution
+        if (opts.resolution && opts.resolution !== 'source') {
+            const h = opts.resolution.replace('p', '');
+            convertArgs.push('-vf', `scale=-2:${h}`);
+        }
+
+        // Quality (CRF)
+        let crf = '20'; // medium default
+        if (opts.quality === 'high') crf = '18';
+        if (opts.quality === 'lite') crf = '23';
+        convertArgs.push('-c:v', 'libx264', '-preset', 'medium', '-crf', crf);
+
+        // Audio
+        if (opts.audio === 'copy') {
+            convertArgs.push('-c:a', 'copy');
+        } else if (opts.audio === 'aac-128') {
+            convertArgs.push('-c:a', 'aac', '-b:a', '128k');
+        } else if (opts.audio === 'aac-192') {
+            convertArgs.push('-c:a', 'aac', '-b:a', '192k');
+        } else {
+            // default to aac 128 if undefined
+            convertArgs.push('-c:a', 'aac', '-b:a', '128k');
+        }
+
+    } else {
+        convertArgs = presetCfg.args || [];
+    }
+
     const args = [
         '-y',               // Overwrite output
         '-i', inputPath,    // Input
-        ...presetCfg.args,  // Preset specific args
+        ...convertArgs,     // Preset/Dynamic args
         outputPath          // Output
     ];
 
@@ -520,7 +560,8 @@ async function processConvertJob(jobId, payload) {
         sourcePath: inputPath,
         preset, target,
         status: 'spawned',
-        args
+        args,
+        advancedOptions: payload.advancedOptions
     });
 
     const child = spawn(ffmpegPath, args, { shell: false, windowsHide: true });

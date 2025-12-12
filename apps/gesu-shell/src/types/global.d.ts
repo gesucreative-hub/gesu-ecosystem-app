@@ -36,7 +36,18 @@ declare global {
         | 'audio-aac-256'
         | 'video-mp4-1080p'
         | 'video-mp4-720p'
-        | 'video-mp4-540p-lite';
+        | 'video-mp4-540p-lite'
+        | 'video-advanced';
+
+    type AdvancedVideoResolution = 'source' | '1080p' | '720p' | '540p';
+    type AdvancedVideoQuality = 'high' | 'medium' | 'lite';
+    type AdvancedAudioProfile = 'copy' | 'aac-128' | 'aac-192';
+
+    interface MediaAdvancedVideoOptions {
+        resolution: AdvancedVideoResolution;
+        quality: AdvancedVideoQuality;
+        audio: AdvancedAudioProfile;
+    }
 
     interface MediaSuiteJob {
         id: string;

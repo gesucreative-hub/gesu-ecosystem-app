@@ -132,6 +132,8 @@ export function MediaSuitePage() {
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
     const [jobs, setJobs] = useState<Job[]>([]);
     const [historyJobs, setHistoryJobs] = useState<MediaSuiteJob[]>([]);
+    const [queueFilter, setQueueFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
+    const [historyFilter, setHistoryFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
 
     // Downloader Form State
     const [url, setUrl] = useState('');
@@ -300,7 +302,23 @@ export function MediaSuitePage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20 relative">
+        <div className="h-screen w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-2 pr-6 pl-6 relative overflow-hidden">
+            <style>{`
+                .scroll-on-hover::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+                .scroll-on-hover::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .scroll-on-hover::-webkit-scrollbar-thumb {
+                    background: rgba(107, 114, 128, 0.3);
+                    border-radius: 3px;
+                }
+                .scroll-on-hover:hover::-webkit-scrollbar-thumb {
+                    background: rgba(107, 114, 128, 0.6);
+                }
+            `}</style>
 
             {/* Toast Notification */}
             {toast && (
@@ -312,47 +330,47 @@ export function MediaSuitePage() {
             )}
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-2">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 shrink-0">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Gesu Media Suite</h1>
                     <p className="text-gray-400 text-sm mt-1">Universal media downloader & format converter.</p>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="bg-gray-800 p-1 rounded-lg flex gap-1 border border-gray-700">
+                    <div className="bg-gray-800 p-1 rounded-lg grid grid-cols-3 gap-1 border border-gray-700 w-full md:w-auto min-w-[320px]">
                         <button
                             onClick={() => setActiveTab('downloader')}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'downloader' ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'downloader' ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             Downloader
                         </button>
                         <button
                             onClick={() => setActiveTab('converter')}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'converter' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'converter' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             Converter
                         </button>
                         <button
                             onClick={() => { setActiveTab('history'); refreshHistory(); }}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'history' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             History
                         </button>
                     </div>
 
-                    <Link to="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors">
+                    <Link to="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors shrink-0">
                         ← Back
                     </Link>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] gap-6 max-w-7xl w-full mx-auto flex-1 min-h-0 px-6">
 
                 {/* --- LEFT COLUMN: INPUT FORMS --- */}
-                <div className="flex-1 flex flex-col gap-6">
+                <div className="flex flex-col gap-6 w-full min-w-0">
 
                     {/* Downloader Form */}
                     {activeTab === 'downloader' && (
@@ -562,86 +580,127 @@ export function MediaSuitePage() {
 
                     {/* History View */}
                     {activeTab === 'history' && (
-                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                            <div className="flex justify-between items-center mb-6">
+                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex flex-col w-full max-h-[calc(100vh-180px)] min-h-[500px]">
+                            <div className="flex justify-between items-center mb-4 shrink-0">
                                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                                     <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
                                     Recent Jobs
                                 </h2>
-                                <button onClick={refreshHistory} className="text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
+                                <div className="flex gap-2 items-center">
+                                    <select
+                                        value={historyFilter}
+                                        onChange={(e) => setHistoryFilter(e.target.value as any)}
+                                        className="bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-gray-100 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="download">Download</option>
+                                        <option value="convert">Convert</option>
+                                        <option value="advanced">Advanced</option>
+                                    </select>
+                                    <button onClick={refreshHistory} className="text-xs text-cyan-400 hover:text-cyan-300 ml-2">Refresh</button>
+                                </div>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="flex-1 overflow-y-auto scroll-on-hover pr-1 min-h-0">
                                 <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
-                                            <th className="p-3">Time</th>
-                                            <th className="p-3">Type</th>
-                                            <th className="p-3">Status</th>
-                                            <th className="p-3">Preset</th>
-                                            <th className="p-3">Network</th>
-                                            <th className="p-3">Target</th>
-                                            <th className="p-3">Details</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-800">
-                                        {historyJobs.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={7} className="p-8 text-center text-gray-500">
-                                                    No history log found.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            historyJobs.map((job, idx) => (
-                                                <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-gray-800/30 transition-colors">
-                                                    <td className="p-3 text-sm text-gray-300 whitespace-nowrap">
-                                                        {new Date(job.timestamp).toLocaleString()}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {/* TYPE badge: DL / CV / ADV */}
-                                                        {(() => {
-                                                            const preset = job.preset || '';
-                                                            if (preset === 'video-advanced') {
-                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-800">ADV</span>;
-                                                            } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
-                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-purple-900/30 text-purple-400 border-purple-800">CV</span>;
-                                                            } else {
-                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-cyan-900/30 text-cyan-400 border-cyan-800">DL</span>;
-                                                            }
-                                                        })()}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${job.status === 'success' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' :
-                                                            job.status === 'failed' ? 'bg-red-900/30 text-red-400 border-red-800' :
-                                                                'bg-blue-900/30 text-blue-400 border-blue-800'
-                                                            }`}>
-                                                            {job.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3 text-sm text-gray-300">
-                                                        {PRESET_DISPLAY_NAMES[job.preset] || job.preset}
-                                                    </td>
-                                                    <td className="p-3 text-sm text-gray-300">
-                                                        {job.network ? (
-                                                            NETWORK_LABELS[job.network as NetworkProfile] || job.network
-                                                        ) : (
-                                                            <span className="text-gray-600">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3 text-sm text-gray-300">
-                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
-                                                            {job.target === 'workflow' ? 'WF DB' : 'Shell'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url || job.details}>
-                                                        {/* Untuk advanced, backend sudah mengisi job.details.
-                                                           Untuk job lain, pakai errorMessage atau url. */}
-                                                        {job.details || job.errorMessage || job.url}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
+                                    {/* Table content continues... */}
+                                    {(() => {
+                                        const isConvertLikeFilter = historyFilter === 'convert' || historyFilter === 'advanced';
+                                        const colSpan = isConvertLikeFilter ? 5 : 7;
+                                        return (
+                                            <>
+                                                <thead>
+                                                    <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
+                                                        <th className="p-3">Time</th>
+                                                        <th className="p-3">Type</th>
+                                                        <th className="p-3">Status</th>
+                                                        <th className="p-3">Preset</th>
+                                                        {!isConvertLikeFilter && <th className="p-3">Network</th>}
+                                                        <th className="p-3">Target</th>
+                                                        {!isConvertLikeFilter && <th className="p-3">Details</th>}
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-800">
+                                                    {historyJobs.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan={colSpan} className="p-8 text-center text-gray-500">
+                                                                No history log found.
+                                                            </td>
+                                                        </tr>
+                                                    ) : (
+                                                        historyJobs
+                                                            .filter(job => {
+                                                                if (historyFilter === 'all') return true;
+                                                                const preset = job.preset || '';
+                                                                if (historyFilter === 'advanced') {
+                                                                    return preset === 'video-advanced';
+                                                                }
+                                                                if (historyFilter === 'convert') {
+                                                                    return preset.startsWith('audio-') || (preset.startsWith('video-') && preset !== 'video-advanced');
+                                                                }
+                                                                if (historyFilter === 'download') {
+                                                                    if (!preset) return true;
+                                                                    return !(preset.startsWith('audio-') || preset.startsWith('video-'));
+                                                                }
+                                                                return true;
+                                                            })
+                                                            .map((job, idx) => (
+                                                                <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-gray-800/30 transition-colors">
+                                                                    <td className="p-3 text-sm text-gray-300 whitespace-nowrap">
+                                                                        {new Date(job.timestamp).toLocaleString()}
+                                                                    </td>
+                                                                    <td className="p-3">
+                                                                        {/* TYPE badge: DL / CV / ADV */}
+                                                                        {(() => {
+                                                                            const preset = job.preset || '';
+                                                                            if (preset === 'video-advanced') {
+                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-800">ADV</span>;
+                                                                            } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
+                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-purple-900/30 text-purple-400 border-purple-800">CV</span>;
+                                                                            } else {
+                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-cyan-900/30 text-cyan-400 border-cyan-800">DL</span>;
+                                                                            }
+                                                                        })()}
+                                                                    </td>
+                                                                    <td className="p-3">
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${job.status === 'success' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' :
+                                                                            job.status === 'failed' ? 'bg-red-900/30 text-red-400 border-red-800' :
+                                                                                'bg-blue-900/30 text-blue-400 border-blue-800'
+                                                                            }`}>
+                                                                            {job.status}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="p-3 text-sm text-gray-300">
+                                                                        {getPresetDisplayName(job.preset)}
+                                                                    </td>
+                                                                    {!isConvertLikeFilter && (
+                                                                        <td className="p-3 text-sm text-gray-300">
+                                                                            {job.network ? (
+                                                                                NETWORK_LABELS[job.network as NetworkProfile] || job.network
+                                                                            ) : (
+                                                                                <span className="text-gray-600">-</span>
+                                                                            )}
+                                                                        </td>
+                                                                    )}
+                                                                    <td className="p-3 text-sm text-gray-300">
+                                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                                                                            {job.target === 'workflow' ? 'WF DB' : 'Shell'}
+                                                                        </span>
+                                                                    </td>
+                                                                    {!isConvertLikeFilter && (
+                                                                        <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url || job.details}>
+                                                                            {/* Untuk advanced, backend sudah mengisi job.details.
+                                                               Untuk job lain, pakai errorMessage atau url. */}
+                                                                            {job.details || job.errorMessage || job.url}
+                                                                        </td>
+                                                                    )}
+                                                                </tr>
+                                                            ))
+                                                    )}
+                                                </tbody>
+                                            </>
+                                        );
+                                    })()}
                                 </table>
                             </div>
                         </div>
@@ -650,18 +709,33 @@ export function MediaSuitePage() {
                 </div>
 
                 {/* --- RIGHT COLUMN: JOB QUEUE --- */}
-                <div className="lg:w-[28rem] xl:w-[32rem] bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit min-h-[500px] flex flex-col">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                            Job Queue · <span className="text-gray-400 font-normal">All Jobs</span>
-                        </h2>
-                        <div className="flex items-center gap-3">
-                            {/* Future filter chips can go here */}
-                            <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700">
-                                {jobs.length} jobs
-                            </span>
-                            <button onClick={refreshJobs} className="text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
+                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex flex-col shrink-0 max-h-[calc(100vh-180px)] w-full min-w-[320px]">
+                    <div className="flex flex-col gap-3 mb-4 shrink-0">
+                        {/* Row 1: Title + Controls */}
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                                Job Queue
+                            </h2>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700 whitespace-nowrap">
+                                    {jobs.length} jobs
+                                </span>
+                                <button onClick={refreshJobs} className="text-xs text-cyan-400 hover:text-cyan-300 ml-1">Refresh</button>
+                            </div>
+                        </div>
+                        {/* Row 2: Filter */}
+                        <div className="flex justify-end">
+                            <select
+                                value={queueFilter}
+                                onChange={(e) => setQueueFilter(e.target.value as any)}
+                                className="bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-gray-100 focus:outline-none focus:ring-1 focus:ring-cyan-500 w-full md:w-auto"
+                            >
+                                <option value="all">Filters: All</option>
+                                <option value="download">Filters: Download</option>
+                                <option value="convert">Filters: Convert</option>
+                                <option value="advanced">Filters: Advanced</option>
+                            </select>
                         </div>
                     </div>
 
@@ -672,75 +746,87 @@ export function MediaSuitePage() {
                             <p className="text-sm mt-1">Start a download or conversion to see it here.</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-3 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
-                            {jobs.map(job => (
-                                <div key={job.id} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 hover:border-gray-600 transition-colors group">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${job.type === 'download' ? 'bg-cyan-900/30 text-cyan-400 border-cyan-800' : 'bg-purple-900/30 text-purple-400 border-purple-800'
-                                                }`}>
-                                                {job.type.slice(0, 4)}
-                                            </span>
-                                            <span className="text-xs text-gray-500 font-mono">#{job.id}</span>
-                                        </div>
-                                        <StatusBadge status={job.status} progress={job.progress} />
-                                    </div>
-
-                                    <div className="font-medium text-sm text-gray-200 mb-1 line-clamp-1" title={job.label}>
-                                        {job.label}
-                                    </div>
-
-                                    <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="flex items-center gap-1">
-                                                ⚙️ {job.engine}
-                                            </span>
-                                            {job.type === 'download' && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-gray-400 font-semibold mb-0.5">
-                                                        Download · {(job.payload as any).preset}
-                                                    </span>
-                                                    <span className="text-gray-600 text-[10px]">
-                                                        {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {job.type === 'convert' && (
-                                                <div className="flex flex-col">
-                                                    {(job.payload as any).preset === 'video-advanced' ? (
-                                                        <span className="text-gray-400 font-semibold mb-0.5">
-                                                            Advanced · {formatAdvancedOptionsSummaryFromPayload(job.payload)}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-400 font-semibold mb-0.5">
-                                                            Preset · {getPresetDisplayName((job.payload as any).preset as string)}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-gray-600 text-[10px] break-all">
-                                                        {(job.payload as any).outputPath
-                                                            ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
-                                                            : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).target || 'mp4'}`
-                                                        }
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {job.errorMessage && (
-                                                <span className="text-red-400 font-mono text-[10px]">
-                                                    Error: {job.errorMessage}
+                        <div className="flex flex-col gap-3 overflow-y-auto scroll-on-hover pr-2 flex-1 min-h-0">
+                            {jobs
+                                .filter(job => {
+                                    if (queueFilter === 'all') return true;
+                                    if (queueFilter === 'download') return job.type === 'download';
+                                    if (queueFilter === 'convert') {
+                                        return job.type === 'convert' && (job.payload as any).preset !== 'video-advanced';
+                                    }
+                                    if (queueFilter === 'advanced') {
+                                        return job.type === 'convert' && (job.payload as any).preset === 'video-advanced';
+                                    }
+                                    return true;
+                                })
+                                .map(job => (
+                                    <div key={job.id} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 hover:border-gray-600 transition-colors group">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${job.type === 'download' ? 'bg-cyan-900/30 text-cyan-400 border-cyan-800' : 'bg-purple-900/30 text-purple-400 border-purple-800'
+                                                    }`}>
+                                                    {job.type.slice(0, 4)}
                                                 </span>
-                                            )}
+                                                <span className="text-xs text-gray-500 font-mono">#{job.id}</span>
+                                            </div>
+                                            <StatusBadge status={job.status} progress={job.progress} />
                                         </div>
-                                        <span>
-                                            {new Date(job.createdAt).toLocaleTimeString()}
-                                        </span>
-                                    </div>
 
-                                    {/* Actions Row (Read Only for now) */}
-                                    <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-700/50">
-                                        <div className="text-xs text-gray-500 italic">Processing managed by backend...</div>
+                                        <div className="font-medium text-sm text-gray-200 mb-1 line-clamp-1" title={job.label}>
+                                            {job.label}
+                                        </div>
+
+                                        <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="flex items-center gap-1">
+                                                    ⚙️ {job.engine}
+                                                </span>
+                                                {job.type === 'download' && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-gray-400 font-semibold mb-0.5">
+                                                            Download · {(job.payload as any).preset}
+                                                        </span>
+                                                        <span className="text-gray-600 text-[10px]">
+                                                            {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {job.type === 'convert' && (
+                                                    <div className="flex flex-col">
+                                                        {(job.payload as any).preset === 'video-advanced' ? (
+                                                            <span className="text-gray-400 font-semibold mb-0.5">
+                                                                Advanced · {formatAdvancedOptionsSummaryFromPayload(job.payload)}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400 font-semibold mb-0.5">
+                                                                Preset · {getPresetDisplayName((job.payload as any).preset as string)}
+                                                            </span>
+                                                        )}
+                                                        <span className="text-gray-600 text-[10px] break-all">
+                                                            {(job.payload as any).outputPath
+                                                                ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
+                                                                : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).target || 'mp4'}`
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {job.errorMessage && (
+                                                    <span className="text-red-400 font-mono text-[10px]">
+                                                        Error: {job.errorMessage}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span>
+                                                {new Date(job.createdAt).toLocaleTimeString()}
+                                            </span>
+                                        </div>
+
+                                        {/* Actions Row (Read Only for now) */}
+                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-700/50">
+                                            <div className="text-xs text-gray-500 italic">Processing managed by backend...</div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     )}
                 </div>

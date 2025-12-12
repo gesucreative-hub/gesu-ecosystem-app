@@ -12,6 +12,20 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
     fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
 
+function getDownloadOutputDir(target) {
+    if (target === 'workflow') {
+        // TODO: Read from Gesu.GlobalSettings.json later
+        // Minimal hardcoded path for MVP as requested
+        const wfDir = 'D:\\03. Resources\\_Gesu\'s\\WorkFlowDatabase\\_Apps\\GesuMediaSuite\\Downloads';
+        if (!fs.existsSync(wfDir)) {
+            try { fs.mkdirSync(wfDir, { recursive: true }); } catch (e) { console.error('Failed to create WF dir:', e); }
+        }
+        return wfDir;
+    }
+    // Default: Gesu Shell downloads folder
+    return DOWNLOADS_DIR;
+}
+
 const YTDLP_BIN = 'yt-dlp'; // Assumes PATH access
 
 function buildPresetArgs(preset, downloadsDir) {
@@ -195,13 +209,14 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
 
     // Dispatch processing
     if (type === 'download') {
-        const { url, preset, network } = payload.payload || {};
+        const { url, preset, network, target } = payload.payload || {};
         // Log "queued" state immediately for downloads
         appendJobLog({
             id: newJob.id,
             url: url || 'unknown',
             preset: preset || 'unknown',
             network: network || 'unknown',
+            target: target || 'shell',
             status: 'queued'
         });
 
@@ -229,15 +244,18 @@ function processDownloadJob(jobId, payload) {
     const url = payload.url;
     const preset = payload.preset || 'video-best';
     const network = payload.network || 'normal';
+    const target = payload.target || 'shell';
 
     console.log('[download job]', {
         id: job.id,
         url: job.payload.url,
         preset: job.payload.preset,
         network: job.payload.network,
+        target: target,
     });
 
-    const presetArgs = buildPresetArgs(preset, DOWNLOADS_DIR);
+    const outputDir = getDownloadOutputDir(target);
+    const presetArgs = buildPresetArgs(preset, outputDir);
     const networkArgs = buildNetworkArgs(network);
 
     const args = [
@@ -254,6 +272,7 @@ function processDownloadJob(jobId, payload) {
         url,
         preset,
         network,
+        target,
         status: 'spawned',
         args
     });
@@ -285,6 +304,7 @@ function processDownloadJob(jobId, payload) {
                 url,
                 preset,
                 network,
+                target,
                 status: 'success'
             });
         } else {
@@ -299,6 +319,7 @@ function processDownloadJob(jobId, payload) {
                 url,
                 preset,
                 network,
+                target,
                 status: 'failed',
                 errorMessage: finishedJob.errorMessage
             });
@@ -319,6 +340,7 @@ function processDownloadJob(jobId, payload) {
             url,
             preset,
             network,
+            target,
             status: 'failed',
             errorMessage: errorJob.errorMessage
         });

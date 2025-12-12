@@ -584,7 +584,12 @@ useEffect(() => {
 - [x] Selected network profile wired to yt-dlp arguments (e.g. gaspol -> --limit-rate 5M)
 - [x] Console logging added: "[download job]" showing payload and args
 
-**Milestone**: React ↔ PowerShell communication working safely and Job System refined
+#### 2.6: Media Suite Job History (Recent Jobs) ✅ DONE
+- [x] Backend: `mediaSuite:getRecentJobs` IPC handler reads from `apps/gesu-shell/logs/media-suite-jobs.log`
+- [x] Frontend: "History" tab added to MediaSuitePage showing recent jobs table
+- [x] Features: Auto-refresh on enqueue, manual refresh, status badges, details view
+
+**Milestone**: Job system now has persistence logging and UI visibility
 
 ---
 

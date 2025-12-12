@@ -12,6 +12,7 @@ type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
 
 type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
 type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
+type MediaOutputTarget = 'shell' | 'workflow';
 
 interface Job {
     id: string;
@@ -86,6 +87,7 @@ export function MediaSuitePage() {
     const [url, setUrl] = useState('');
     const [dlPreset, setDlPreset] = useState<DownloadPreset>('music-mp3');
     const [netProfile, setNetProfile] = useState<NetworkProfile>('normal');
+    const [outputTarget, setOutputTarget] = useState<MediaOutputTarget>('shell');
 
     // Converter Form State
     // Converter Form State
@@ -165,7 +167,7 @@ export function MediaSuitePage() {
             alert("Please enter a valid URL");
             return;
         }
-        const payload = { url, preset: dlPreset, network: netProfile };
+        const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget };
         enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
         setUrl('');
     };
@@ -270,6 +272,23 @@ export function MediaSuitePage() {
                                         </select>
                                     </div>
                                 </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-300">Save to</label>
+                                    <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
+                                        <button
+                                            onClick={() => setOutputTarget('shell')}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-cyan-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                        >
+                                            Gesu Shell
+                                        </button>
+                                        <button
+                                            onClick={() => setOutputTarget('workflow')}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                        >
+                                            WorkFlow DB
+                                        </button>
+                                    </div>
+                                </div>
                                 <button
                                     onClick={handleQueueDownload}
                                     disabled={!url}
@@ -354,6 +373,7 @@ export function MediaSuitePage() {
                                             <th className="p-3">Status</th>
                                             <th className="p-3">Preset</th>
                                             <th className="p-3">Network</th>
+                                            <th className="p-3">Target</th>
                                             <th className="p-3">Details</th>
                                         </tr>
                                     </thead>
@@ -380,6 +400,11 @@ export function MediaSuitePage() {
                                                     </td>
                                                     <td className="p-3 text-sm text-gray-300">{job.preset}</td>
                                                     <td className="p-3 text-sm text-gray-300">{job.network}</td>
+                                                    <td className="p-3 text-sm text-gray-300">
+                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                                                            {job.target === 'workflow' ? 'WF DB' : 'Shell'}
+                                                        </span>
+                                                    </td>
                                                     <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url}>
                                                         {job.errorMessage || job.url}
                                                     </td>

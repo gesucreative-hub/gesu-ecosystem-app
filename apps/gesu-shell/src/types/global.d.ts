@@ -27,11 +27,14 @@ declare global {
         errorMessage?: string;
     }
 
+    type MediaOutputTarget = 'shell' | 'workflow';
+
     interface MediaSuiteJob {
         id: string;
         url: string;
         preset: string;
         network: string;
+        target?: MediaOutputTarget;
         status: 'queued' | 'spawned' | 'success' | 'failed';
         timestamp: string;
         args?: string[];

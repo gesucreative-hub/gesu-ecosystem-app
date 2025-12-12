@@ -8,8 +8,8 @@ contextBridge.exposeInMainWorld('gesu', {
         list: () => ipcRenderer.invoke('jobs:list'),
     },
     settings: {
-        load: () => ipcRenderer.invoke('gesu:settings:load'),
-        save: (settings) => ipcRenderer.invoke('gesu:settings:save', settings),
+        read: () => ipcRenderer.invoke('gesu:settings:read'),
+        write: (settings) => ipcRenderer.invoke('gesu:settings:write', settings),
     },
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),

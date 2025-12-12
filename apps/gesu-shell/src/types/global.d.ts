@@ -97,8 +97,8 @@ declare global {
             checkTools?: (payload: GesuToolsCheckPayload) => Promise<any>;
             jobs?: GesuJobsAPI;
             settings?: {
-                load: () => Promise<GesuSettings>;
-                save: (settings: Partial<GesuSettings>) => Promise<GesuSettings>;
+                read: () => Promise<GesuSettings>;
+                write: (settings: Partial<GesuSettings>) => Promise<GesuSettings>;
             };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;

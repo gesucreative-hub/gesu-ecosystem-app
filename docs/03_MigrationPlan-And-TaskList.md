@@ -827,11 +827,12 @@ ipcMain.handle('dialog:pick-folder', async () => {
 
 ### Phase 4 Completion Checklist
 
-- [x] `gesu.config.json` centralized at workspace root
+- [x] `gesu.config.json` centralized at workspace root (Using `Gesu.GlobalSettings.json` with legacy support)
 - [x] GesuSettings React UI built
 - [x] Config read/write IPC handlers working
-- [x] File picker dialogs functional
-- [x] Manual test: Edit config, restart app, verify changes persist
+- [ ] File picker dialogs functional
+- [ ] Refactor Media Suite to read tool paths from Settings
+- [ ] Manual test: Edit config, restart app, verify changes persist
 
 **Milestone**: GesuSettings migrated, centralized config working
 

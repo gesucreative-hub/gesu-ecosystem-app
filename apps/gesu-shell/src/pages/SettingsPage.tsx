@@ -158,7 +158,7 @@ export function SettingsPage() {
         didLoadRef.current = true;
 
         if (window.gesu?.settings) {
-            window.gesu.settings.load().then(loaded => {
+            window.gesu.settings.read().then(loaded => {
                 if (loaded) {
                     console.log('Loaded settings from bridge:', loaded);
 
@@ -313,7 +313,7 @@ export function SettingsPage() {
 
         if (window.gesu?.settings) {
             try {
-                await window.gesu.settings.save(payload);
+                await window.gesu.settings.write(payload);
                 console.log("Settings Saved to Disk:", payload);
                 alert("Settings saved successfully to disk!");
                 setIsDirty(false);

@@ -86,20 +86,10 @@ async function loadGlobalSettings() {
 
 async function saveGlobalSettings(partial) {
     try {
-        // 1. Load current state (to merge, ensuring we don't wipe unknown keys)
+        // 1. Load current state (to merge safely)
         const current = await loadGlobalSettings();
 
         // 2. Shallow merge
-        // Note: For deep nesting (like 'paths' or 'engines'), the partial update from frontend 
-        // usually sends the whole sub-object. Use caution if frontend sends partial sub-objects.
-        // For Wave 1, we assume the frontend sends complete sub-sections or we merge carefully.
-
-        // To be safer for legacy keys, we do a shallow merge at top level.
-        // If 'partial' contains 'paths', it replaces 'current.paths'.
-        // Ideally, we should do a deep merge or let the frontend handle the merging state 
-        // and send the full desired object.
-        // For this specific requirement, 'saveGlobalSettings' in request description says:
-        // "Create next = { ...current, ...partial }"
         const next = { ...current, ...partial };
 
         // 3. Ensure dir exists
@@ -108,9 +98,14 @@ async function saveGlobalSettings(partial) {
             await fs.promises.mkdir(dir, { recursive: true });
         }
 
-        // 4. Write
-        await fs.promises.writeFile(SETTINGS_FILE_PATH, JSON.stringify(next, null, 2) + '\n', 'utf-8');
-        console.log('[Settings] Saved to:', SETTINGS_FILE_PATH);
+        // 4. Atomic Write (Write to temp -> Rename)
+        const tempPath = `${SETTINGS_FILE_PATH}.tmp`;
+        const jsonContent = JSON.stringify(next, null, 2) + '\n';
+
+        await fs.promises.writeFile(tempPath, jsonContent, 'utf-8');
+        await fs.promises.rename(tempPath, SETTINGS_FILE_PATH);
+
+        console.log('[Settings] Saved via atomic write to:', SETTINGS_FILE_PATH);
 
         return next;
     } catch (err) {
@@ -124,13 +119,13 @@ async function saveGlobalSettings(partial) {
 export function registerSettingsHandlers() {
     console.log('[Settings] Registering handlers. Target:', SETTINGS_FILE_PATH);
 
-    // Get current settings
-    ipcMain.handle('gesu:settings:load', async () => {
+    // Read settings
+    ipcMain.handle('gesu:settings:read', async () => {
         return await loadGlobalSettings();
     });
 
-    // Save settings (partial update)
-    ipcMain.handle('gesu:settings:save', async (event, partial) => {
+    // Write settings (partial update)
+    ipcMain.handle('gesu:settings:write', async (event, partial) => {
         return await saveGlobalSettings(partial || {});
     });
 }

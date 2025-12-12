@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
+import { appendJobLog, getRecentJobs } from './job-logger.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -194,6 +195,16 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
 
     // Dispatch processing
     if (type === 'download') {
+        const { url, preset, network } = payload.payload || {};
+        // Log "queued" state immediately for downloads
+        appendJobLog({
+            id: newJob.id,
+            url: url || 'unknown',
+            preset: preset || 'unknown',
+            network: network || 'unknown',
+            status: 'queued'
+        });
+
         processDownloadJob(newJob.id, payload.payload);
     } else if (type === 'convert') {
         processConvertJob(newJob.id, payload.payload);
@@ -202,6 +213,10 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
     }
 
     return newJob;
+});
+
+ipcMain.handle('mediaSuite:getRecentJobs', async () => {
+    return getRecentJobs();
 });
 
 function processDownloadJob(jobId, payload) {
@@ -215,6 +230,13 @@ function processDownloadJob(jobId, payload) {
     const preset = payload.preset || 'video-best';
     const network = payload.network || 'normal';
 
+    console.log('[download job]', {
+        id: job.id,
+        url: job.payload.url,
+        preset: job.payload.preset,
+        network: job.payload.network,
+    });
+
     const presetArgs = buildPresetArgs(preset, DOWNLOADS_DIR);
     const networkArgs = buildNetworkArgs(network);
 
@@ -225,6 +247,16 @@ function processDownloadJob(jobId, payload) {
     ];
 
     console.log(`[Job:${jobId}] Spawning yt-dlp with args:`, args);
+
+    // LOG: Spawned
+    appendJobLog({
+        id: job.id,
+        url,
+        preset,
+        network,
+        status: 'spawned',
+        args
+    });
 
     const child = spawn(YTDLP_BIN, args, { shell: false, windowsHide: true });
 
@@ -246,11 +278,30 @@ function processDownloadJob(jobId, payload) {
         if (code === 0) {
             finishedJob.status = 'success';
             finishedJob.errorMessage = undefined;
+
+            // LOG: Success
+            appendJobLog({
+                id: finishedJob.id,
+                url,
+                preset,
+                network,
+                status: 'success'
+            });
         } else {
             finishedJob.status = 'error';
             // simple short error
             const shortError = stderr.split('\n').slice(0, 3).join(' ').trim();
             finishedJob.errorMessage = `yt-dlp exited with code ${code}. ${shortError}`;
+
+            // LOG: Failed (Non-zero exit)
+            appendJobLog({
+                id: finishedJob.id,
+                url,
+                preset,
+                network,
+                status: 'failed',
+                errorMessage: finishedJob.errorMessage
+            });
         }
     });
 
@@ -261,6 +312,16 @@ function processDownloadJob(jobId, payload) {
         errorJob.status = 'error';
         errorJob.errorMessage = `Failed to start yt-dlp: ${err.message}`;
         errorJob.updatedAt = new Date().toISOString();
+
+        // LOG: Failed (Spawn error)
+        appendJobLog({
+            id: errorJob.id,
+            url,
+            preset,
+            network,
+            status: 'failed',
+            errorMessage: errorJob.errorMessage
+        });
     });
 }
 

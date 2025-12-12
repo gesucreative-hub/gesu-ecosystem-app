@@ -35,3 +35,7 @@ coverage/
 
 # Reference files
 _backup-reference/
+
+# Gesu Shell
+apps/gesu-shell/downloads/
+apps/gesu-shell/logs/

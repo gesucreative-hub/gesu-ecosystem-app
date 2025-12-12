@@ -579,7 +579,12 @@ useEffect(() => {
 - [x] Launcher fetches real project data from PowerShell
 - [x] Security: Input validation added to IPC handlers
 
-**Milestone**: React ↔ PowerShell communication working safely
+#### 2.5: Refining Download Jobs (Media Suite) ✅ DONE
+- [x] Download job object includes: id, url, preset, and network
+- [x] Selected network profile wired to yt-dlp arguments (e.g. gaspol -> --limit-rate 5M)
+- [x] Console logging added: "[download job]" showing payload and args
+
+**Milestone**: React ↔ PowerShell communication working safely and Job System refined
 
 ---
 

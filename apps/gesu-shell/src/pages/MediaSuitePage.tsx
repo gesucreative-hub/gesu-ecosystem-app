@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom';
 
 // --- Types & Interfaces ---
 
-type Tab = 'downloader' | 'converter';
+type Tab = 'downloader' | 'converter' | 'history';
 
 type JobType = 'download' | 'convert';
 type JobStatus = 'queued' | 'running' | 'success' | 'error' | 'canceled';
 type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
+
+type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
+type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
 
 interface Job {
     id: string;
@@ -25,13 +28,13 @@ interface Job {
 
 // --- Constants ---
 
-const DOWNLOAD_PRESETS = [
+const DOWNLOAD_PRESETS: { value: DownloadPreset; label: string }[] = [
     { value: 'music-mp3', label: 'Music MP3' },
     { value: 'video-1080p', label: 'Video 1080p' },
     { value: 'video-best', label: 'Best Video' }
 ];
 
-const NETWORK_PROFILES = [
+const NETWORK_PROFILES: { value: NetworkProfile; label: string }[] = [
     { value: 'hemat', label: 'Hemat (Low Bandwidth)' },
     { value: 'normal', label: 'Normal' },
     { value: 'gaspol', label: 'Gaspol (Max Speed)' }
@@ -76,12 +79,13 @@ export function MediaSuitePage() {
     // State
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
     const [jobs, setJobs] = useState<Job[]>([]);
+    const [historyJobs, setHistoryJobs] = useState<MediaSuiteJob[]>([]);
 
     // Downloader Form State
     // Downloader Form State
     const [url, setUrl] = useState('');
-    const [dlPreset, setDlPreset] = useState(DOWNLOAD_PRESETS[0].value);
-    const [netProfile, setNetProfile] = useState(NETWORK_PROFILES[1].value);
+    const [dlPreset, setDlPreset] = useState<DownloadPreset>('music-mp3');
+    const [netProfile, setNetProfile] = useState<NetworkProfile>('normal');
 
     // Converter Form State
     // Converter Form State
@@ -113,6 +117,16 @@ export function MediaSuitePage() {
         }
     };
 
+    const refreshHistory = async () => {
+        if (!window.gesu?.mediaSuite) return;
+        try {
+            const history = await window.gesu.mediaSuite.getRecentJobs();
+            setHistoryJobs(history);
+        } catch (err) {
+            console.error('Failed to fetch history:', err);
+        }
+    };
+
     const enqueueJob = async (type: JobType, label: string, engine: JobEngine, payload: Record<string, unknown>) => {
         if (!window.gesu?.jobs) {
             // Fallback for browser-only dev (mock)
@@ -135,7 +149,9 @@ export function MediaSuitePage() {
                 label,
                 payload: { ...payload, engine }
             });
+
             refreshJobs(); // Refresh list immediately
+            refreshHistory(); // Refresh history too
             alert('Job sent to backend!');
         } catch (err) {
             console.error(err);
@@ -149,7 +165,7 @@ export function MediaSuitePage() {
             alert("Please enter a valid URL");
             return;
         }
-        const payload = { url, preset: dlPreset, networkProfile: netProfile };
+        const payload = { url, preset: dlPreset, network: netProfile };
         enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
         setUrl('');
     };
@@ -194,6 +210,13 @@ export function MediaSuitePage() {
                         >
                             Converter
                         </button>
+                        <button
+                            onClick={() => { setActiveTab('history'); refreshHistory(); }}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+                                }`}
+                        >
+                            History
+                        </button>
                     </div>
 
                     <Link to="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors">
@@ -230,7 +253,7 @@ export function MediaSuitePage() {
                                         <label className="text-sm font-medium text-gray-300">Preset</label>
                                         <select
                                             value={dlPreset}
-                                            onChange={(e) => setDlPreset(e.target.value)}
+                                            onChange={(e) => setDlPreset(e.target.value as DownloadPreset)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
                                         >
                                             {DOWNLOAD_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
@@ -240,7 +263,7 @@ export function MediaSuitePage() {
                                         <label className="text-sm font-medium text-gray-300">Network</label>
                                         <select
                                             value={netProfile}
-                                            onChange={(e) => setNetProfile(e.target.value)}
+                                            onChange={(e) => setNetProfile(e.target.value as NetworkProfile)}
                                             className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
                                         >
                                             {NETWORK_PROFILES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
@@ -312,6 +335,63 @@ export function MediaSuitePage() {
                         </div>
                     )}
 
+                    {/* History View */}
+                    {activeTab === 'history' && (
+                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                                    Recent Jobs
+                                </h2>
+                                <button onClick={refreshHistory} className="text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
+                                            <th className="p-3">Time</th>
+                                            <th className="p-3">Status</th>
+                                            <th className="p-3">Preset</th>
+                                            <th className="p-3">Network</th>
+                                            <th className="p-3">Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-800">
+                                        {historyJobs.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="p-8 text-center text-gray-500">
+                                                    No history log found.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            historyJobs.map((job, idx) => (
+                                                <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-gray-800/30 transition-colors">
+                                                    <td className="p-3 text-sm text-gray-300 whitespace-nowrap">
+                                                        {new Date(job.timestamp).toLocaleString()}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${job.status === 'success' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' :
+                                                            job.status === 'failed' ? 'bg-red-900/30 text-red-400 border-red-800' :
+                                                                'bg-blue-900/30 text-blue-400 border-blue-800'
+                                                            }`}>
+                                                            {job.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3 text-sm text-gray-300">{job.preset}</td>
+                                                    <td className="p-3 text-sm text-gray-300">{job.network}</td>
+                                                    <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url}>
+                                                        {job.errorMessage || job.url}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
 
                 {/* --- RIGHT COLUMN: JOB QUEUE --- */}
@@ -359,7 +439,7 @@ export function MediaSuitePage() {
                                             </span>
                                             {job.type === 'download' && (
                                                 <span className="text-gray-600">
-                                                    {(job.payload as any).preset} • {(job.payload as any).networkProfile}
+                                                    {(job.payload as any).preset} • {(job.payload as any).network}
                                                 </span>
                                             )}
                                             {job.type === 'convert' && (

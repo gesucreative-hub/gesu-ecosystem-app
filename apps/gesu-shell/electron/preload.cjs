@@ -11,4 +11,7 @@ contextBridge.exposeInMainWorld('gesu', {
         load: () => ipcRenderer.invoke('gesu:settings:load'),
         save: (settings) => ipcRenderer.invoke('gesu:settings:save', settings),
     },
+    mediaSuite: {
+        getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
+    },
 });

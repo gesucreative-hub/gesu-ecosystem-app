@@ -27,6 +27,17 @@ declare global {
         errorMessage?: string;
     }
 
+    interface MediaSuiteJob {
+        id: string;
+        url: string;
+        preset: string;
+        network: string;
+        status: 'queued' | 'spawned' | 'success' | 'failed';
+        timestamp: string;
+        args?: string[];
+        errorMessage?: string;
+    }
+
     interface GesuJobsAPI {
         enqueue: (payload: GesuJobEnqueuePayload) => Promise<GesuJob>;
         list: () => Promise<GesuJob[]>;
@@ -40,6 +51,9 @@ declare global {
             settings?: {
                 load: () => Promise<GesuSettings | null>;
                 save: (settings: GesuSettings) => Promise<void>;
+            };
+            mediaSuite?: {
+                getRecentJobs: () => Promise<MediaSuiteJob[]>;
             };
         };
     }

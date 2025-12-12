@@ -831,7 +831,7 @@ ipcMain.handle('dialog:pick-folder', async () => {
 - [x] GesuSettings React UI built
 - [x] Config read/write IPC handlers working (atomic write)
 - [x] Auto-restart Electron main/preload in dev (dev:desktop:watch)
-- [ ] File picker dialogs functional (Settings UI browse)
+- [x] File picker dialogs functional (Settings UI browse)
 - [ ] Refactor Media Suite to read tool paths from Settings
 - [ ] Manual test: Edit config, restart app, verify changes persist
 

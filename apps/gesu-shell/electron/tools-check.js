@@ -23,34 +23,61 @@ async function isExecutable(path) {
  * 1. If manualPath is provided, checks if it's executable.
  * 2. If not, runs `where <defaultCommand>` to find it in PATH.
  */
-async function resolveToolPath(manualPath, defaultCommand) {
-    if (manualPath && (await isExecutable(manualPath))) {
-        return { path: manualPath, source: 'manual' };
+export async function resolveToolPath(manualPath, defaultCommand) {
+    let configuredExists = false;
+
+    // 1. Check Configured Path
+    if (manualPath && manualPath.trim() !== '') {
+        configuredExists = await isExecutable(manualPath);
+        if (configuredExists) {
+            return {
+                path: manualPath,
+                source: 'configured',
+                configuredPath: manualPath,
+                configuredExists: true
+            };
+        }
     }
 
+    // 2. Fallback to System PATH
     try {
+        // 'where' on Windows returns all matches; take first
         const { stdout } = await execAsync(`where ${defaultCommand}`);
         const firstLine = stdout.split('\r\n')[0].trim();
         if (firstLine) {
-            return { path: firstLine, source: 'system' };
+            return {
+                path: firstLine,
+                source: 'path',
+                configuredPath: manualPath || null,
+                configuredExists: false
+            };
         }
     } catch (error) {
-        // Ignore error, tool not found
+        // Ignore error (tool not found in path)
     }
 
-    return { path: null, source: null };
+    // 3. Missing
+    return {
+        path: null,
+        source: 'missing',
+        configuredPath: manualPath || null,
+        configuredExists: false
+    };
 }
 
 /**
  * Runs a version check for a specific tool.
  */
 async function checkTool(name, manualPath, defaultCommand, versionArgs = ['--version']) {
-    const { path: resolvedPath } = await resolveToolPath(manualPath, defaultCommand);
+    const resolution = await resolveToolPath(manualPath, defaultCommand);
+    const { path: resolvedPath, source } = resolution;
 
     const result = {
         name,
         status: 'unknown',
+        resolution: source, // 'configured' | 'path' | 'missing'
         resolvedPath,
+        configuredPath: resolution.configuredPath,
         version: null,
         lastCheckedAt: new Date().toISOString(),
         errorMessage: undefined,

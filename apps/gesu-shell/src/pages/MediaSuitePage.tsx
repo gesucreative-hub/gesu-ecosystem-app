@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 
@@ -127,6 +127,47 @@ function formatAdvancedOptionsSummaryFromPayload(payload: any): string {
     return `${r} · ${q} · ${a}`;
 }
 
+// --- Status Widget ---
+// Status can be: 'configured' (Green), 'path' (Yellow), 'missing' (Red)
+// Mapped from backend resolution: 'configured' | 'path' | 'missing'
+
+const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
+    const status = data?.resolution || 'unknown';
+    // Exact mapping requested by user
+    const colors: Record<string, string> = {
+        configured: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]', // OK: Configured & Valid
+        path: 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]',      // OK: Fallback to System
+        missing: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',       // Error: Not found anywhere
+        unknown: 'bg-gray-600',
+        error: 'bg-red-500' // General error fallback
+    };
+
+    // Map backend 'installed' to 'path' if legacy, but ideally backend sends explicit source
+    // Since we updated backend to return 'configured' | 'path' | 'missing', we use that directly.
+    const displayColor = colors[status] || colors.unknown;
+
+    return (
+        <div className="flex items-center gap-1.5 cursor-help group relative">
+            <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${displayColor}`}></div>
+            <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{name}</span>
+            {/* Detailed Tooltip */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded min-w-[200px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 text-[10px] text-gray-300">
+                <div className="font-semibold text-gray-100 mb-1 border-b border-gray-700 pb-1">{name} Status: <span className="uppercase">{status}</span></div>
+                <div className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
+                    <span className="text-gray-500">Config:</span>
+                    <span className="font-mono text-gray-400 break-all">{data?.configuredPath || '(none)'}</span>
+
+                    <span className="text-gray-500">Using:</span>
+                    <span className="font-mono text-emerald-400 break-all">{data?.resolvedPath || '(none)'}</span>
+
+                    <span className="text-gray-500">Source:</span>
+                    <span className="text-gray-400">{data?.resolution === 'configured' ? 'Settings' : data?.resolution === 'path' ? 'System PATH' : 'Missing'}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export function MediaSuitePage() {
     // State
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
@@ -134,6 +175,32 @@ export function MediaSuitePage() {
     const [historyJobs, setHistoryJobs] = useState<MediaSuiteJob[]>([]);
     const [queueFilter, setQueueFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
     const [historyFilter, setHistoryFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
+
+    const [toolsStatus, setToolsStatus] = useState<any>(null);
+
+    const checkTools = () => {
+        if (window.gesu?.checkTools) {
+            window.gesu.checkTools({}).then(res => {
+                setToolsStatus({
+                    ytDlp: res.ytDlp,
+                    ffmpeg: res.ffmpeg,
+                    magick: res.imageMagick,
+                    office: res.libreOffice
+                });
+            }).catch(console.error);
+        }
+    };
+
+    // Initial Load & Focus Refetch
+    useEffect(() => {
+        refreshJobs();
+        refreshHistory();
+        checkTools();
+
+        const onFocus = () => checkTools();
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, []);
 
     // Downloader Form State
     const [url, setUrl] = useState('');
@@ -363,6 +430,31 @@ export function MediaSuitePage() {
 
                     <Link to="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors shrink-0">
                         ← Back
+                    </Link>
+                </div>
+            </div>
+
+            {/* Sub-header / Tools Status Bar */}
+            <div className="flex justify-end px-6 -mt-4 mb-2">
+                <div className="flex bg-gray-900/40 border border-gray-800 rounded-full pl-4 pr-2 py-1 gap-4 items-center backdrop-blur-sm">
+                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mr-1">Engine Status</span>
+
+                    <ToolStatusDot name="yt-dlp" data={toolsStatus?.ytDlp} />
+                    <ToolStatusDot name="ffmpeg" data={toolsStatus?.ffmpeg} />
+                    <ToolStatusDot name="Magick" data={toolsStatus?.magick} />
+
+                    <div className="h-3 w-px bg-gray-700 mx-1"></div>
+
+                    <button
+                        onClick={checkTools}
+                        className="text-[10px] text-gray-400 hover:text-white transition-colors"
+                        title="Refresh Status"
+                    >
+                        🔄
+                    </button>
+
+                    <Link to="/settings" className="px-2 py-0.5 rounded-full bg-gray-800 text-[10px] text-cyan-500 hover:text-cyan-300 hover:bg-gray-700 transition-colors">
+                        Configure
                     </Link>
                 </div>
             </div>

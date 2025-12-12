@@ -1,12 +1,12 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
-import { runGlobalToolsCheck } from './tools-check.js';
+import { runGlobalToolsCheck, resolveToolPath } from './tools-check.js';
 import path from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
-import { registerSettingsHandlers } from './settings-store.js';
+import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -27,60 +27,13 @@ function getDownloadOutputDir(target) {
     return DOWNLOADS_DIR;
 }
 
-const YTDLP_BIN = 'yt-dlp'; // Assumes PATH access
+// --- Tool Resolution Helpers ---
 
-function buildPresetArgs(preset, downloadsDir) {
-    const outputTemplate = path.join(downloadsDir, '%(title)s.%(ext)s');
-
-    switch (preset) {
-        case 'music-mp3':
-            return [
-                '-x',
-                '--audio-format', 'mp3',
-                '-o', outputTemplate,
-            ];
-        case 'video-1080p':
-            return [
-                '-f', 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
-                '--merge-output-format', 'mp4',
-                '-o', outputTemplate,
-            ];
-        case 'video-best':
-        default:
-            return [
-                '-f', 'bestvideo+bestaudio/best',
-                '--merge-output-format', 'mp4',
-                '-o', outputTemplate,
-            ];
-    }
-}
-
-function buildNetworkArgs(network) {
-    switch (network) {
-        case 'hemat':
-            return ['--limit-rate', '250K'];
-        case 'gaspol':
-            return ['--limit-rate', '5M'];
-        case 'normal':
-        default:
-            return [];
-    }
-}
-
-function resolveFfmpegExecutable(settings) {
-    const configured = settings?.engines?.ffmpegPath;
-
-    // If configured looks like a path and exists, use as-is
-    if (configured && configured.trim() !== '' && fs.existsSync(configured)) {
-        console.log('[Electron] Using configured FFmpeg:', configured);
-        return configured;
-    }
-
-    // Otherwise, fall back to 'ffmpeg' (from PATH)
-    if (configured) {
-        console.warn('[Electron] Configured FFmpeg path invalid or not found, falling back to PATH:', configured);
-    }
-    return 'ffmpeg';
+async function resolveExecutable(settings, engineId, defaultBin) {
+    const configuredPath = settings?.engines?.[`${engineId}Path`];
+    // resolveToolPath handles validation of configuredPath and fallback to defaultBin
+    const { path } = await resolveToolPath(configuredPath, defaultBin);
+    return path;
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -138,7 +91,15 @@ ipcMain.handle('ping', async (event, payload) => {
 });
 
 ipcMain.handle('tools:check', async (event, payload) => {
-    const input = payload || {};
+    // Merge provided payload with saved settings
+    const settings = await loadGlobalSettings();
+    const input = {
+        ytDlpPath: payload?.ytDlpPath || settings.engines?.ytDlpPath,
+        ffmpegPath: payload?.ffmpegPath || settings.engines?.ffmpegPath,
+        imageMagickPath: payload?.imageMagickPath || settings.engines?.imageMagickPath,
+        libreOfficePath: payload?.libreOfficePath || settings.engines?.libreOfficePath
+    };
+
     const result = await runGlobalToolsCheck(input);
     return result;
 });
@@ -250,7 +211,24 @@ ipcMain.handle('gesu:dialog:pickFile', async (event, { defaultPath, filters }) =
     return filePaths[0];
 });
 
-function processDownloadJob(jobId, payload) {
+// Re-add helpers removed during replacement block optimization
+function buildPresetArgs(preset, downloadsDir) {
+    const outputTemplate = path.join(downloadsDir, '%(title)s.%(ext)s');
+    switch (preset) {
+        case 'music-mp3': return ['-x', '--audio-format', 'mp3', '-o', outputTemplate];
+        case 'video-1080p': return ['-f', 'bestvideo[height<=1080]+bestaudio/best[height<=1080]', '--merge-output-format', 'mp4', '-o', outputTemplate];
+        default: return ['-f', 'bestvideo+bestaudio/best', '--merge-output-format', 'mp4', '-o', outputTemplate];
+    }
+}
+function buildNetworkArgs(network) {
+    switch (network) {
+        case 'hemat': return ['--limit-rate', '250K'];
+        case 'gaspol': return ['--limit-rate', '5M'];
+        default: return [];
+    }
+}
+
+async function processDownloadJob(jobId, payload) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
@@ -293,7 +271,21 @@ function processDownloadJob(jobId, payload) {
         args
     });
 
-    const child = spawn(YTDLP_BIN, args, { shell: false, windowsHide: true });
+
+
+    // Resolve Tool
+    const settings = await loadGlobalSettings();
+    const ytdlpPath = await resolveExecutable(settings, 'ytDlp', 'yt-dlp');
+
+    if (!ytdlpPath) {
+        const errMsg = 'yt-dlp not found in PATH or config';
+        job.status = 'failed';
+        job.errorMessage = errMsg;
+        appendJobLog({ id: job.id, url, preset, network, target, status: 'failed', errorMessage: errMsg });
+        return;
+    }
+
+    const child = spawn(ytdlpPath, args, { shell: false, windowsHide: true });
 
     let stderr = '';
 
@@ -488,8 +480,10 @@ async function processConvertJob(jobId, payload) {
         preset
     });
 
-    const settings = await loadSettingsFromDisk();
-    const ffmpegPath = resolveFfmpegExecutable(settings);
+
+
+    const settings = await loadGlobalSettings();
+    const ffmpegPath = await resolveExecutable(settings, 'ffmpeg', 'ffmpeg');
 
     if (!ffmpegPath) {
         const errMsg = 'FFmpeg not found in PATH or config';

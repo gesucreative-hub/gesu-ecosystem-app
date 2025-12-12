@@ -21,7 +21,7 @@ interface SettingsState {
 
 // Engine Manager
 type EngineId = 'ytDlp' | 'ffmpeg' | 'imageMagick' | 'libreOffice';
-type EngineStatus = 'unknown' | 'ok' | 'missing' | 'error';
+type EngineStatus = 'unknown' | 'ok' | 'fallback' | 'missing' | 'error';
 type InstallMethod = 'manual' | 'winget' | 'choco' | 'scoop';
 
 interface EngineConfig {
@@ -120,22 +120,24 @@ const StatusBadge = ({ status, version }: { status: EngineStatus; version?: stri
     const styles = {
         unknown: 'bg-gray-700 text-gray-300 border-gray-600',
         ok: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
+        fallback: 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30',
         missing: 'bg-red-900/50 text-red-300 border-red-500/30',
         error: 'bg-amber-900/50 text-amber-300 border-amber-500/30'
     };
 
     const labels = {
         unknown: 'Unknown',
-        ok: 'Ready',
+        ok: 'Ready (Configured)',
+        fallback: 'Ready (PATH)',
         missing: 'Missing',
         error: 'Error'
     };
 
     return (
         <div className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-2 w-fit ${styles[status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'unknown' ? 'bg-gray-400' : 'bg-red-400'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'fallback' ? 'bg-yellow-400' : status === 'missing' ? 'bg-red-400' : 'bg-gray-400'}`}></span>
             <span>{labels[status]}</span>
-            {version && status === 'ok' && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
+            {version && (status === 'ok' || status === 'fallback') && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
         </div>
     );
 };
@@ -228,20 +230,9 @@ export function SettingsPage() {
         setIsDirty(true);
     };
 
-    const detectEngine = (id: EngineId) => {
-        setEngines(prev => prev.map(e => {
-            if (e.id === id) {
-                return {
-                    ...e,
-                    path: e.path || e.defaultPath, // Use default if empty
-                    status: 'ok',
-                    version: 'auto-detected (mock)',
-                    lastCheckedAt: new Date().toISOString()
-                };
-            }
-            return e;
-        }));
-        setIsDirty(true);
+    const detectEngine = async (id: EngineId) => {
+        // Just run a global check, it's fast enough and updates everything
+        await checkAllTools();
     };
 
     const handleBrowseFolder = async (section: keyof SettingsState, key: string) => {
@@ -302,20 +293,30 @@ export function SettingsPage() {
                 if (!res) return e;
 
                 let status: EngineStatus = 'unknown';
-                if (res.status === 'installed') status = 'ok';
+
+                // Use resolution source to determine status
+                if (res.resolution === 'configured') status = 'ok';
+                else if (res.resolution === 'path') status = 'fallback';
+                else if (res.resolution === 'missing') status = 'missing';
+
+                // Fallback for logic safety
                 if (res.status === 'not_found') status = 'missing';
                 if (res.status === 'error') status = 'error';
 
                 return {
                     ...e,
                     status,
-                    path: res.resolvedPath || e.path, // Enable auto-fix if found in path
+                    // If we found it in PATH (fallback), we might want to suggest that path in UI or just keep user input?
+                    // User requirement: "show actual resolved/used tool".
+                    // If fallback, resolvedPath is the system path. We shouldn't overwrite the user's input field (e.path) 
+                    // unless they explicitly asked to "Detect" or "Set".
+                    // Keeping e.path as user input. We can show resolved path in tooltip or separate label if needed.
                     version: res.version || undefined,
                     lastCheckedAt: res.lastCheckedAt
                 };
             }));
 
-            alert("Global tools check complete. Statuses updated.");
+            // Note: Removed alert to valid annoyance
         } catch (err) {
             console.error(err);
             alert("Error running tools check.");
@@ -345,6 +346,8 @@ export function SettingsPage() {
                 console.log("Settings Saved to Disk:", payload);
                 alert("Settings saved successfully to disk!");
                 setIsDirty(false);
+                // Auto-refresh tools
+                checkAllTools();
             } catch (err) {
                 console.error(err);
                 alert("Failed to save settings to key file.");
@@ -507,8 +510,9 @@ export function SettingsPage() {
                                     <button
                                         onClick={() => detectEngine(engine.id)}
                                         className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                        title="Check this tool (runs global check)"
                                     >
-                                        Detect (Mock)
+                                        Check
                                     </button>
                                 </div>
 

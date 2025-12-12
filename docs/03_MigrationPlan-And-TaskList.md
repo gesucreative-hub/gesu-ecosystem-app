@@ -832,7 +832,9 @@ ipcMain.handle('dialog:pick-folder', async () => {
 - [x] Config read/write IPC handlers working (atomic write)
 - [x] Auto-restart Electron main/preload in dev (dev:desktop:watch)
 - [x] File picker dialogs functional (Settings UI browse)
-- [ ] Refactor Media Suite to read tool paths from Settings
+- [x] Refactor Media Suite to read tool paths from Settings
+- [x] Tool status sync: configured vs PATH fallback, refresh in Settings + Media Suite
+- [ ] Manual test: Edit config, restart app, verify changes persist
 - [ ] Manual test: Edit config, restart app, verify changes persist
 
 **Milestone**: GesuSettings migrated, centralized config working
@@ -1416,7 +1418,15 @@ To speed up development when working on backend files (`electron/main.js`, `prel
 - **Behavior**:
   - Automatically restarts the Electron process when backend files change.
   - Keeps the React dev server running (UI uses standard HMR).
-  - Uses `scripts/run-electron.cmd` to safely launch in Windows.
-- **Troubleshooting**:
-  - **Port 5173**: Vite is now configured to strict port 5173. If it fails to start, check if another process is using the port and terminate it.
-  - **Dependencies**: Ensure you run `pnpm install` if you haven't recently.
+- **Runner Script**: `apps/gesu-shell/scripts/run-electron.cmd` is used to launch Electron. It cds into `apps/gesu-shell` first to ensure the app root is correct.
+- **Port 5173**: The `dev:watch` script waits for `localhost:5173` (Vite). `vite.config.ts` enforces `strictPort: true` to prevent port drift.
+- **Dependencies**: `concurrently`, `wait-on`, and `nodemon` are used to coordinate the dev environment.
+
+### Tool Resolution Strategy
+- **Centralized Logic**: `electron/tools-check.js` (exported `resolveToolPath`) and `electron/main.js` (`resolveExecutable`).
+- **Precedence**:
+  1. **Configured Path**: Path in `Gesu.GlobalSettings.json` (if valid/executable).
+  2. **System Path**: Fallback to `where <command>` (Windows) or `which` (Unix) if config is missing/invalid.
+  3. **Failure**: If both fail, the job errors out with "Tool not found".
+- **Usage**: Media Suite jobs (download/convert) now use this strategy. UI shows status based on this same resolution.
+```

@@ -63,7 +63,7 @@ function mergeSettings(loaded) {
     };
 }
 
-async function loadGlobalSettings() {
+export async function loadGlobalSettings() {
     try {
         if (!fs.existsSync(SETTINGS_FILE_PATH)) {
             console.log('[Settings] File not found, returning defaults:', SETTINGS_FILE_PATH);

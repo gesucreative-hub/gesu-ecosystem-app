@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { runGlobalToolsCheck } from './tools-check.js';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -232,6 +232,15 @@ ipcMain.handle('jobs:enqueue', async (event, payload) => {
 
 ipcMain.handle('mediaSuite:getRecentJobs', async () => {
     return getRecentJobs();
+});
+
+ipcMain.handle('mediaSuite:openFolder', async (event, target) => {
+    const dir = getDownloadOutputDir(target || 'shell');
+    if (fs.existsSync(dir)) {
+        await shell.openPath(dir);
+        return { success: true };
+    }
+    return { success: false, error: 'Directory does not exist' };
 });
 
 function processDownloadJob(jobId, payload) {

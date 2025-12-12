@@ -57,6 +57,7 @@ declare global {
             };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
+                openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;
             };
         };
     }

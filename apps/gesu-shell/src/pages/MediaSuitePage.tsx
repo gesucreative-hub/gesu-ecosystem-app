@@ -41,6 +41,12 @@ const NETWORK_PROFILES: { value: NetworkProfile; label: string }[] = [
     { value: 'gaspol', label: 'Gaspol (Max Speed)' }
 ];
 
+const NETWORK_LABELS: Record<NetworkProfile, string> = {
+    'hemat': 'hemat · ~1 MB/s',
+    'normal': 'normal · ~3 MB/s',
+    'gaspol': 'gaspol · ~5 MB/s'
+};
+
 const CONVERT_TARGET_FORMATS = [
     { value: 'mp3', label: 'MP3 Audio' },
     { value: 'wav', label: 'WAV Audio' },
@@ -88,6 +94,14 @@ export function MediaSuitePage() {
     const [dlPreset, setDlPreset] = useState<DownloadPreset>('music-mp3');
     const [netProfile, setNetProfile] = useState<NetworkProfile>('normal');
     const [outputTarget, setOutputTarget] = useState<MediaOutputTarget>('shell');
+
+    // Notification State
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     // Converter Form State
     // Converter Form State
@@ -140,7 +154,7 @@ export function MediaSuitePage() {
                 updatedAt: new Date().toISOString()
             };
             setJobs(prev => [mockJob, ...prev]);
-            alert('Job queued (Mock - No Electron)');
+            showToast('Job queued (Mock - No Electron)', 'success');
             return;
         }
 
@@ -154,17 +168,17 @@ export function MediaSuitePage() {
 
             refreshJobs(); // Refresh list immediately
             refreshHistory(); // Refresh history too
-            alert('Job sent to backend!');
+            showToast('Download job queued', 'success');
         } catch (err) {
             console.error(err);
-            alert('Failed to enqueue job');
+            showToast('Failed to enqueue job', 'error');
         }
     };
 
     // User Actions
     const handleQueueDownload = () => {
         if (!url.trim()) {
-            alert("Please enter a valid URL");
+            showToast("Please enter a valid URL", 'error');
             return;
         }
         const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget };
@@ -186,8 +200,35 @@ export function MediaSuitePage() {
         enqueueJob('convert', `Conv: ${simpleName} -> .${targetFormat}`, engine, payload);
     };
 
+    const handleOpenFolder = async (target: MediaOutputTarget) => {
+        if (!window.gesu?.mediaSuite?.openFolder) {
+            showToast("Folder open not supported in browser mode", 'error');
+            return;
+        }
+        try {
+            const result = await window.gesu.mediaSuite.openFolder(target);
+            if (result.success) {
+                // showToast(`Opened ${target === 'shell' ? 'Shell' : 'WF DB'} folder`, 'success');
+            } else {
+                showToast(`Failed to open folder: ${result.error}`, 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to open folder", 'error');
+        }
+    };
+
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
+        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20 relative">
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 animate-in slide-in-from-right-10 duration-300 ${toast.type === 'success' ? 'bg-emerald-900 border border-emerald-700 text-emerald-100' : 'bg-red-900 border border-red-700 text-red-100'
+                    }`}>
+                    <span className="text-xl">{toast.type === 'success' ? '✅' : '⚠️'}</span>
+                    <span className="font-medium text-sm">{toast.message}</span>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-2">
@@ -287,6 +328,11 @@ export function MediaSuitePage() {
                                         >
                                             WorkFlow DB
                                         </button>
+                                    </div>
+                                    <div className="flex justify-end gap-2 mt-1">
+                                        <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-cyan-500 hover:text-cyan-400 hover:underline">Open Shell Folder</button>
+                                        <span className="text-gray-700">|</span>
+                                        <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:text-pink-400 hover:underline">Open WF DB Folder</button>
                                     </div>
                                 </div>
                                 <button
@@ -399,7 +445,9 @@ export function MediaSuitePage() {
                                                         </span>
                                                     </td>
                                                     <td className="p-3 text-sm text-gray-300">{job.preset}</td>
-                                                    <td className="p-3 text-sm text-gray-300">{job.network}</td>
+                                                    <td className="p-3 text-sm text-gray-300">
+                                                        {NETWORK_LABELS[job.network as NetworkProfile] || job.network}
+                                                    </td>
                                                     <td className="p-3 text-sm text-gray-300">
                                                         <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
                                                             {job.target === 'workflow' ? 'WF DB' : 'Shell'}
@@ -464,7 +512,7 @@ export function MediaSuitePage() {
                                             </span>
                                             {job.type === 'download' && (
                                                 <span className="text-gray-600">
-                                                    {(job.payload as any).preset} • {(job.payload as any).network}
+                                                    {(job.payload as any).preset} • {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
                                                 </span>
                                             )}
                                             {job.type === 'convert' && (

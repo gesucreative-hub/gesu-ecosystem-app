@@ -589,6 +589,11 @@ useEffect(() => {
 - [x] Frontend: "History" tab added to MediaSuitePage showing recent jobs table
 - [x] Features: Auto-refresh on enqueue, manual refresh, status badges, details view
 
+#### 2.7: Media Suite Output Routing (Shell vs WorkFlowDB) ✅ DONE
+- [x] UI: "Save to" option (Gesu Shell / WorkFlow Database)
+- [x] Backend: Output directory selection logic (local `downloads/` vs `WorkFlowDatabase path`)
+- [x] Logging & History: `target` field persisted in logs and displayed in History tab ("Shell" vs "WF DB")
+
 **Milestone**: Job system now has persistence logging and UI visibility
 
 ---

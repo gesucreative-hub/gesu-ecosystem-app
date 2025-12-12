@@ -61,6 +61,7 @@ declare global {
         timestamp: string;
         args?: string[];
         errorMessage?: string;
+        details?: string;
     }
 
     interface GesuJobsAPI {

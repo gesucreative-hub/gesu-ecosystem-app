@@ -84,13 +84,55 @@ const StatusBadge = ({ status, progress }: { status: JobStatus, progress?: numbe
     );
 };
 
+const PRESET_DISPLAY_NAMES: Record<string, string> = {
+    "audio-mp3-320": "Audio MP3 · 320 kbps",
+    "audio-mp3-192": "Audio MP3 · 192 kbps",
+    "audio-wav-48k": "Audio WAV · 48 kHz",
+    "audio-aac-256": "Audio AAC · 256 kbps",
+    "video-mp4-1080p": "Video MP4 · 1080p (HQ)",
+    "video-mp4-720p": "Video MP4 · 720p",
+    "video-mp4-540p-lite": "Video MP4 · 540p (Lite)",
+    "video-advanced": "Video (Advanced)",
+};
+
+function getPresetDisplayName(presetId?: string | null): string {
+    if (!presetId) return "";
+    return PRESET_DISPLAY_NAMES[presetId] ?? presetId;
+}
+
+// Ringkasan advanced options dari payload (untuk kartu Job Queue)
+function formatAdvancedOptionsSummaryFromPayload(payload: any): string {
+    const opts = payload?.advancedOptions || {};
+    const resMap: Record<string, string> = {
+        source: 'Source',
+        '1080p': '1080p',
+        '720p': '720p',
+        '540p': '540p',
+    };
+    const qualityMap: Record<string, string> = {
+        high: 'High',
+        medium: 'Medium',
+        lite: 'Lite',
+    };
+    const audioMap: Record<string, string> = {
+        'copy': 'Copy',
+        'aac-192': 'AAC 192k',
+        'aac-128': 'AAC 128k',
+    };
+
+    const r = resMap[(opts as any).resolution] || (opts as any).resolution || 'Source';
+    const q = qualityMap[(opts as any).quality] || (opts as any).quality || 'Medium';
+    const a = audioMap[(opts as any).audio] || (opts as any).audio || 'Audio';
+
+    return `${r} · ${q} · ${a}`;
+}
+
 export function MediaSuitePage() {
     // State
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
     const [jobs, setJobs] = useState<Job[]>([]);
     const [historyJobs, setHistoryJobs] = useState<MediaSuiteJob[]>([]);
 
-    // Downloader Form State
     // Downloader Form State
     const [url, setUrl] = useState('');
     const [dlPreset, setDlPreset] = useState<DownloadPreset>('music-mp3');
@@ -558,17 +600,25 @@ export function MediaSuitePage() {
                                                             {job.status}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3 text-sm text-gray-300">{job.preset}</td>
                                                     <td className="p-3 text-sm text-gray-300">
-                                                        {NETWORK_LABELS[job.network as NetworkProfile] || job.network}
+                                                        {PRESET_DISPLAY_NAMES[job.preset] || job.preset}
+                                                    </td>
+                                                    <td className="p-3 text-sm text-gray-300">
+                                                        {job.network ? (
+                                                            NETWORK_LABELS[job.network as NetworkProfile] || job.network
+                                                        ) : (
+                                                            <span className="text-gray-600">-</span>
+                                                        )}
                                                     </td>
                                                     <td className="p-3 text-sm text-gray-300">
                                                         <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
                                                             {job.target === 'workflow' ? 'WF DB' : 'Shell'}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url}>
-                                                        {job.errorMessage || job.url}
+                                                    <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url || job.details}>
+                                                        {/* Untuk advanced, backend sudah mengisi job.details.
+                                                           Untuk job lain, pakai errorMessage atau url. */}
+                                                        {job.details || job.errorMessage || job.url}
                                                     </td>
                                                 </tr>
                                             ))
@@ -625,17 +675,33 @@ export function MediaSuitePage() {
                                                 ⚙️ {job.engine}
                                             </span>
                                             {job.type === 'download' && (
-                                                <span className="text-gray-600">
-                                                    {(job.payload as any).preset} • {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-gray-400 font-semibold mb-0.5">
+                                                        Download · {(job.payload as any).preset}
+                                                    </span>
+                                                    <span className="text-gray-600 text-[10px]">
+                                                        {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
+                                                    </span>
+                                                </div>
                                             )}
                                             {job.type === 'convert' && (
-                                                <span className="text-gray-600 block truncate max-w-[200px]" title={(job.payload as any).outputPath}>
-                                                    {(job.payload as any).outputPath
-                                                        ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
-                                                        : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).targetFormat}`
-                                                    }
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    {(job.payload as any).preset === 'video-advanced' ? (
+                                                        <span className="text-gray-400 font-semibold mb-0.5">
+                                                            Advanced · {formatAdvancedOptionsSummaryFromPayload(job.payload)}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400 font-semibold mb-0.5">
+                                                            Preset · {getPresetDisplayName((job.payload as any).preset as string)}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-gray-600 text-[10px] break-all">
+                                                        {(job.payload as any).outputPath
+                                                            ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
+                                                            : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).target || 'mp4'}`
+                                                        }
+                                                    </span>
+                                                </div>
                                             )}
                                             {job.errorMessage && (
                                                 <span className="text-red-400 font-mono text-[10px]">

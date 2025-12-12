@@ -525,6 +525,10 @@ export function MediaSuitePage() {
                                                     <option value="aac-128">AAC 128k</option>
                                                 </select>
                                             </div>
+                                            {/* Summary line */}
+                                            <div className="w-full mt-2 text-xs text-gray-400">
+                                                Summary: <span className="text-gray-300">{advRes} · {advQuality === 'high' ? 'High' : advQuality === 'medium' ? 'Medium' : 'Lite'} · {advAudio === 'copy' ? 'Copy' : advAudio === 'aac-192' ? 'AAC 192k' : 'AAC 128k'}</span>
+                                            </div>
                                         </div>
                                     )}
                                     <div className="flex flex-col gap-2">
@@ -572,6 +576,7 @@ export function MediaSuitePage() {
                                     <thead>
                                         <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
                                             <th className="p-3">Time</th>
+                                            <th className="p-3">Type</th>
                                             <th className="p-3">Status</th>
                                             <th className="p-3">Preset</th>
                                             <th className="p-3">Network</th>
@@ -582,7 +587,7 @@ export function MediaSuitePage() {
                                     <tbody className="divide-y divide-gray-800">
                                         {historyJobs.length === 0 ? (
                                             <tr>
-                                                <td colSpan={5} className="p-8 text-center text-gray-500">
+                                                <td colSpan={7} className="p-8 text-center text-gray-500">
                                                     No history log found.
                                                 </td>
                                             </tr>
@@ -591,6 +596,19 @@ export function MediaSuitePage() {
                                                 <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-gray-800/30 transition-colors">
                                                     <td className="p-3 text-sm text-gray-300 whitespace-nowrap">
                                                         {new Date(job.timestamp).toLocaleString()}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {/* TYPE badge: DL / CV / ADV */}
+                                                        {(() => {
+                                                            const preset = job.preset || '';
+                                                            if (preset === 'video-advanced') {
+                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-800">ADV</span>;
+                                                            } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
+                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-purple-900/30 text-purple-400 border-purple-800">CV</span>;
+                                                            } else {
+                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-cyan-900/30 text-cyan-400 border-cyan-800">DL</span>;
+                                                            }
+                                                        })()}
                                                     </td>
                                                     <td className="p-3">
                                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${job.status === 'success' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' :
@@ -636,12 +654,15 @@ export function MediaSuitePage() {
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                            Job Queue
+                            Job Queue · <span className="text-gray-400 font-normal">All Jobs</span>
                         </h2>
-                        <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700">
-                            {jobs.length} jobs
-                        </span>
-                        <button onClick={refreshJobs} className="ml-2 text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
+                        <div className="flex items-center gap-3">
+                            {/* Future filter chips can go here */}
+                            <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700">
+                                {jobs.length} jobs
+                            </span>
+                            <button onClick={refreshJobs} className="text-xs text-cyan-400 hover:text-cyan-300">Refresh</button>
+                        </div>
                     </div>
 
                     {jobs.length === 0 ? (

@@ -621,7 +621,25 @@ useEffect(() => {
 - [x] Backend: Implemented `video-advanced` preset with dynamic FFmpeg args logic
 - [x] Logging: Extended job logger to capture `advancedOptions` payload
 
-**Milestone**: Media Suite now supports both downloading and local conversion jobs (Simple & Advanced)
+### Media Suite Completion Checklist
+
+- [x] Integrate Media Suite Job System (Download & Convert)
+- [x] MS-7a: Baseline converter pipeline (simple ffmpeg convert job)
+- [x] MS-7b: Audio presets (MP3 320/192, WAV 48k, AAC 256)
+- [x] MS-7c: Video presets (MP4 1080p HQ, 720p, 540p Lite)
+- [x] MS-7d: Advanced converter mode (resolution / quality / audio options)
+- [x] MS-7e: Media Suite UI polish (History + Job Queue)
+    - Human-readable preset labels in History and Job Queue
+    - Type badges in History (DL / CV / ADV)
+    - Advanced options summary in Converter and Job Queue
+    - Layout/spacing tweaks for Media Suite pages
+
+### Media Suite Next Steps / Backlog
+- Optional: Job Queue filters (All / Download / Convert / Advanced)
+- Optional: History pagination or date-based grouping
+- Optional: Quick actions in Job Queue (open folder, re-run job)
+
+**Milestone**: Media Suite fully implemented (Downloader + Converter + Advanced Mode + Polished UI)
 
 ---
 

@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('gesu', {
         read: () => ipcRenderer.invoke('gesu:settings:read'),
         write: (settings) => ipcRenderer.invoke('gesu:settings:write', settings),
     },
+    dialog: {
+        pickFolder: (defaultPath) => ipcRenderer.invoke('gesu:dialog:pickFolder', defaultPath),
+        pickFile: (opts) => ipcRenderer.invoke('gesu:dialog:pickFile', opts),
+    },
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),

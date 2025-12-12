@@ -225,6 +225,28 @@ ipcMain.handle('mediaSuite:pickSourceFile', async () => {
         ]
     });
     if (canceled || filePaths.length === 0) return null;
+    if (canceled || filePaths.length === 0) return null;
+    return filePaths[0];
+});
+
+// --- Generic Dialog Handlers (Settings v2) ---
+
+ipcMain.handle('gesu:dialog:pickFolder', async (event, defaultPath) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        defaultPath,
+        properties: ['openDirectory']
+    });
+    if (canceled || filePaths.length === 0) return null;
+    return filePaths[0];
+});
+
+ipcMain.handle('gesu:dialog:pickFile', async (event, { defaultPath, filters }) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        defaultPath,
+        properties: ['openFile'],
+        filters: filters || [{ name: 'All Files', extensions: ['*'] }]
+    });
+    if (canceled || filePaths.length === 0) return null;
     return filePaths[0];
 });
 

@@ -100,6 +100,10 @@ declare global {
                 read: () => Promise<GesuSettings>;
                 write: (settings: Partial<GesuSettings>) => Promise<GesuSettings>;
             };
+            dialog?: {
+                pickFolder: (defaultPath?: string) => Promise<string | null>;
+                pickFile: (opts: { defaultPath?: string; filters?: Electron.FileFilter[] }) => Promise<string | null>;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;

@@ -244,6 +244,34 @@ export function SettingsPage() {
         setIsDirty(true);
     };
 
+    const handleBrowseFolder = async (section: keyof SettingsState, key: string) => {
+        if (!window.gesu?.dialog?.pickFolder) {
+            alert("Dialog API not available.");
+            return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const currentPath = (settings[section] as any)[key];
+        const result = await window.gesu.dialog.pickFolder(currentPath);
+        if (result) {
+            updateSettings(section, key, result);
+        }
+    };
+
+    const handleBrowseTool = async (id: EngineId) => {
+        if (!window.gesu?.dialog?.pickFile) {
+            alert("Dialog API not available.");
+            return;
+        }
+        const engine = engines.find(e => e.id === id);
+        const result = await window.gesu.dialog.pickFile({
+            defaultPath: engine?.path,
+            filters: [{ name: 'Executables', extensions: ['exe', 'bat', 'cmd'] }, { name: 'All Files', extensions: ['*'] }]
+        });
+        if (result) {
+            updateEnginePath(id, result);
+        }
+    };
+
     const checkAllTools = async () => {
         if (!window.gesu?.checkTools) {
             alert("Desktop bridge not available. Run inside Electron to perform real checks.");
@@ -364,34 +392,58 @@ export function SettingsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-300">Workflow Root</label>
-                            <input
-                                type="text"
-                                value={settings.paths.workflowRoot}
-                                onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={settings.paths.workflowRoot}
+                                    onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
+                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
+                                />
+                                <button
+                                    onClick={() => handleBrowseFolder('paths', 'workflowRoot')}
+                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                >
+                                    Browse
+                                </button>
+                            </div>
                             <p className="text-xs text-gray-500">Root folder for the entire Gesu ecosystem database.</p>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-300">Projects Root</label>
-                            <input
-                                type="text"
-                                value={settings.paths.projectsRoot}
-                                onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={settings.paths.projectsRoot}
+                                    onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
+                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
+                                />
+                                <button
+                                    onClick={() => handleBrowseFolder('paths', 'projectsRoot')}
+                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                >
+                                    Browse
+                                </button>
+                            </div>
                             <p className="text-xs text-gray-500">Directory where new projects will be initialized.</p>
                         </div>
 
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium text-gray-300">Backup Location</label>
-                            <input
-                                type="text"
-                                value={settings.paths.backupRoot}
-                                onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={settings.paths.backupRoot}
+                                    onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
+                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
+                                />
+                                <button
+                                    onClick={() => handleBrowseFolder('paths', 'backupRoot')}
+                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                >
+                                    Browse
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -446,6 +498,12 @@ export function SettingsPage() {
                                         placeholder="Enter absolute path..."
                                         className="flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/30 font-mono text-xs"
                                     />
+                                    <button
+                                        onClick={() => handleBrowseTool(engine.id)}
+                                        className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
+                                    >
+                                        Browse
+                                    </button>
                                     <button
                                         onClick={() => detectEngine(engine.id)}
                                         className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"

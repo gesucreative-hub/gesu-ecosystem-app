@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Button } from './Button';
+import { ArrowRight } from 'lucide-react';
 
 interface LauncherCardProps {
     title: string;
@@ -7,6 +8,7 @@ interface LauncherCardProps {
     buttonText?: string;
     onClick?: () => void;
     primary?: boolean;
+    icon?: ReactNode;
 }
 
 export const LauncherCard: React.FC<LauncherCardProps> = ({
@@ -14,7 +16,8 @@ export const LauncherCard: React.FC<LauncherCardProps> = ({
     description,
     buttonText = "Open",
     onClick,
-    primary = false
+    primary = false,
+    icon
 }) => {
     return (
         <div
@@ -32,7 +35,7 @@ export const LauncherCard: React.FC<LauncherCardProps> = ({
                         onClick={(e) => { e.stopPropagation(); onClick?.(); }}
                         variant={primary ? 'primary' : 'outline'}
                         fullWidth
-                        icon={<span>→</span>}
+                        icon={icon || <ArrowRight size={16} strokeWidth={2.5} />}
                         iconPosition="circle"
                     >
                         {buttonText}

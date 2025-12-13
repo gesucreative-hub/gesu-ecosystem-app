@@ -1,8 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Home, Rocket, Film, Compass, Target, Zap, Settings, Moon, Sun, ChevronRight, ChevronLeft } from 'lucide-react';
+import gesuLogo from '../assets/icons/gcl-logo.ico';
 
 // NavItem Component matching Reference (Pill shape, Left indicator/Rail)
-const NavItem = ({ to, icon, label, isActive, isCollapsed }: { to: string, icon: string, label: string, isActive: boolean, isCollapsed: boolean }) => (
+const NavItem = ({ to, icon, label, isActive, isCollapsed }: { to: string, icon: React.ReactNode, label: string, isActive: boolean, isCollapsed: boolean }) => (
     <Link
         to={to}
         title={isCollapsed ? label : undefined}
@@ -56,11 +58,14 @@ const ThemeToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     return (
         <button
             onClick={toggle}
-            className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between px-3'} py-2 mx-2 mt-auto mb-2 rounded-lg bg-tokens-panel/10 hover:bg-tokens-sidebar-hover border border-tokens-sidebar-border transition-all group`}
+            className={`flex items-center ${isCollapsed
+                ? 'justify-center w-8 h-8 mx-auto'
+                : 'justify-between px-3 py-2 mx-2 border border-tokens-sidebar-border'
+                } mt-auto mb-2 rounded-lg bg-tokens-panel/10 hover:bg-tokens-sidebar-hover transition-all group`}
             title="Toggle Theme"
         >
             <div className="flex items-center gap-2">
-                <span className="text-lg">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                <span className={isCollapsed ? '' : 'text-lg'}>{theme === 'dark' ? <Moon strokeWidth={1.5} size={isCollapsed ? 16 : 18} /> : <Sun strokeWidth={1.5} size={isCollapsed ? 16 : 18} />}</span>
                 {!isCollapsed && <span className="text-xs font-medium text-tokens-sidebar-fg">Mode</span>}
             </div>
             {!isCollapsed && (
@@ -102,8 +107,8 @@ export function Layout() {
             >
                 {/* Logo Area */}
                 <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center' : 'px-6'} border-b border-tokens-sidebar-border relative`}>
-                    <div className="w-8 h-8 rounded-lg bg-tokens-brand-DEFAULT text-tokens-brand-foreground flex items-center justify-center shadow-md shrink-0">
-                        <span className="font-bold font-mono">G</span>
+                    <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                        <img src={gesuLogo} alt="Gesu" className="w-full h-full object-contain" />
                     </div>
                     {!isCollapsed && (
                         <div className="ml-3 animate-in fade-in duration-300">
@@ -118,7 +123,7 @@ export function Layout() {
                         className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-tokens-panel border border-tokens-border rounded-full flex items-center justify-center text-xs text-tokens-sidebar-muted hover:text-tokens-fg hover:bg-tokens-panel2 transition-colors z-30 shadow-sm"
                         title={isCollapsed ? "Expand" : "Collapse"}
                     >
-                        {isCollapsed ? '→' : '←'}
+                        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                     </button>
                 </div>
 
@@ -127,17 +132,17 @@ export function Layout() {
 
                     {/* CORE Group */}
                     {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-1 animate-in fade-in">Core</div>}
-                    <NavItem to="/" icon="🏠" label="Dashboard" isActive={p === '/'} isCollapsed={isCollapsed} />
-                    <NavItem to="/launcher" icon="🚀" label="Launcher" isActive={p === '/launcher'} isCollapsed={isCollapsed} />
+                    <NavItem to="/" icon={<Home strokeWidth={1.5} size={20} />} label="Dashboard" isActive={p === '/'} isCollapsed={isCollapsed} />
+                    <NavItem to="/launcher" icon={<Rocket strokeWidth={1.5} size={20} />} label="Launcher" isActive={p === '/launcher'} isCollapsed={isCollapsed} />
 
                     {/* MODULES Group */}
                     {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">Modules</div>}
                     {isCollapsed && <div className="h-4"></div>}
 
-                    <NavItem to="/media-suite" icon="🎬" label="Media Suite" isActive={p.startsWith('/media-suite')} isCollapsed={isCollapsed} />
-                    <NavItem to="/compass" icon="🧭" label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
-                    <NavItem to="/refocus" icon="🎯" label="Refocus" isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />
-                    <NavItem to="/initiator" icon="⚡" label="Initiator" isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
+                    <NavItem to="/media-suite" icon={<Film strokeWidth={1.5} size={20} />} label="Media Suite" isActive={p.startsWith('/media-suite')} isCollapsed={isCollapsed} />
+                    <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
+                    <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label="Refocus" isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />
+                    <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label="Initiator" isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
                 </nav>
 
                 {/* Bottom Controls */}
@@ -146,7 +151,7 @@ export function Layout() {
                     <ThemeToggle isCollapsed={isCollapsed} />
 
                     <Link to="/settings" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-lg text-tokens-muted hover:text-tokens-fg hover:bg-tokens-sidebar-hover transition-colors`}>
-                        <span className="text-lg">⚙️</span>
+                        <span className="text-lg"><Settings strokeWidth={1.5} size={20} /></span>
                         {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
                     </Link>
 

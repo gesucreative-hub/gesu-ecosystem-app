@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { LauncherCard } from '../components/LauncherCard';
 import { PageContainer } from '../components/PageContainer';
+import { ArrowRight } from 'lucide-react';
 
 export function LauncherPage() {
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ export function LauncherPage() {
                     buttonText="Open Compass"
                     primary={true}
                     onClick={() => navigate('/compass')}
+                    icon={<div className="w-full h-full bg-inherit rounded-full flex items-center justify-center text-inherit"><span className="w-2.5 h-2.5 rounded-full bg-current"></span></div>}
                 />
 
                 <LauncherCard
@@ -33,6 +35,7 @@ export function LauncherPage() {
                     description="Emergency support system. Quick check-ins when you feel overwhelmed or lost."
                     buttonText="Get Support"
                     onClick={() => navigate('/refocus')}
+                    icon={<ArrowRight size={16} strokeWidth={2.5} />}
                 />
 
                 <LauncherCard
@@ -40,6 +43,7 @@ export function LauncherPage() {
                     description="Advanced media downloader and processor. Convert content and manage assets."
                     buttonText="Manage Media"
                     onClick={() => navigate('/media-suite')}
+                    icon={<ArrowRight size={16} strokeWidth={2.5} />}
                 />
 
                 <LauncherCard
@@ -47,6 +51,7 @@ export function LauncherPage() {
                     description="Project scaffolding tool. Create new projects with consistent templates and logs."
                     buttonText="New Project"
                     onClick={() => navigate('/initiator')}
+                    icon={<ArrowRight size={16} strokeWidth={2.5} />}
                 />
 
                 <LauncherCard
@@ -54,6 +59,7 @@ export function LauncherPage() {
                     description="Global configuration manager. Customize paths, themes, and integrations."
                     buttonText="Configure"
                     onClick={() => navigate('/settings')}
+                    icon={<ArrowRight size={16} strokeWidth={2.5} />}
                 />
 
             </div>

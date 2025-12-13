@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
+import { Save, Search, Loader2 } from 'lucide-react';
 
 
 // --- Types & Interfaces ---
@@ -493,7 +494,7 @@ export function SettingsPage() {
                         onClick={checkAllTools}
                         disabled={isCheckingTools}
                         className="mt-6"
-                        icon={isCheckingTools ? "⏳" : "🔍"}
+                        icon={isCheckingTools ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
                         iconPosition="circle"
                     >
                         {isCheckingTools ? 'Checking System...' : 'Run Global Tools Check'}
@@ -587,7 +588,7 @@ export function SettingsPage() {
                 <Button
                     variant="primary"
                     onClick={handleSave}
-                    icon="💾"
+                    icon={<Save size={16} />}
                     iconPosition="circle"
                 >
                     Save Settings

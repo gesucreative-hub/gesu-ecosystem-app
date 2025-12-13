@@ -1,5 +1,4 @@
-import React from 'react';
-import { Button } from './Button';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface TabItem {
     id: string;
@@ -15,29 +14,67 @@ interface TabsProps {
 }
 
 export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
-    return (
-        <div className={`flex items-center gap-2 border-b border-tokens-border mb-6 ${className}`}>
-            {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                    <button
-                        key={tab.id}
-                        onClick={() => onChange(tab.id)}
-                        className={`
-                            relative px-4 py-3 text-sm font-medium transition-colors flex items-center gap-2
-                            ${isActive ? 'text-tokens-brand-DEFAULT' : 'text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel2'}
-                        `}
-                    >
-                        {tab.icon && <span>{tab.icon}</span>}
-                        {tab.label}
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
 
-                        {/* Active Indicator Line */}
-                        {isActive && (
-                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-tokens-brand-DEFAULT rounded-t-full"></div>
-                        )}
-                    </button>
-                );
-            })}
+    // Update indicator position when active tab changes
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const activeButton = container.querySelector(`[data-tab-id="${activeTab}"]`) as HTMLButtonElement;
+        if (activeButton) {
+            setIndicatorStyle({
+                left: activeButton.offsetLeft,
+                width: activeButton.offsetWidth,
+            });
+        }
+    }, [activeTab, tabs]);
+
+    return (
+        <div className={`inline-flex items-center ${className}`}>
+            {/* Container - white (light) / gesu-black (dark) */}
+            <div
+                ref={containerRef}
+                className="relative flex items-center gap-1 p-1 rounded-full 
+                           bg-white dark:bg-[#1a1a1a]
+                           border border-tokens-border/50
+                           shadow-sm"
+            >
+                {/* Sliding Active Indicator Capsule - indigo (light) / green (dark) */}
+                <div
+                    className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out
+                               bg-[#4141b9] dark:bg-[#7cb342]
+                               shadow-md"
+                    style={{
+                        left: `${indicatorStyle.left}px`,
+                        width: `${indicatorStyle.width}px`,
+                    }}
+                />
+
+                {/* Tab Buttons */}
+                {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                        <button
+                            key={tab.id}
+                            data-tab-id={tab.id}
+                            onClick={() => onChange(tab.id)}
+                            className={`
+                                relative z-10 px-4 py-2 text-sm font-medium rounded-full
+                                transition-colors duration-300 flex items-center gap-2
+                                ${isActive
+                                    ? 'text-white'
+                                    : 'text-tokens-muted hover:text-tokens-fg'
+                                }
+                            `}
+                        >
+                            {tab.icon && <span className={isActive ? 'opacity-100' : 'opacity-70'}>{tab.icon}</span>}
+                            {tab.label}
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     );
 }

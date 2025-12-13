@@ -20,3 +20,24 @@ body {
   /* App-like feel */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* =========================================
+   SCROLLBAR Styling (Theme Aware)
+   ========================================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+}

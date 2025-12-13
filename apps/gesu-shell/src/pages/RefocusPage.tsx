@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { Textarea } from '../components/Textarea';
 
 // --- Types & Interfaces ---
 
@@ -127,16 +128,14 @@ export function RefocusPage() {
                         <div className="flex flex-col gap-6">
                             {PROMPTS.map((prompt) => (
                                 <div key={prompt.id} className="flex flex-col gap-2">
-                                    <label htmlFor={prompt.id} className="text-sm font-medium text-tokens-muted">
-                                        {prompt.question}
-                                    </label>
-                                    <textarea
+                                    <Textarea
                                         id={prompt.id}
+                                        label={prompt.question}
                                         value={answers[prompt.id]}
                                         onChange={(e) => handleAnswerChange(prompt.id, e.target.value)}
                                         rows={3}
-                                        className="w-full bg-tokens-panel2 border border-tokens-border rounded-lg p-3 text-tokens-fg focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all placeholder-gray-500 resize-none"
                                         placeholder="Type your thoughts here..."
+                                        className="resize-none"
                                     />
                                 </div>
                             ))}

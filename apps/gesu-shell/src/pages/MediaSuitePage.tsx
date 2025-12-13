@@ -4,10 +4,12 @@ import { useGesuSettings } from '../lib/gesuSettings';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Tabs } from '../components/Tabs';
+import { ToggleSwitch } from '../components/ToggleSwitch';
+import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw } from 'lucide-react';
 
 
 // --- Types & Interfaces ---
@@ -396,23 +398,8 @@ export function MediaSuitePage() {
     };
 
     return (
-        <PageContainer maxWidth="full" className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-2 relative overflow-hidden">
-            <style>{`
-                .scroll-on-hover::-webkit-scrollbar {
-                    width: 6px;
-                    height: 6px;
-                }
-                .scroll-on-hover::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .scroll-on-hover::-webkit-scrollbar-thumb {
-                    background: rgba(107, 114, 128, 0.3);
-                    border-radius: 3px;
-                }
-                .scroll-on-hover:hover::-webkit-scrollbar-thumb {
-                    background: rgba(107, 114, 128, 0.6);
-                }
-            `}</style>
+        <PageContainer>
+
 
             {/* Toast Notification */}
             {toast && (
@@ -424,59 +411,52 @@ export function MediaSuitePage() {
             )}
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 shrink-0">
+            <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Media Suite</h1>
                     <p className="text-tokens-muted text-sm mt-1">Universal media downloader & format converter.</p>
                 </div>
-
-                <div className="flex items-center gap-4">
-                    <Link to="/" className="px-3 py-2 bg-tokens-panel2 hover:bg-tokens-panel2/80 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors shrink-0">
-                        ← Back
-                    </Link>
-                </div>
+                <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
+                    ← Back
+                </Link>
             </div>
 
-            {/* Sub-header / Tools Status Bar */}
-            <div className="flex justify-end px-6 -mt-4 mb-2">
+            {/* Tabs + Engine Status Row */}
+            <div className="flex justify-between items-center mb-6">
+                <Tabs
+                    tabs={[
+                        { id: 'downloader', label: 'Downloader', icon: <Download size={16} /> },
+                        { id: 'converter', label: 'Converter', icon: <Zap size={16} /> },
+                        { id: 'history', label: 'Job History', icon: <HistoryIcon size={16} /> }
+                    ]}
+                    activeTab={activeTab}
+                    onChange={(id) => { setActiveTab(id as Tab); if (id === 'history') refreshHistory(); }}
+                />
+
+                {/* Engine Status Bar */}
                 <div className="flex bg-tokens-panel2/40 border border-tokens-border rounded-full pl-4 pr-2 py-1 gap-4 items-center backdrop-blur-sm">
                     <span className="text-[10px] text-tokens-muted font-medium uppercase tracking-widest mr-1">Engine Status</span>
-
                     <ToolStatusDot name="yt-dlp" data={toolsStatus?.ytDlp} />
                     <ToolStatusDot name="ffmpeg" data={toolsStatus?.ffmpeg} />
                     <ToolStatusDot name="Magick" data={toolsStatus?.magick} />
-
                     <div className="h-3 w-px bg-tokens-border mx-1"></div>
-
                     <button
                         onClick={checkTools}
                         className="text-[10px] text-tokens-muted hover:text-tokens-fg transition-colors"
                         title="Refresh Status"
                     >
-                        🔄
+                        <RefreshCcw size={12} />
                     </button>
-
                     <Link to="/settings" className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:bg-tokens-border transition-colors">
                         Configure
                     </Link>
                 </div>
             </div>
 
-            {/* Tabs */}
-            <Tabs
-                tabs={[
-                    { id: 'downloader', label: 'Downloader', icon: '⬇️' },
-                    { id: 'converter', label: 'Converter', icon: '⚡' },
-                    { id: 'history', label: 'Job History', icon: '📜' }
-                ]}
-                activeTab={activeTab}
-                onChange={(id) => { setActiveTab(id as Tab); if (id === 'history') refreshHistory(); }}
-                className="px-6"
-            />
+            {/* Main Grid: 2/3 Left + 1/3 Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] gap-6 max-w-7xl w-full mx-auto flex-1 min-h-0 px-6">
-
-                {/* --- LEFT COLUMN: INPUT FORMS --- */}
+                {/* --- LEFT COLUMN: INPUT FORMS (2/3) --- */}
                 <div className="flex flex-col gap-6 w-full min-w-0">
 
                     {/* Downloader Form */}
@@ -488,45 +468,38 @@ export function MediaSuitePage() {
                                     placeholder="https://..."
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
-                                    icon={<span className="text-base">🔗</span>}
+                                    icon={<LinkIcon size={16} />}
                                 />
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <Select
+                                    <SelectDropdown
                                         label="Preset"
                                         value={dlPreset}
-                                        onChange={(e) => setDlPreset(e.target.value as DownloadPreset)}
+                                        onChange={(value) => setDlPreset(value as DownloadPreset)}
                                         options={DOWNLOAD_PRESETS}
                                     />
-                                    <Select
+                                    <SelectDropdown
                                         label="Network Profile"
                                         value={netProfile}
-                                        onChange={(e) => setNetProfile(e.target.value as NetworkProfile)}
+                                        onChange={(value) => setNetProfile(value as NetworkProfile)}
                                         options={NETWORK_PROFILES}
                                     />
                                 </div>
 
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-tokens-muted">Save to</label>
-                                    <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border">
-                                        <button
-                                            onClick={() => setOutputTarget('shell')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                        >
-                                            Gesu Shell
-                                        </button>
-                                        <button
-                                            onClick={() => setOutputTarget('workflow')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600/90 text-white shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                        >
-                                            WorkFlow DB
-                                        </button>
-                                    </div>
-                                    <div className="flex justify-end gap-2 mt-1">
-                                        <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-tokens-brand-DEFAULT hover:underline">Open Shell Folder</button>
-                                        <span className="text-tokens-border">|</span>
-                                        <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:underline">Open WF DB Folder</button>
-                                    </div>
+                                <ToggleSwitch
+                                    label="Save to"
+                                    value={outputTarget}
+                                    onChange={(value) => setOutputTarget(value as 'shell' | 'workflow')}
+                                    options={[
+                                        { id: 'shell', label: 'Gesu Shell' },
+                                        { id: 'workflow', label: 'WorkFlow DB' }
+                                    ]}
+                                    fullWidth
+                                />
+                                <div className="flex justify-end gap-2 mt-1">
+                                    <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-tokens-brand-DEFAULT hover:underline">Open Shell Folder</button>
+                                    <span className="text-tokens-border">|</span>
+                                    <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:underline">Open WF DB Folder</button>
                                 </div>
                                 <Button
                                     variant="primary"
@@ -534,7 +507,7 @@ export function MediaSuitePage() {
                                     fullWidth
                                     onClick={handleQueueDownload}
                                     disabled={!url}
-                                    icon="⬇️"
+                                    icon={<Download size={16} />}
                                     iconPosition="circle"
                                 >
                                     Queue Download (Mock)
@@ -545,7 +518,7 @@ export function MediaSuitePage() {
 
                     {/* Converter Form */}
                     {activeTab === 'converter' && (
-                        <Card title="Local Converter" className="bg-tokens-panel backdrop-blur-sm shadow-lg">
+                        <Card title="Local Converter" className="bg-tokens-panel backdrop-blur-sm shadow-lg overflow-visible min-h-[420px]">
                             <div className="flex flex-col gap-5">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium text-tokens-muted">Source File</label>
@@ -557,7 +530,7 @@ export function MediaSuitePage() {
                                             className="flex-1 font-mono opacity-70 cursor-not-allowed"
                                         />
                                         <Button
-                                            variant="secondary"
+                                            variant="outline"
                                             onClick={handleBrowseFile}
                                         >
                                             Browse...
@@ -566,49 +539,34 @@ export function MediaSuitePage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    {/* Mode Toggle */}
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-tokens-muted">Mode</label>
-                                        <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border w-fit">
-                                            <button
-                                                onClick={() => setConvertMode('simple')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${convertMode === 'simple' ? 'bg-tokens-panel border border-tokens-border text-tokens-fg shadow-sm' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                            >
-                                                Simple
-                                            </button>
-                                            <button
-                                                onClick={() => setConvertMode('advanced')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${convertMode === 'advanced' ? 'bg-tokens-panel border border-tokens-border text-tokens-fg shadow-sm' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                            >
-                                                Advanced
-                                            </button>
-                                        </div>
-                                    </div>
+                                    {/* Mode Toggle - Sliding squircle */}
+                                    <ToggleSwitch
+                                        label="Mode"
+                                        value={convertMode}
+                                        onChange={(value) => setConvertMode(value as 'simple' | 'advanced')}
+                                        options={[
+                                            { id: 'simple', label: 'Simple' },
+                                            { id: 'advanced', label: 'Advanced' }
+                                        ]}
+                                    />
 
                                     {convertMode === 'simple' ? (
-                                        <Select
+                                        <SelectDropdown
                                             label="Preset"
                                             value={convertPreset}
-                                            onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
-                                            options={[]} // Using children for optgroups
-                                        >
-                                            <optgroup label="Audio">
-                                                {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                            </optgroup>
-                                            <optgroup label="Video">
-                                                {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                            </optgroup>
-                                        </Select>
+                                            onChange={(value) => setConvertPreset(value as ConvertPreset)}
+                                            options={CONVERT_PRESETS.map(p => ({ value: p.value, label: `${p.category}: ${p.label}` }))}
+                                        />
                                     ) : null}
                                 </div>
 
                                 {convertMode === 'advanced' && (
                                     <div className="flex flex-wrap gap-4 p-4 bg-tokens-panel2/50 rounded-xl border border-tokens-border">
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
-                                            <Select
+                                            <SelectDropdown
                                                 label="Resolution"
                                                 value={advRes}
-                                                onChange={(e) => setAdvRes(e.target.value as AdvancedVideoResolution)}
+                                                onChange={(value) => setAdvRes(value as AdvancedVideoResolution)}
                                                 options={[
                                                     { value: "source", label: "Source (No Resize)" },
                                                     { value: "1080p", label: "1080p" },
@@ -618,10 +576,10 @@ export function MediaSuitePage() {
                                             />
                                         </div>
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
-                                            <Select
+                                            <SelectDropdown
                                                 label="Quality"
                                                 value={advQuality}
-                                                onChange={(e) => setAdvQuality(e.target.value as AdvancedVideoQuality)}
+                                                onChange={(value) => setAdvQuality(value as AdvancedVideoQuality)}
                                                 options={[
                                                     { value: "high", label: "High (CRF 18)" },
                                                     { value: "medium", label: "Medium (CRF 20)" },
@@ -630,10 +588,10 @@ export function MediaSuitePage() {
                                             />
                                         </div>
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
-                                            <Select
+                                            <SelectDropdown
                                                 label="Audio"
                                                 value={advAudio}
-                                                onChange={(e) => setAdvAudio(e.target.value as AdvancedAudioProfile)}
+                                                onChange={(value) => setAdvAudio(value as AdvancedAudioProfile)}
                                                 options={[
                                                     { value: "copy", label: "Copy (Passthrough)" },
                                                     { value: "aac-192", label: "AAC 192k" },
@@ -644,23 +602,16 @@ export function MediaSuitePage() {
                                     </div>
                                 )}
 
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-tokens-muted">Save to</label>
-                                    <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border">
-                                        <button
-                                            onClick={() => setOutputTarget('shell')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                        >
-                                            Gesu Shell
-                                        </button>
-                                        <button
-                                            onClick={() => setOutputTarget('workflow')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600/90 text-white shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
-                                        >
-                                            WorkFlow DB
-                                        </button>
-                                    </div>
-                                </div>
+                                <ToggleSwitch
+                                    label="Save to"
+                                    value={outputTarget}
+                                    onChange={(value) => setOutputTarget(value as 'shell' | 'workflow')}
+                                    options={[
+                                        { id: 'shell', label: 'Gesu Shell' },
+                                        { id: 'workflow', label: 'WorkFlow DB' }
+                                    ]}
+                                    fullWidth
+                                />
 
                                 <Button
                                     variant="primary"
@@ -668,7 +619,7 @@ export function MediaSuitePage() {
                                     fullWidth
                                     onClick={handleQueueConvert}
                                     disabled={!convertFilePath}
-                                    icon="⚡"
+                                    icon={<Zap size={16} />}
                                     iconPosition="circle"
                                 >
                                     Queue Convert Job
@@ -679,25 +630,26 @@ export function MediaSuitePage() {
 
                     {/* History View */}
                     {activeTab === 'history' && (
-                        <Card title="Recent Jobs" className="h-full min-h-[500px] flex flex-col" headerAction={
+                        <Card title="Recent Jobs" className="flex flex-col" headerAction={
                             <div className="flex gap-2 items-center">
-                                <Select
+                                <SelectDropdown
                                     value={historyFilter}
-                                    onChange={(e) => setHistoryFilter(e.target.value as any)}
+                                    onChange={(value) => setHistoryFilter(value as any)}
                                     options={[
                                         { value: 'all', label: 'All Types' },
                                         { value: 'download', label: 'Downloads' },
                                         { value: 'convert', label: 'Converts' },
                                         { value: 'advanced', label: 'Advanced' }
                                     ]}
-                                    className="!w-32 !py-1 !text-xs"
                                 />
                                 <button onClick={refreshHistory} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">Refresh</button>
                             </div>
                         }>
-                            <div className="flex-1 overflow-y-auto scroll-on-hover pr-1 min-h-0">
+                            {/* Scrollable table container with max height */}
+                            <div className="max-h-[400px] overflow-y-auto scroll-on-hover">
                                 <table className="w-full text-left border-collapse">
-                                    <thead>
+                                    {/* Sticky header */}
+                                    <thead className="sticky top-0 bg-tokens-panel z-10">
                                         <tr className="border-b border-tokens-border text-tokens-muted text-xs uppercase tracking-wider">
                                             <th className="p-3">Time</th>
                                             <th className="p-3">Type</th>
@@ -774,17 +726,16 @@ export function MediaSuitePage() {
 
                 {/* --- RIGHT COLUMN: QUEUE & INFO --- */}
                 <div className="flex flex-col gap-6 w-full min-w-0">
-                    <Card title="Job Queue" className="flex-1 min-h-[400px] flex flex-col">
+                    <Card title="Job Queue" className="flex flex-col">
                         <div className="flex gap-2 items-center mb-4">
-                            <Select
+                            <SelectDropdown
                                 value={queueFilter}
-                                onChange={(e) => setQueueFilter(e.target.value as any)}
+                                onChange={(value) => setQueueFilter(value as any)}
                                 options={[
                                     { value: 'all', label: 'All Jobs' },
                                     { value: 'download', label: 'Downloads' },
                                     { value: 'convert', label: 'Converts' }
                                 ]}
-                                className="!w-32 !py-1 !text-xs"
                             />
                         </div>
 
@@ -823,8 +774,8 @@ export function MediaSuitePage() {
                                                 <div className="text-[10px] text-tokens-muted grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-tokens-border/50">
                                                     {job.type === 'download' && (
                                                         <>
-                                                            <span>Preset: <span className="text-tokens-fg">{job.payload.preset}</span></span>
-                                                            <span>Network: <span className="text-tokens-fg">{job.payload.network}</span></span>
+                                                            <span>Preset: <span className="text-tokens-fg">{String(job.payload.preset)}</span></span>
+                                                            <span>Network: <span className="text-tokens-fg">{String(job.payload.network)}</span></span>
                                                         </>
                                                     )}
                                                     {job.type === 'convert' && (

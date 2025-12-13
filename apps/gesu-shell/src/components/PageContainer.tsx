@@ -17,7 +17,7 @@ export function PageContainer({ children, className = '', maxWidth = '2xl' }: Pa
     };
 
     return (
-        <div className={`p-6 sm:px-8 w-full mx-auto animate-in fade-in duration-300 ${maxWidthClasses[maxWidth]} ${className}`}>
+        <div className={`pt-16 pb-6 px-6 sm:px-8 w-full mx-auto animate-in fade-in duration-300 ${maxWidthClasses[maxWidth]} ${className}`}>
             {children}
         </div>
     );

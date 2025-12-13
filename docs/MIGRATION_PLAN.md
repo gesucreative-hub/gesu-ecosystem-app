@@ -25,17 +25,18 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 **Owner**: Frontend Lead | **Status**: In Progress
 - [x] **Semantic Tokens**: Define `--bg`, `--fg`, `--brand`, `--sidebar-*` CSS variables for Light (Theme 1) and Dark (Theme 2).
 - [x] **Tailwind Mapping**: Map `tokens.*` in `tailwind.config.js`.
-- [ ] **Sidebar Spec**: Implement "Pill" item style, subtle borders, and harmonious bottom controls.
-- [ ] **Button Primitives**: precise "pill + circle icon" `Button` component.
-- [ ] **Accessibility**: Ensure 4.5:1 contrast for text (Theme 1 Blue #4141b9 / Theme 2 Green #a4db74) against backgrounds.
-- [ ] **Manual Visual Regression**: Verify sidebar and buttons match reference in both themes.
+- [x] **Sidebar Spec**: Implement "Pill" item style, subtle borders, and harmonious bottom controls.
+- [x] **Button Primitives**: precise "pill + circle icon" `Button` component.
+- [x] **Accessibility**: Ensure 4.5:1 contrast for text (Theme 1 Blue #4141b9 / Theme 2 Green #a4db74) against backgrounds.
+- [x] **Manual Visual Regression**: Verify sidebar and buttons match reference in both themes.
+- [x] **Icon Standardization**: Replaced emojis with `lucide-react` icons; created `Icon.tsx` wrapper.
 
 ### B. Shell App (Gesu Shell)
 **Owner**: Core Team | **Status**: Planned
-- [ ] **Layout Consistency**: `PageContainer` with standardized padding/margins.
+- [x] **Layout Consistency**: `PageContainer` with standardized padding/margins.
 - [ ] **Navigation**: `react-router-dom` setup with strict route definitions.
 - [ ] **Global Error Boundary**: Catch React errors and show a friendly "Gesu Recovery" UI.
-- [ ] **Assets**: Standardize app icons and window chrome (title bar controls).
+- [x] **Assets**: Standardize app icons and window chrome (title bar controls).
 - [ ] **Window State**: Persist window size/position in `localStorage`.
 
 ### C. Settings (Gesu Settings)

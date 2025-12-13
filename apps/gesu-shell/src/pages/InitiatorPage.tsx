@@ -4,7 +4,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 
 // --- Types & Interfaces ---
 
@@ -142,18 +142,18 @@ export function InitiatorPage() {
                                     autoFocus
                                 />
 
-                                <Select
+                                <SelectDropdown
                                     label="Project Type"
                                     value={type}
-                                    onChange={(e) => setType(e.target.value)}
+                                    onChange={(value) => setType(value)}
                                     options={PROJECT_TYPES}
                                 />
 
                                 <div className="md:col-span-2">
-                                    <Select
+                                    <SelectDropdown
                                         label="Category / Discipline"
                                         value={category}
-                                        onChange={(e) => setCategory(e.target.value)}
+                                        onChange={(value) => setCategory(value)}
                                         options={CATEGORIES}
                                     />
                                 </div>

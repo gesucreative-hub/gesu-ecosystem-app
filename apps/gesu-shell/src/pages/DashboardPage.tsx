@@ -2,52 +2,54 @@ import { Link } from 'react-router-dom';
 import { useGesuSettings } from '../lib/gesuSettings';
 import { PageContainer } from '../components/PageContainer';
 import { useEffect, useState } from 'react';
+import { Card } from '../components/Card';
+import { Badge } from '../components/Badge';
 
 // --- Sub-components ---
 
 const QuickAction = ({ icon, label, onClick }: { icon: string, label: string, onClick: () => void }) => (
     <button
         onClick={onClick}
-        className="flex flex-col items-center justify-center p-4 bg-gesu-card border border-gesu-border rounded-xl hover:bg-gesu-card-hover hover:border-gesu-primary/30 transition-all group"
+        className="flex flex-col items-center justify-center p-4 bg-tokens-panel border border-tokens-border rounded-xl hover:bg-tokens-panel/80 hover:border-tokens-brand-DEFAULT/30 transition-all group shadow-sm active:scale-[0.98]"
     >
         <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">{icon}</span>
-        <span className="text-xs font-medium text-gesu-text-muted group-hover:text-gesu-text-main">{label}</span>
+        <span className="text-xs font-medium text-tokens-muted group-hover:text-tokens-fg">{label}</span>
     </button>
 );
 
 const ModuleCard = ({ title, description, to, icon }: { title: string, description: string, to: string, icon: string }) => (
-    <Link to={to} className="group relative overflow-hidden bg-gesu-card border border-gesu-border rounded-xl p-5 hover:border-gesu-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+    <Link to={to} className="group relative overflow-hidden bg-tokens-panel border border-tokens-border rounded-xl p-5 hover:border-tokens-brand-DEFAULT/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
         <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gesu-card-hover group-hover:bg-gesu-primary-bg group-hover:text-gesu-primary-light transition-colors">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-tokens-panel2 group-hover:bg-tokens-brand-DEFAULT/10 group-hover:text-tokens-brand-DEFAULT transition-colors">
                 {icon}
             </div>
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-gesu-primary text-xs font-bold">OPEN</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-tokens-brand-DEFAULT text-xs font-bold">OPEN</span>
         </div>
-        <h3 className="text-lg font-bold text-gesu-text-main mb-1 group-hover:text-gesu-primary-light transition-colors">{title}</h3>
-        <p className="text-xs text-gesu-text-dim leading-relaxed">{description}</p>
+        <h3 className="text-lg font-bold text-tokens-fg mb-1 group-hover:text-tokens-brand-DEFAULT transition-colors">{title}</h3>
+        <p className="text-xs text-tokens-muted leading-relaxed">{description}</p>
     </Link>
 );
 
 const EngineStatusPill = ({ id, status, label }: { id: string, status: string, label: string }) => {
-    let colorClass = 'bg-gray-800 text-gray-500 border-gray-700'; // unknown
+    let variant: 'success' | 'warning' | 'error' | 'neutral' = 'neutral';
     let icon = '⚫';
 
     if (status === 'ready_configured' || status === 'ready_path') {
-        colorClass = 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50';
+        variant = 'success';
         icon = '🟢';
     } else if (status === 'fallback_path') {
-        colorClass = 'bg-amber-900/30 text-amber-400 border-amber-800/50';
+        variant = 'warning';
         icon = '🟠';
     } else if (status === 'missing' || status === 'error') {
-        colorClass = 'bg-red-900/30 text-red-400 border-red-800/50';
+        variant = 'error';
         icon = '🔴';
     }
 
     return (
-        <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 text-xs font-medium ${colorClass}`}>
-            <span className="text-[10px]">{icon}</span>
+        <Badge variant={variant} className="pl-1.5 pr-2.5 py-1">
+            <span className="text-[10px] opacity-70">{icon}</span>
             <span>{label}</span>
-        </div>
+        </Badge>
     );
 };
 
@@ -87,12 +89,12 @@ export function DashboardPage() {
     return (
         <PageContainer className="flex flex-col h-full gap-8 pb-20">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gesu-border pb-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-tokens-border pb-6">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
+                    <h1 className="text-3xl font-extrabold text-tokens-fg tracking-tight mb-2">
                         Dashboard
                     </h1>
-                    <p className="text-gesu-text-muted text-sm">
+                    <p className="text-tokens-muted text-sm">
                         System Overview & Quick Access
                     </p>
                 </div>
@@ -109,7 +111,7 @@ export function DashboardPage() {
                 {/* Main Modules Grid (2/3 width) */}
                 <div className="lg:col-span-2 flex flex-col gap-6">
                     <div>
-                        <h2 className="text-sm font-semibold text-gesu-text-dim uppercase tracking-wider mb-4">Modules</h2>
+                        <h2 className="text-sm font-semibold text-tokens-muted uppercase tracking-wider mb-4">Modules</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ModuleCard
                                 title="Media Suite"
@@ -139,7 +141,7 @@ export function DashboardPage() {
                     </div>
 
                     <div>
-                        <h2 className="text-sm font-semibold text-gesu-text-dim uppercase tracking-wider mb-4">Quick Actions</h2>
+                        <h2 className="text-sm font-semibold text-tokens-muted uppercase tracking-wider mb-4">Quick Actions</h2>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <QuickAction icon="📂" label="Open Workflow DB" onClick={() => openFolder('workflow')} />
                             <QuickAction icon="📁" label="Open Projects" onClick={() => openFolder('projects')} />
@@ -151,34 +153,35 @@ export function DashboardPage() {
                 {/* Sidebar / Right Col (1/3 width) */}
                 <div className="flex flex-col gap-6">
                     {/* Recent Activity Panel */}
-                    <div className="bg-gesu-card/50 border border-gesu-border rounded-xl p-5 flex flex-col h-full min-h-[300px]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-sm font-bold text-gesu-text-main">Recent Activity</h2>
-                            <Link to="/media-suite" className="text-[10px] text-gesu-primary hover:underline">VIEW ALL</Link>
-                        </div>
-
+                    <Card
+                        title="Recent Activity"
+                        headerAction={<Link to="/media-suite" className="text-[10px] text-tokens-brand-DEFAULT hover:underline">VIEW ALL</Link>}
+                        className="h-full min-h-[300px] flex flex-col"
+                    >
                         <div className="flex-1 overflow-y-auto pr-1 space-y-3">
                             {recentJobs.length === 0 ? (
-                                <div className="text-center text-xs text-gesu-text-dim py-10 italic">No recent jobs</div>
+                                <div className="text-center text-xs text-tokens-muted py-10 italic">No recent jobs</div>
                             ) : (
                                 recentJobs.map((job, i) => (
-                                    <div key={i} className="bg-gesu-bg/50 p-2 rounded border border-gesu-border flex flex-col gap-1 hover:border-gesu-border-light transition-colors">
+                                    <div key={i} className="bg-tokens-panel2/50 p-3 rounded-lg border border-tokens-border flex flex-col gap-1.5 hover:border-tokens-brand-DEFAULT/20 transition-colors">
                                         <div className="flex justify-between items-start">
-                                            <span className="text-xs font-medium text-gesu-text-main truncate max-w-[140px]" title={job.label || job.url}>{job.label || 'Job'}</span>
-                                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${job.status === 'success' ? 'bg-emerald-900/40 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>{job.status}</span>
+                                            <span className="text-sm font-medium text-tokens-fg truncate max-w-[140px]" title={job.label || job.url}>{job.label || 'Job'}</span>
+                                            <Badge variant={job.status === 'success' ? 'success' : 'neutral'} className="text-[10px] px-1.5 py-0 uppercase">
+                                                {job.status}
+                                            </Badge>
                                         </div>
-                                        <span className="text-[10px] text-gesu-text-dim">{new Date(job.timestamp).toLocaleString()}</span>
+                                        <span className="text-[10px] text-tokens-muted">{new Date(job.timestamp).toLocaleString()}</span>
                                     </div>
                                 ))
                             )}
                         </div>
-                    </div>
+                    </Card>
                 </div>
             </div>
 
-            <div className="mt-auto pt-6 border-t border-gesu-border text-[10px] text-gesu-text-dim flex justify-between">
+            <div className="mt-auto pt-6 border-t border-tokens-border text-[10px] text-tokens-muted flex justify-between">
                 <span>Gesu Shell v2.0.0-alpha</span>
-                <span>WorkFlow Root: <span className="font-mono text-gesu-text-muted">{settings?.paths?.workflowRoot || 'Nt Set'}</span></span>
+                <span>WorkFlow Root: <span className="font-mono text-tokens-fg">{settings?.paths?.workflowRoot || 'Nt Set'}</span></span>
             </div>
         </PageContainer>
     );

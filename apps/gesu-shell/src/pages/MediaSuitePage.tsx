@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGesuSettings } from '../lib/gesuSettings';
 import { PageContainer } from '../components/PageContainer';
+import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { Select } from '../components/Select';
+import { Card } from '../components/Card';
+import { Badge } from '../components/Badge';
+import { Tabs } from '../components/Tabs';
 
 
 // --- Types & Interfaces ---
@@ -44,11 +50,7 @@ const NETWORK_PROFILES: { value: NetworkProfile; label: string }[] = [
     { value: 'gaspol', label: 'Gaspol (Max Speed)' }
 ];
 
-const NETWORK_LABELS: Record<NetworkProfile, string> = {
-    'hemat': 'hemat · ~1 MB/s',
-    'normal': 'normal · ~3 MB/s',
-    'gaspol': 'gaspol · ~5 MB/s'
-};
+
 
 const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: 'Audio' | 'Video' }[] = [
     { value: 'audio-mp3-320', label: 'Audio MP3 – 320 kbps', category: 'Audio' },
@@ -63,12 +65,12 @@ const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: 'Audio' 
 // --- Helper Components ---
 
 const StatusBadge = ({ status, progress }: { status: JobStatus, progress?: number }) => {
-    const styles = {
-        queued: 'bg-gray-700 text-gray-300 border-gray-600',
-        running: 'bg-blue-900/50 text-blue-300 border-blue-500/30 animate-pulse',
-        success: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
-        error: 'bg-red-900/50 text-red-300 border-red-500/30',
-        canceled: 'bg-gray-800 text-gray-500 border-gray-700 dashed border'
+    const variants: Record<JobStatus, 'neutral' | 'brand' | 'success' | 'warning' | 'error'> = {
+        queued: 'neutral',
+        running: 'brand',
+        success: 'success',
+        error: 'error',
+        canceled: 'neutral'
     };
 
     const labels = {
@@ -80,9 +82,9 @@ const StatusBadge = ({ status, progress }: { status: JobStatus, progress?: numbe
     };
 
     return (
-        <span className={`px-2 py-0.5 rounded text-xs font-medium border ${styles[status]} whitespace-nowrap`}>
+        <Badge variant={variants[status]} className={status === 'running' ? 'animate-pulse' : ''}>
             {labels[status]}
-        </span>
+        </Badge>
     );
 };
 
@@ -142,7 +144,7 @@ const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
         ready_path: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
         fallback_path: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
         missing: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',
-        unknown: 'bg-gray-600',
+        unknown: 'bg-tokens-muted',
         error: 'bg-red-500'
     };
 
@@ -162,20 +164,20 @@ const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
             <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${displayColor}`}></div>
             <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{name}</span>
             {/* Detailed Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded min-w-[200px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 text-[10px] text-gray-300">
-                <div className="font-semibold text-gray-100 mb-1 border-b border-gray-700 pb-1">{name}: <span className="text-xs font-mono ml-1">{displayText[status] || status}</span></div>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-tokens-popover border border-tokens-border shadow-xl rounded min-w-[200px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 text-[10px] text-tokens-muted">
+                <div className="font-semibold text-tokens-fg mb-1 border-b border-tokens-border pb-1">{name}: <span className="text-xs font-mono ml-1">{displayText[status] || status}</span></div>
                 <div className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
-                    <span className="text-gray-500">Config:</span>
-                    <span className={`font-mono break-all ${status === 'fallback_path' ? 'text-amber-400 decoration-wavy underline' : 'text-gray-400'}`}>
+                    <span className="text-tokens-muted">Config:</span>
+                    <span className={`font-mono break-all ${status === 'fallback_path' ? 'text-amber-500 decoration-wavy underline' : 'text-tokens-fg'}`}>
                         {data?.configuredPath || '(none)'}
                         {status === 'fallback_path' && ' (Invalid)'}
                     </span>
 
-                    <span className="text-gray-500">Using:</span>
-                    <span className="font-mono text-emerald-400 break-all">{data?.resolvedPath || '(none)'}</span>
+                    <span className="text-tokens-muted">Using:</span>
+                    <span className="font-mono text-emerald-500 break-all">{data?.resolvedPath || '(none)'}</span>
 
-                    <span className="text-gray-500">Source:</span>
-                    <span className="text-gray-400">{data?.resolution}</span>
+                    <span className="text-tokens-muted">Source:</span>
+                    <span className="text-tokens-fg">{data?.resolution}</span>
                 </div>
             </div>
         </div>
@@ -424,36 +426,12 @@ export function MediaSuitePage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Gesu Media Suite</h1>
-                    <p className="text-gray-400 text-sm mt-1">Universal media downloader & format converter.</p>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Media Suite</h1>
+                    <p className="text-tokens-muted text-sm mt-1">Universal media downloader & format converter.</p>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="bg-gray-800 p-1 rounded-lg grid grid-cols-3 gap-1 border border-gray-700 w-full md:w-auto min-w-[320px]">
-                        <button
-                            onClick={() => setActiveTab('downloader')}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'downloader' ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-                                }`}
-                        >
-                            Downloader
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('converter')}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'converter' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-                                }`}
-                        >
-                            Converter
-                        </button>
-                        <button
-                            onClick={() => { setActiveTab('history'); refreshHistory(); }}
-                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all text-center ${activeTab === 'history' ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
-                                }`}
-                        >
-                            History
-                        </button>
-                    </div>
-
-                    <Link to="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors shrink-0">
+                    <Link to="/" className="px-3 py-2 bg-tokens-panel2 hover:bg-tokens-panel2/80 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors shrink-0">
                         ← Back
                     </Link>
                 </div>
@@ -461,28 +439,40 @@ export function MediaSuitePage() {
 
             {/* Sub-header / Tools Status Bar */}
             <div className="flex justify-end px-6 -mt-4 mb-2">
-                <div className="flex bg-gray-900/40 border border-gray-800 rounded-full pl-4 pr-2 py-1 gap-4 items-center backdrop-blur-sm">
-                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-widest mr-1">Engine Status</span>
+                <div className="flex bg-tokens-panel2/40 border border-tokens-border rounded-full pl-4 pr-2 py-1 gap-4 items-center backdrop-blur-sm">
+                    <span className="text-[10px] text-tokens-muted font-medium uppercase tracking-widest mr-1">Engine Status</span>
 
                     <ToolStatusDot name="yt-dlp" data={toolsStatus?.ytDlp} />
                     <ToolStatusDot name="ffmpeg" data={toolsStatus?.ffmpeg} />
                     <ToolStatusDot name="Magick" data={toolsStatus?.magick} />
 
-                    <div className="h-3 w-px bg-gray-700 mx-1"></div>
+                    <div className="h-3 w-px bg-tokens-border mx-1"></div>
 
                     <button
                         onClick={checkTools}
-                        className="text-[10px] text-gray-400 hover:text-white transition-colors"
+                        className="text-[10px] text-tokens-muted hover:text-tokens-fg transition-colors"
                         title="Refresh Status"
                     >
                         🔄
                     </button>
 
-                    <Link to="/settings" className="px-2 py-0.5 rounded-full bg-gray-800 text-[10px] text-cyan-500 hover:text-cyan-300 hover:bg-gray-700 transition-colors">
+                    <Link to="/settings" className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:bg-tokens-border transition-colors">
                         Configure
                     </Link>
                 </div>
             </div>
+
+            {/* Tabs */}
+            <Tabs
+                tabs={[
+                    { id: 'downloader', label: 'Downloader', icon: '⬇️' },
+                    { id: 'converter', label: 'Converter', icon: '⚡' },
+                    { id: 'history', label: 'Job History', icon: '📜' }
+                ]}
+                activeTab={activeTab}
+                onChange={(id) => { setActiveTab(id as Tab); if (id === 'history') refreshHistory(); }}
+                className="px-6"
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] gap-6 max-w-7xl w-full mx-auto flex-1 min-h-0 px-6">
 
@@ -491,363 +481,379 @@ export function MediaSuitePage() {
 
                     {/* Downloader Form */}
                     {activeTab === 'downloader' && (
-                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                            <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-cyan-500 rounded-full"></span>
-                                Quick Download
-                            </h2>
+                        <Card title="Quick Download" className="bg-tokens-panel backdrop-blur-sm shadow-lg">
                             <div className="flex flex-col gap-5">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-gray-300">Source URL</label>
-                                    <input
-                                        type="text"
-                                        value={url}
-                                        onChange={(e) => setUrl(e.target.value)}
-                                        placeholder="https://..."
-                                        className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                                <Input
+                                    label="Source URL"
+                                    placeholder="https://..."
+                                    value={url}
+                                    onChange={(e) => setUrl(e.target.value)}
+                                    icon={<span className="text-base">🔗</span>}
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <Select
+                                        label="Preset"
+                                        value={dlPreset}
+                                        onChange={(e) => setDlPreset(e.target.value as DownloadPreset)}
+                                        options={DOWNLOAD_PRESETS}
+                                    />
+                                    <Select
+                                        label="Network Profile"
+                                        value={netProfile}
+                                        onChange={(e) => setNetProfile(e.target.value as NetworkProfile)}
+                                        options={NETWORK_PROFILES}
                                     />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Preset</label>
-                                        <select
-                                            value={dlPreset}
-                                            onChange={(e) => setDlPreset(e.target.value as DownloadPreset)}
-                                            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
-                                        >
-                                            {DOWNLOAD_PRESETS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Network</label>
-                                        <select
-                                            value={netProfile}
-                                            onChange={(e) => setNetProfile(e.target.value as NetworkProfile)}
-                                            className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none"
-                                        >
-                                            {NETWORK_PROFILES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
+
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-gray-300">Save to</label>
-                                    <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
+                                    <label className="text-sm font-medium text-tokens-muted">Save to</label>
+                                    <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border">
                                         <button
                                             onClick={() => setOutputTarget('shell')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-cyan-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
                                         >
                                             Gesu Shell
                                         </button>
                                         <button
                                             onClick={() => setOutputTarget('workflow')}
-                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600/90 text-white shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
                                         >
                                             WorkFlow DB
                                         </button>
                                     </div>
                                     <div className="flex justify-end gap-2 mt-1">
-                                        <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-cyan-500 hover:text-cyan-400 hover:underline">Open Shell Folder</button>
-                                        <span className="text-gray-700">|</span>
-                                        <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:text-pink-400 hover:underline">Open WF DB Folder</button>
+                                        <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-tokens-brand-DEFAULT hover:underline">Open Shell Folder</button>
+                                        <span className="text-tokens-border">|</span>
+                                        <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:underline">Open WF DB Folder</button>
                                     </div>
                                 </div>
-                                <button
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
                                     onClick={handleQueueDownload}
                                     disabled={!url}
-                                    className="mt-2 w-full py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg shadow-cyan-900/40 transition-all active:scale-[0.98]"
+                                    icon="⬇️"
+                                    iconPosition="circle"
                                 >
                                     Queue Download (Mock)
-                                </button>
+                                </Button>
                             </div>
-                        </div>
+                        </Card>
                     )}
 
                     {/* Converter Form */}
                     {activeTab === 'converter' && (
-                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                            <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
-                                Local Converter
-                            </h2>
+                        <Card title="Local Converter" className="bg-tokens-panel backdrop-blur-sm shadow-lg">
                             <div className="flex flex-col gap-5">
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-gray-300">Source File</label>
+                                    <label className="text-sm font-medium text-tokens-muted">Source File</label>
                                     <div className="flex gap-2">
-                                        <input
-                                            type="text"
+                                        <Input
                                             value={convertFilePath}
                                             readOnly
                                             placeholder="No file selected..."
-                                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none font-mono text-sm opacity-70 cursor-not-allowed"
+                                            className="flex-1 font-mono opacity-70 cursor-not-allowed"
                                         />
-                                        <button
+                                        <Button
+                                            variant="secondary"
                                             onClick={handleBrowseFile}
-                                            className="px-4 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm border border-gray-600 transition-colors"
                                         >
                                             Browse...
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {/* Mode Toggle */}
-                                    <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 w-fit mb-4 h-11 items-center">
-                                        <button
-                                            onClick={() => setConvertMode('simple')}
-                                            className={`h-9 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center ${convertMode === 'simple' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                                        >
-                                            Simple
-                                        </button>
-                                        <button
-                                            onClick={() => setConvertMode('advanced')}
-                                            className={`h-9 px-4 rounded-md text-sm font-medium transition-all flex items-center justify-center ${convertMode === 'advanced' ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}
-                                        >
-                                            Advanced
-                                        </button>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-tokens-muted">Mode</label>
+                                        <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border w-fit">
+                                            <button
+                                                onClick={() => setConvertMode('simple')}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${convertMode === 'simple' ? 'bg-tokens-panel border border-tokens-border text-tokens-fg shadow-sm' : 'text-tokens-muted hover:text-tokens-fg'}`}
+                                            >
+                                                Simple
+                                            </button>
+                                            <button
+                                                onClick={() => setConvertMode('advanced')}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${convertMode === 'advanced' ? 'bg-tokens-panel border border-tokens-border text-tokens-fg shadow-sm' : 'text-tokens-muted hover:text-tokens-fg'}`}
+                                            >
+                                                Advanced
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {convertMode === 'simple' ? (
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-sm font-medium text-gray-400">Preset</label>
-                                            <select
-                                                value={convertPreset}
-                                                onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
-                                                className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none"
-                                            >
-                                                <optgroup label="Audio">
-                                                    {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                                </optgroup>
-                                                <optgroup label="Video">
-                                                    {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                                                </optgroup>
-                                            </select>
+                                        <Select
+                                            label="Preset"
+                                            value={convertPreset}
+                                            onChange={(e) => setConvertPreset(e.target.value as ConvertPreset)}
+                                            options={[]} // Using children for optgroups
+                                        >
+                                            <optgroup label="Audio">
+                                                {CONVERT_PRESETS.filter(p => p.category === 'Audio').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                            </optgroup>
+                                            <optgroup label="Video">
+                                                {CONVERT_PRESETS.filter(p => p.category === 'Video').map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                            </optgroup>
+                                        </Select>
+                                    ) : null}
+                                </div>
+
+                                {convertMode === 'advanced' && (
+                                    <div className="flex flex-wrap gap-4 p-4 bg-tokens-panel2/50 rounded-xl border border-tokens-border">
+                                        <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
+                                            <Select
+                                                label="Resolution"
+                                                value={advRes}
+                                                onChange={(e) => setAdvRes(e.target.value as AdvancedVideoResolution)}
+                                                options={[
+                                                    { value: "source", label: "Source (No Resize)" },
+                                                    { value: "1080p", label: "1080p" },
+                                                    { value: "720p", label: "720p" },
+                                                    { value: "540p", label: "540p" }
+                                                ]}
+                                            />
                                         </div>
-                                    ) : (
-                                        <div className="flex flex-wrap gap-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700/50">
-                                            <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
-                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Resolution</label>
-                                                <select
-                                                    value={advRes}
-                                                    onChange={(e) => setAdvRes(e.target.value as AdvancedVideoResolution)}
-                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
-                                                >
-                                                    <option value="source">Source (No Resize)</option>
-                                                    <option value="1080p">1080p</option>
-                                                    <option value="720p">720p</option>
-                                                    <option value="540p">540p</option>
-                                                </select>
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Quality</label>
-                                                <select
-                                                    value={advQuality}
-                                                    onChange={(e) => setAdvQuality(e.target.value as AdvancedVideoQuality)}
-                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
-                                                >
-                                                    <option value="high">High (CRF 18)</option>
-                                                    <option value="medium">Medium (CRF 20)</option>
-                                                    <option value="lite">Lite (CRF 23)</option>
-                                                </select>
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Audio</label>
-                                                <select
-                                                    value={advAudio}
-                                                    onChange={(e) => setAdvAudio(e.target.value as AdvancedAudioProfile)}
-                                                    className="bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-100"
-                                                >
-                                                    <option value="copy">Copy (Passthrough)</option>
-                                                    <option value="aac-192">AAC 192k</option>
-                                                    <option value="aac-128">AAC 128k</option>
-                                                </select>
-                                            </div>
-                                            {/* Summary line */}
-                                            <div className="w-full mt-2 text-xs text-gray-400">
-                                                Summary: <span className="text-gray-300">{advRes} · {advQuality === 'high' ? 'High' : advQuality === 'medium' ? 'Medium' : 'Lite'} · {advAudio === 'copy' ? 'Copy' : advAudio === 'aac-192' ? 'AAC 192k' : 'AAC 128k'}</span>
-                                            </div>
+                                        <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
+                                            <Select
+                                                label="Quality"
+                                                value={advQuality}
+                                                onChange={(e) => setAdvQuality(e.target.value as AdvancedVideoQuality)}
+                                                options={[
+                                                    { value: "high", label: "High (CRF 18)" },
+                                                    { value: "medium", label: "Medium (CRF 20)" },
+                                                    { value: "lite", label: "Lite (CRF 23)" }
+                                                ]}
+                                            />
                                         </div>
-                                    )}
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-gray-300">Save to</label>
-                                        <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
-                                            <button
-                                                onClick={() => setOutputTarget('shell')}
-                                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-cyan-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
-                                            >
-                                                Gesu Shell
-                                            </button>
-                                            <button
-                                                onClick={() => setOutputTarget('workflow')}
-                                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
-                                            >
-                                                WorkFlow DB
-                                            </button>
+                                        <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
+                                            <Select
+                                                label="Audio"
+                                                value={advAudio}
+                                                onChange={(e) => setAdvAudio(e.target.value as AdvancedAudioProfile)}
+                                                options={[
+                                                    { value: "copy", label: "Copy (Passthrough)" },
+                                                    { value: "aac-192", label: "AAC 192k" },
+                                                    { value: "aac-128", label: "AAC 128k" }
+                                                ]}
+                                            />
                                         </div>
                                     </div>
+                                )}
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-tokens-muted">Save to</label>
+                                    <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border">
+                                        <button
+                                            onClick={() => setOutputTarget('shell')}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'shell' ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
+                                        >
+                                            Gesu Shell
+                                        </button>
+                                        <button
+                                            onClick={() => setOutputTarget('workflow')}
+                                            className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${outputTarget === 'workflow' ? 'bg-pink-600/90 text-white shadow' : 'text-tokens-muted hover:text-tokens-fg'}`}
+                                        >
+                                            WorkFlow DB
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
+
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
                                     onClick={handleQueueConvert}
                                     disabled={!convertFilePath}
-                                    className="mt-2 w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-lg shadow-purple-900/40 transition-all active:scale-[0.98]"
+                                    icon="⚡"
+                                    iconPosition="circle"
                                 >
                                     Queue Convert Job
-                                </button>
+                                </Button>
                             </div>
-                        </div>
+                        </Card>
                     )}
 
                     {/* History View */}
                     {activeTab === 'history' && (
-                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex flex-col w-full max-h-[calc(100vh-180px)] min-h-[500px]">
-                            <div className="flex justify-between items-center mb-4 shrink-0">
-                                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                                    Recent Jobs
-                                </h2>
-                                <div className="flex gap-2 items-center">
-                                    <select
-                                        value={historyFilter}
-                                        onChange={(e) => setHistoryFilter(e.target.value as any)}
-                                        className="bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-gray-100 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                                    >
-                                        <option value="all">All</option>
-                                        <option value="download">Download</option>
-                                        <option value="convert">Convert</option>
-                                        <option value="advanced">Advanced</option>
-                                    </select>
-                                    <button onClick={refreshHistory} className="text-xs text-cyan-400 hover:text-cyan-300 ml-2">Refresh</button>
-                                </div>
+                        <Card title="Recent Jobs" className="h-full min-h-[500px] flex flex-col" headerAction={
+                            <div className="flex gap-2 items-center">
+                                <Select
+                                    value={historyFilter}
+                                    onChange={(e) => setHistoryFilter(e.target.value as any)}
+                                    options={[
+                                        { value: 'all', label: 'All Types' },
+                                        { value: 'download', label: 'Downloads' },
+                                        { value: 'convert', label: 'Converts' },
+                                        { value: 'advanced', label: 'Advanced' }
+                                    ]}
+                                    className="!w-32 !py-1 !text-xs"
+                                />
+                                <button onClick={refreshHistory} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">Refresh</button>
                             </div>
-
+                        }>
                             <div className="flex-1 overflow-y-auto scroll-on-hover pr-1 min-h-0">
                                 <table className="w-full text-left border-collapse">
-                                    {/* Table content continues... */}
-                                    {(() => {
-                                        const isConvertLikeFilter = historyFilter === 'convert' || historyFilter === 'advanced';
-                                        const colSpan = isConvertLikeFilter ? 5 : 7;
-                                        return (
-                                            <>
-                                                <thead>
-                                                    <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
-                                                        <th className="p-3">Time</th>
-                                                        <th className="p-3">Type</th>
-                                                        <th className="p-3">Status</th>
-                                                        <th className="p-3">Preset</th>
-                                                        {!isConvertLikeFilter && <th className="p-3">Network</th>}
-                                                        <th className="p-3">Target</th>
-                                                        {!isConvertLikeFilter && <th className="p-3">Details</th>}
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-800">
-                                                    {historyJobs.length === 0 ? (
-                                                        <tr>
-                                                            <td colSpan={colSpan} className="p-8 text-center text-gray-500">
-                                                                No history log found.
-                                                            </td>
-                                                        </tr>
-                                                    ) : (
-                                                        historyJobs
-                                                            .filter(job => {
-                                                                if (historyFilter === 'all') return true;
+                                    <thead>
+                                        <tr className="border-b border-tokens-border text-tokens-muted text-xs uppercase tracking-wider">
+                                            <th className="p-3">Time</th>
+                                            <th className="p-3">Type</th>
+                                            <th className="p-3">Status</th>
+                                            <th className="p-3">Preset</th>
+                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">Network</th>}
+                                            <th className="p-3">Target</th>
+                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">Details</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-tokens-border">
+                                        {historyJobs.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={7} className="p-8 text-center text-tokens-muted">
+                                                    No history log found.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            historyJobs
+                                                .filter(job => {
+                                                    if (historyFilter === 'all') return true;
+                                                    const preset = job.preset || '';
+                                                    if (historyFilter === 'advanced') {
+                                                        return preset === 'video-advanced';
+                                                    }
+                                                    if (historyFilter === 'convert') {
+                                                        return preset.startsWith('audio-') || (preset.startsWith('video-') && preset !== 'video-advanced');
+                                                    }
+                                                    if (historyFilter === 'download') {
+                                                        if (!preset) return true;
+                                                        return !(preset.startsWith('audio-') || preset.startsWith('video-'));
+                                                    }
+                                                    return true;
+                                                })
+                                                .map((job, idx) => (
+                                                    <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-tokens-panel2/50 transition-colors">
+                                                        <td className="p-3 text-sm text-tokens-muted whitespace-nowrap">
+                                                            {new Date(job.timestamp).toLocaleString()}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            {(() => {
                                                                 const preset = job.preset || '';
-                                                                if (historyFilter === 'advanced') {
-                                                                    return preset === 'video-advanced';
+                                                                if (preset === 'video-advanced') {
+                                                                    return <Badge variant="brand">ADV</Badge>;
+                                                                } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
+                                                                    return <Badge variant="neutral">CV</Badge>;
+                                                                } else {
+                                                                    return <Badge variant="brand">DL</Badge>;
                                                                 }
-                                                                if (historyFilter === 'convert') {
-                                                                    return preset.startsWith('audio-') || (preset.startsWith('video-') && preset !== 'video-advanced');
-                                                                }
-                                                                if (historyFilter === 'download') {
-                                                                    if (!preset) return true;
-                                                                    return !(preset.startsWith('audio-') || preset.startsWith('video-'));
-                                                                }
-                                                                return true;
-                                                            })
-                                                            .map((job, idx) => (
-                                                                <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-gray-800/30 transition-colors">
-                                                                    <td className="p-3 text-sm text-gray-300 whitespace-nowrap">
-                                                                        {new Date(job.timestamp).toLocaleString()}
-                                                                    </td>
-                                                                    <td className="p-3">
-                                                                        {/* TYPE badge: DL / CV / ADV */}
-                                                                        {(() => {
-                                                                            const preset = job.preset || '';
-                                                                            if (preset === 'video-advanced') {
-                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-fuchsia-900/30 text-fuchsia-400 border-fuchsia-800">ADV</span>;
-                                                                            } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
-                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-purple-900/30 text-purple-400 border-purple-800">CV</span>;
-                                                                            } else {
-                                                                                return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border bg-cyan-900/30 text-cyan-400 border-cyan-800">DL</span>;
-                                                                            }
-                                                                        })()}
-                                                                    </td>
-                                                                    <td className="p-3">
-                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${job.status === 'success' ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' :
-                                                                            job.status === 'failed' ? 'bg-red-900/30 text-red-400 border-red-800' :
-                                                                                'bg-blue-900/30 text-blue-400 border-blue-800'
-                                                                            }`}>
-                                                                            {job.status}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="p-3 text-sm text-gray-300">
-                                                                        {getPresetDisplayName(job.preset)}
-                                                                    </td>
-                                                                    {!isConvertLikeFilter && (
-                                                                        <td className="p-3 text-sm text-gray-300">
-                                                                            {job.network ? (
-                                                                                NETWORK_LABELS[job.network as NetworkProfile] || job.network
-                                                                            ) : (
-                                                                                <span className="text-gray-600">-</span>
-                                                                            )}
-                                                                        </td>
-                                                                    )}
-                                                                    <td className="p-3 text-sm text-gray-300">
-                                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] border ${job.target === 'workflow' ? 'bg-pink-900/30 text-pink-300 border-pink-800' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
-                                                                            {job.target === 'workflow' ? 'WF DB' : 'Shell'}
-                                                                        </span>
-                                                                    </td>
-                                                                    {!isConvertLikeFilter && (
-                                                                        <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url || job.details}>
-                                                                            {/* Untuk advanced, backend sudah mengisi job.details.
-                                                               For job lain, pakai errorMessage atau url. */}
-                                                                            {job.details || job.errorMessage || job.url}
-                                                                        </td>
-                                                                    )}
-                                                                </tr>
-                                                            ))
-                                                    )}
-                                                </tbody>
-                                            </>
-                                        );
-                                    })()}
-
+                                                            })()}
+                                                        </td>
+                                                        <td className="p-3">
+                                                            <Badge variant={job.status === 'success' ? 'success' : job.status === 'failed' ? 'error' : 'neutral'}>
+                                                                {job.status}
+                                                            </Badge>
+                                                        </td>
+                                                        <td className="p-3 text-xs text-tokens-fg">{getPresetDisplayName(job.preset)}</td>
+                                                        {!(historyFilter === 'convert' || historyFilter === 'advanced') && <td className="p-3 text-xs text-tokens-muted">{job.network}</td>}
+                                                        <td className="p-3 text-xs text-tokens-muted">{job.target}</td>
+                                                        {!(historyFilter === 'convert' || historyFilter === 'advanced') && (
+                                                            <td className="p-3 text-xs font-mono text-tokens-muted truncate max-w-[150px]" title={job.url}>
+                                                                {job.url}
+                                                            </td>
+                                                        )}
+                                                    </tr>
+                                                ))
+                                        )}
+                                    </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </Card>
                     )}
                 </div>
 
-                {/* --- RIGHT COLUMN --- */}
-                {/* Note: In previous version right column content was not fully shown in view. Assuming sidebar placeholder or info panel. 
-                    Adding a placeholder panel if needed, OR if grid column definition suggests content. 
-                    Grid was: [minmax(0,2.2fr)_minmax(320px,1fr)]
-                */}
-                <div className="hidden lg:flex flex-col gap-6">
-                    <div className="bg-gesu-card/50 border border-gesu-border rounded-xl p-5 sticky top-0">
-                        <h3 className="font-bold text-lg text-white mb-2">Info & Help</h3>
-                        <p className="text-sm text-gesu-text-dim mb-4">
-                            Use the Media Suite to download content or convert files locally.
-                        </p>
-                        <div className="p-3 bg-gesu-bg/50 rounded-lg border border-gesu-border mb-2">
-                            <h4 className="font-semibold text-xs text-white mb-1">Status Legend</h4>
-                            <div className="space-y-2 text-[10px] text-gray-400">
-                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Ready (Configured)</div>
-                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Ready (System Path)</div>
-                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Warning (Path Fallback)</div>
-                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Missing</div>
-                            </div>
+                {/* --- RIGHT COLUMN: QUEUE & INFO --- */}
+                <div className="flex flex-col gap-6 w-full min-w-0">
+                    <Card title="Job Queue" className="flex-1 min-h-[400px] flex flex-col">
+                        <div className="flex gap-2 items-center mb-4">
+                            <Select
+                                value={queueFilter}
+                                onChange={(e) => setQueueFilter(e.target.value as any)}
+                                options={[
+                                    { value: 'all', label: 'All Jobs' },
+                                    { value: 'download', label: 'Downloads' },
+                                    { value: 'convert', label: 'Converts' }
+                                ]}
+                                className="!w-32 !py-1 !text-xs"
+                            />
                         </div>
-                    </div>
-                </div>
 
+                        <div className="flex-1 overflow-y-auto scroll-on-hover pr-2 space-y-3">
+                            {jobs.length === 0 ? (
+                                <div className="text-center text-tokens-muted py-10 italic border-2 border-dashed border-tokens-border/50 rounded-xl">
+                                    Queue is empty.
+                                </div>
+                            ) : (
+                                jobs
+                                    .filter(j => queueFilter === 'all' || j.type === queueFilter)
+                                    .map(job => (
+                                        <div key={job.id} className="bg-tokens-panel2/50 border border-tokens-border rounded-lg p-3 hover:border-tokens-brand-DEFAULT/30 transition-all group">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex flex-col gap-0.5 max-w-[70%]">
+                                                    <span className="font-medium text-sm text-tokens-fg truncate" title={job.label}>{job.label}</span>
+                                                    <span className="text-[10px] text-tokens-muted font-mono">{job.id} · {job.engine}</span>
+                                                </div>
+                                                <StatusBadge status={job.status} progress={job.progress} />
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            {job.status === 'running' && (
+                                                <div className="w-full bg-tokens-border h-1.5 rounded-full overflow-hidden mb-2">
+                                                    <div
+                                                        className="bg-tokens-brand-DEFAULT h-full transition-all duration-500 ease-out relative overflow-hidden"
+                                                        style={{ width: `${job.progress || 0}%` }}
+                                                    >
+                                                        <div className="absolute inset-0 bg-white/20 animate-[shimmer_1s_infinite] skew-x-12"></div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Details */}
+                                            {job.payload && (
+                                                <div className="text-[10px] text-tokens-muted grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-tokens-border/50">
+                                                    {job.type === 'download' && (
+                                                        <>
+                                                            <span>Preset: <span className="text-tokens-fg">{job.payload.preset}</span></span>
+                                                            <span>Network: <span className="text-tokens-fg">{job.payload.network}</span></span>
+                                                        </>
+                                                    )}
+                                                    {job.type === 'convert' && (
+                                                        <>
+                                                            <span className="col-span-2">
+                                                                {job.payload.preset === 'video-advanced'
+                                                                    ? formatAdvancedOptionsSummaryFromPayload(job.payload)
+                                                                    : `Preset: ${job.payload.preset}`
+                                                                }
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                            )}
+                        </div>
+                    </Card>
+
+                    {/* Info Panel / Tips */}
+                    <Card title="Quick Tips" className="bg-tokens-panel/50 border-dashed">
+                        <ul className="text-xs text-tokens-muted space-y-2 list-disc pl-4">
+                            <li>Use <strong>WorkFlow DB</strong> target to auto-imports into the Gesu Asset Database.</li>
+                            <li><strong>Gaspol</strong> network profile uses aria2c for maximum bandwidth (up to 16 connections).</li>
+                            <li><strong>Advanced Converter</strong> allows manual control over FFmpeg CRF and Audio Bitrate.</li>
+                        </ul>
+                    </Card>
+                </div>
             </div>
         </PageContainer>
     );

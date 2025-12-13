@@ -1,17 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { LauncherCard } from '../components/LauncherCard';
+import { PageContainer } from '../components/PageContainer';
 
 export function LauncherPage() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center w-full">
+        <PageContainer className="flex flex-col items-center justify-center min-h-[80vh]">
             {/* Hero Section */}
             <div className="text-center mb-16 max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 tracking-tight mb-6 p-1">
                     Gesu Ecosystem v2
                 </h1>
-                <p className="text-lg text-gray-400 mb-8 leading-relaxed max-w-2xl mx-auto">
+                <p className="text-lg text-tokens-muted mb-8 leading-relaxed max-w-2xl mx-auto">
                     Your personal productivity operating system. Manage projects, track focus, and maintain balance from a single unified interface.
                 </p>
             </div>
@@ -56,6 +57,6 @@ export function LauncherPage() {
                 />
 
             </div>
-        </div>
+        </PageContainer>
     );
 }

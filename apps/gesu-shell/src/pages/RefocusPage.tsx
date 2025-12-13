@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { PageContainer } from '../components/PageContainer';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
 
 // --- Types & Interfaces ---
 
@@ -17,9 +20,9 @@ const PROMPTS: Prompt[] = [
 // --- Helper Functions ---
 
 const getStatus = (level: number) => {
-    if (level <= 3) return { label: "Calm", color: "text-emerald-400", bg: "bg-emerald-500", border: "border-emerald-500/30" };
-    if (level <= 6) return { label: "Distracted", color: "text-yellow-400", bg: "bg-yellow-500", border: "border-yellow-500/30" };
-    return { label: "Overwhelmed", color: "text-red-400", bg: "bg-red-500", border: "border-red-500/30" };
+    if (level <= 3) return { label: "Calm", color: "text-emerald-500", bg: "bg-emerald-500", border: "border-emerald-500/30" };
+    if (level <= 6) return { label: "Distracted", color: "text-amber-500", bg: "bg-amber-500", border: "border-amber-500/30" };
+    return { label: "Overwhelmed", color: "text-red-500", bg: "bg-red-500", border: "border-red-500/30" };
 };
 
 export function RefocusPage() {
@@ -60,15 +63,14 @@ export function RefocusPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-
+        <PageContainer>
             {/* Header */}
             <div className="flex justify-between items-center mb-2">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Gesu Refocus</h1>
-                    <p className="text-gray-400 text-sm mt-1">Regain clarity when things get chaotic.</p>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Refocus</h1>
+                    <p className="text-tokens-muted text-sm mt-1">Regain clarity when things get chaotic.</p>
                 </div>
-                <Link to="/" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors">
+                <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
                     ← Back
                 </Link>
             </div>
@@ -79,18 +81,18 @@ export function RefocusPage() {
                 <div className="flex-1 flex flex-col gap-6">
 
                     {/* Current State Card */}
-                    <div className={`bg-gray-900/50 backdrop-blur-sm border p-6 rounded-xl shadow-lg transition-colors duration-500 ${status.border} border-opacity-50`}>
-                        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Card title={
+                        <div className="flex items-center gap-2">
                             <span className={`w-1.5 h-6 rounded-full transition-colors duration-500 ${status.bg}`}></span>
                             Current State
-                        </h2>
-
-                        <div className="px-4 pb-2">
+                        </div>
+                    } className={`transition-colors duration-500 ${status.border} border-opacity-50`}>
+                        <div className="px-1 pb-2">
                             <div className="flex justify-between items-end mb-4">
                                 <span className={`text-2xl font-bold transition-colors duration-500 ${status.color}`}>
                                     {status.label}
                                 </span>
-                                <span className="text-5xl font-black text-gray-700/50 select-none">
+                                <span className="text-5xl font-black text-tokens-panel2 select-none">
                                     {level}
                                 </span>
                             </div>
@@ -102,30 +104,30 @@ export function RefocusPage() {
                                     max="10"
                                     value={level}
                                     onChange={(e) => setLevel(parseInt(e.target.value))}
-                                    className={`w-full h-4 bg-gray-700 rounded-lg appearance-none cursor-pointer hover:opacity-90 transition-opacity`}
+                                    className={`w-full h-4 bg-tokens-panel2 rounded-lg appearance-none cursor-pointer hover:opacity-90 transition-opacity border border-tokens-border`}
                                     style={{ accentColor: status.bg.replace('bg-', '') }} // Fallback/Hint for accent color
                                 />
                                 {/* Custom colored track simulation via CSS accent-color is browser dependent, using reliable Tailwind colors for text/borders instead */}
                             </div>
 
-                            <div className="flex justify-between mt-3 text-xs text-gray-500 font-medium">
+                            <div className="flex justify-between mt-3 text-xs text-tokens-muted font-medium">
                                 <span>Zen</span>
                                 <span>Chaos</span>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Journaling Card */}
-                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Card title={
+                        <div className="flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
                             What's going on?
-                        </h2>
-
+                        </div>
+                    }>
                         <div className="flex flex-col gap-6">
                             {PROMPTS.map((prompt) => (
                                 <div key={prompt.id} className="flex flex-col gap-2">
-                                    <label htmlFor={prompt.id} className="text-sm font-medium text-gray-300">
+                                    <label htmlFor={prompt.id} className="text-sm font-medium text-tokens-muted">
                                         {prompt.question}
                                     </label>
                                     <textarea
@@ -133,26 +135,26 @@ export function RefocusPage() {
                                         value={answers[prompt.id]}
                                         onChange={(e) => handleAnswerChange(prompt.id, e.target.value)}
                                         rows={3}
-                                        className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all placeholder-gray-600 resize-none"
+                                        className="w-full bg-tokens-panel2 border border-tokens-border rounded-lg p-3 text-tokens-fg focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all placeholder-gray-500 resize-none"
                                         placeholder="Type your thoughts here..."
                                     />
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </Card>
                 </div>
 
                 {/* RIGHT COLUMN (1/3 width) - Actions */}
                 <div className="lg:w-80 xl:w-96 flex flex-col gap-6">
 
                     {/* Actions Card */}
-                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex-1 flex flex-col h-full sticky top-24">
-                        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Card title={
+                        <div className="flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
                             Refocus Actions
-                        </h2>
-
-                        <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                        </div>
+                    } className="h-full flex flex-col sticky top-24">
+                        <p className="text-sm text-tokens-muted mb-8 leading-relaxed">
                             Choose an action based on your current energy and overwhelm level.
                             Small steps are better than no steps.
                         </p>
@@ -160,33 +162,34 @@ export function RefocusPage() {
                         <div className="flex flex-col gap-4">
                             <button
                                 onClick={() => logAction('Quick Reset')}
-                                className="w-full py-4 px-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-emerald-500/50 rounded-xl text-left group transition-all"
+                                className="w-full py-4 px-4 bg-tokens-panel2 hover:bg-tokens-border border border-tokens-border hover:border-emerald-500/50 rounded-xl text-left group transition-all"
                             >
-                                <div className="font-semibold text-gray-200 group-hover:text-emerald-400 transition-colors">⚡ Quick 10-15m Reset</div>
-                                <div className="text-xs text-gray-500 mt-1">Short break, breathe, hydrating.</div>
+                                <div className="font-semibold text-tokens-fg group-hover:text-emerald-500 transition-colors">⚡ Quick 10-15m Reset</div>
+                                <div className="text-xs text-tokens-muted mt-1">Short break, breathe, hydrating.</div>
                             </button>
 
                             <button
                                 onClick={() => logAction('Lost Mode')}
-                                className="w-full py-4 px-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-purple-500/50 rounded-xl text-left group transition-all"
+                                className="w-full py-4 px-4 bg-tokens-panel2 hover:bg-tokens-border border border-tokens-border hover:border-purple-500/50 rounded-xl text-left group transition-all"
                             >
-                                <div className="font-semibold text-gray-200 group-hover:text-purple-400 transition-colors">📝 Lost Mode Journaling</div>
-                                <div className="text-xs text-gray-500 mt-1">Deep dive into what's wrong.</div>
+                                <div className="font-semibold text-tokens-fg group-hover:text-purple-500 transition-colors">📝 Lost Mode Journaling</div>
+                                <div className="text-xs text-tokens-muted mt-1">Deep dive into what's wrong.</div>
                             </button>
 
-                            <div className="h-px bg-gray-800 my-2"></div>
+                            <div className="h-px bg-tokens-border my-2"></div>
 
-                            <button
+                            <Button
+                                variant="primary"
                                 onClick={() => logAction('Back to Compass')}
-                                className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-semibold shadow-lg shadow-cyan-900/40 transition-all active:scale-[0.98] text-center"
+                                className="w-full justify-center"
                             >
                                 Back to Compass
-                            </button>
+                            </Button>
                         </div>
-                    </div>
+                    </Card>
 
                 </div>
             </div>
-        </div>
+        </PageContainer>
     );
 }

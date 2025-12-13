@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from './Button';
 
 interface LauncherCardProps {
     title: string;
@@ -16,31 +17,31 @@ export const LauncherCard: React.FC<LauncherCardProps> = ({
     primary = false
 }) => {
     return (
-        <div className={`
-      relative overflow-hidden rounded-xl border border-gray-800 bg-gray-900/50 p-6 
-      transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10
-      flex flex-col h-full backdrop-blur-sm
-      ${primary ? 'border-cyan-500/30' : ''}
-    `}>
-            <div className="mb-4">
-                <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{description}</p>
+        <div
+            onClick={onClick}
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-tokens-border bg-tokens-panel p-6 hover:shadow-xl hover:shadow-tokens-brand-DEFAULT/5 hover:border-tokens-border/80 transition-all duration-300 flex flex-col h-full"
+        >
+            <div className="flex flex-col h-full z-10 relative">
+                <div className="mb-4">
+                    <h3 className="text-xl font-bold text-tokens-fg mb-2 group-hover:text-tokens-brand-DEFAULT transition-colors">{title}</h3>
+                    <p className="text-tokens-muted text-sm leading-relaxed">{description}</p>
+                </div>
+
+                <div className="mt-auto pt-4">
+                    <Button
+                        onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+                        variant={primary ? 'primary' : 'outline'}
+                        fullWidth
+                        icon={<span>→</span>}
+                        iconPosition="circle"
+                    >
+                        {buttonText}
+                    </Button>
+                </div>
             </div>
 
-            <div className="mt-auto pt-4">
-                <button
-                    onClick={onClick}
-                    className={`
-            w-full py-2 px-4 rounded-lg font-medium text-sm
-            transition-colors duration-200
-            ${primary
-                            ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-900/20'
-                            : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'}
-          `}
-                >
-                    {buttonText}
-                </button>
-            </div>
+            {/* Hover Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-tokens-brand-DEFAULT/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
         </div>
     );
 };

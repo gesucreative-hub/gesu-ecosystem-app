@@ -1,34 +1,94 @@
 :root {
-  /* Core Palette (Tailwind Mapping) */
+  /* Existing Compatibility Vars (Keeping them to avoid breaks) */
   --gesu-bg: #030712;
-  /* gray-950 */
   --gesu-card: #111827;
-  /* gray-900 */
   --gesu-card-hover: #1f2937;
-  /* gray-800 */
   --gesu-border: #1f2937;
-  /* gray-800 */
   --gesu-border-light: #374151;
-  /* gray-700 */
-
-  /* Primary (Cyan) */
   --gesu-primary: #06b6d4;
-  /* cyan-500 */
   --gesu-primary-hover: #0891b2;
-  /* cyan-600 */
   --gesu-primary-light: #67e8f9;
-  /* cyan-300 */
   --gesu-primary-bg: rgba(6, 182, 212, 0.1);
-
-  /* Secondary (Red/Rose) */
   --gesu-secondary: #ef4444;
-  /* red-500 */
-
-  /* Text */
   --gesu-text-main: #f3f4f6;
-  /* gray-100 */
   --gesu-text-muted: #9ca3af;
-  /* gray-400 */
   --gesu-text-dim: #6b7280;
-  /* gray-500 */
+}
+
+/* =========================================
+   NEW SEMANTIC TOKEN SYSTEM
+   Theme 1 (Light): Primary-700 Accent (#4141b9) + Gray-50 Base (#f6f6f6)
+   Theme 2 (Dark): Secondary-300 Accent (#a4db74) + Gray-950 Base (#292929)
+   ========================================= */
+
+@layer base {
+  :root[data-theme="light"] {
+    /* Core Base */
+    --bg: #f6f6f6;
+    --fg: #1f1f47;
+    /* High contrast dark blue/purple */
+    --muted: #6d6d6d;
+    --panel: #ffffff;
+    --panel2: #f3fbea;
+    /* Slight tint? Or #eff4fe */
+    --border: rgba(0, 0, 0, 0.08);
+    --ring: rgba(65, 65, 185, 0.3);
+
+    /* Brand / Accent */
+    --brand: #4141b9;
+    /* Primary-700 */
+    --brand-contrast: #ffffff;
+    --brand-hover: #3a3b99;
+
+    /* Sidebar (Light) */
+    --sidebar-bg: #ffffff;
+    --sidebar-fg: #454545;
+    --sidebar-muted: #888888;
+    --sidebar-border: rgba(0, 0, 0, 0.06);
+    --sidebar-active-bg: #eff4fe;
+    /* Light primary tint */
+    --sidebar-active-fg: #4141b9;
+    /* Primary-700 */
+    --sidebar-hover: #f6f6f6;
+  }
+
+  :root[data-theme="dark"] {
+    /* Core Base */
+    --bg: #292929;
+    /* Gray-950 */
+    --fg: #f6f6f6;
+    /* Gray-50 */
+    --muted: #888888;
+    --panel: #3d3d3d;
+    /* Gray-900 */
+    --panel2: #454545;
+    /* Gray-800 */
+    --border: rgba(255, 255, 255, 0.08);
+    --ring: rgba(164, 219, 116, 0.3);
+
+    /* Brand / Accent */
+    --brand: #a4db74;
+    /* Secondary-300 */
+    --brand-contrast: #15280b;
+    /* Secondary-950 */
+    --brand-hover: #87cb50;
+
+    /* Sidebar (Dark) */
+    --sidebar-bg: #1f1f47;
+    /* Primary-950 as requested/implied or #202020? Let's check user Requirement.
+                              User said: "Dark theme uses Theme 2 ... Brand #a4db74 ... BG #292929".
+                              Sidebar Ref: "Dark Sidebar".
+                              My previous used #202020. User didn't complain but said "Sidebar visual target: Must look like my reference".
+                              Reference usually implies slightly darker or lighter than main BG.
+                              Main BG is #292929. Let's make sidebar #232323 or allow #1f1f47 if that was the "design" choice.
+                              Actually, let's stick to safe #252525 (Gray-925 approx) or keep #202020. #202020 is fine.
+                              Let's explicitly add sidebar-muted. */
+    --sidebar-bg: #202020;
+    --sidebar-fg: #d1d1d1;
+    --sidebar-muted: #6b7280;
+    --sidebar-border: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: rgba(164, 219, 116, 0.1);
+    --sidebar-active-fg: #a4db74;
+    --sidebar-hover: rgba(255, 255, 255, 0.05);
+  }
 }

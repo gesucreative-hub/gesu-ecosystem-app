@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { GesuSettings } from '../types/settings';
 import { Link } from 'react-router-dom';
 import { useGesuSettings } from '../lib/gesuSettings';
 import { PageContainer } from '../components/PageContainer';
+import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { Card } from '../components/Card';
+import { Badge } from '../components/Badge';
 
 
 // --- Types & Interfaces ---
@@ -42,7 +45,7 @@ interface EngineConfig {
 
 const DEFAULT_SETTINGS: SettingsState = {
     paths: {
-        workflowRoot: String.raw`D:\03. Resources\_Gesu's\WorkFlowDatabase`,
+        workflowRoot: String.raw`D: \03.Resources\_Gesu's\WorkFlowDatabase`,
         projectsRoot: String.raw`D:\01. Projects`,
         backupRoot: String.raw`D:\03. Resources\_Gesu's\Backup`
     },
@@ -119,29 +122,32 @@ const ACCENT_COLORS = [
 // --- Helper Components ---
 
 const StatusBadge = ({ status, version }: { status: EngineStatus; version?: string }) => {
-    const styles = {
-        unknown: 'bg-gray-700 text-gray-300 border-gray-600',
-        ok: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
-        system: 'bg-blue-900/50 text-blue-300 border-blue-500/30',
-        fallback: 'bg-amber-900/50 text-amber-300 border-amber-500/30',
-        missing: 'bg-red-900/50 text-red-300 border-red-500/30',
-        error: 'bg-red-950/50 text-red-400 border-red-500/30'
+    const variants: Record<EngineStatus, 'neutral' | 'success' | 'brand' | 'warning' | 'error'> = {
+        unknown: 'neutral',
+        ok: 'success',
+        system: 'brand',
+        fallback: 'warning',
+        missing: 'error',
+        error: 'error'
     };
 
     const labels = {
         unknown: 'Unknown',
         ok: 'Ready (Configured)',
         system: 'Ready (System PATH)',
-        fallback: 'Warning: Config Invalid (Using PATH)', // Explicit warning
+        fallback: 'Warning (Fallback)',
         missing: 'Missing',
         error: 'Error'
     };
 
     return (
-        <div className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-2 w-fit ${styles[status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'system' ? 'bg-blue-400' : status === 'fallback' ? 'bg-amber-400' : status === 'missing' ? 'bg-red-400' : 'bg-gray-400'}`}></span>
-            <span>{labels[status]}</span>
-            {version && (status === 'ok' || status === 'system' || status === 'fallback') && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
+        <div className="flex items-center gap-2">
+            <Badge variant={variants[status]}>
+                {labels[status]}
+            </Badge>
+            {version && (status === 'ok' || status === 'system' || status === 'fallback') && (
+                <span className="text-[10px] text-tokens-muted font-mono">{version}</span>
+            )}
         </div>
     );
 };
@@ -151,7 +157,6 @@ export function SettingsPage() {
     const { settings: loadedSettings, saveSettings } = useGesuSettings();
 
     // Local State (for optimistic UI / editing before save)
-    // We hydrate this from loadedSettings when it changes
     const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
     const [engines, setEngines] = useState<EngineConfig[]>(DEFAULT_ENGINES);
 
@@ -226,7 +231,6 @@ export function SettingsPage() {
     };
 
     const detectEngine = async (_id: EngineId) => {
-        // Just run a global check, it's fast enough and updates everything
         await checkAllTools();
     };
 
@@ -266,7 +270,6 @@ export function SettingsPage() {
 
         setIsCheckingTools(true);
         try {
-            // Map engine array to payload
             const payload = {
                 ytDlpPath: engines.find(e => e.id === 'ytDlp')?.path,
                 ffmpegPath: engines.find(e => e.id === 'ffmpeg')?.path,
@@ -277,7 +280,6 @@ export function SettingsPage() {
             const result = await window.gesu.checkTools(payload);
             console.log('[GlobalToolsCheck]', result);
 
-            // Map result back to engines state
             setEngines(prev => prev.map(e => {
                 let res = null;
                 if (e.id === 'ytDlp') res = result.ytDlp;
@@ -289,39 +291,28 @@ export function SettingsPage() {
 
                 let status: EngineStatus = 'unknown';
 
-                // Use resolution source to determine status
-                // Use specific status from backend
                 if (res.status === 'ready_configured') status = 'ok';
                 else if (res.status === 'ready_path') status = 'system';
                 else if (res.status === 'fallback_path') status = 'fallback';
                 else if (res.status === 'missing') status = 'missing';
                 else if (res.status === 'error') status = 'error';
 
-                // Fallback for logic safety
                 if (status === 'unknown') {
                     if (res.resolution === 'configured') status = 'ok';
-                    else if (res.resolution === 'path') status = 'system'; // Default to system if ambiguous
+                    else if (res.resolution === 'path') status = 'system';
                     else if (res.resolution === 'missing') status = 'missing';
                 }
 
-                // Fallback for logic safety
                 if (res.status === 'not_found') status = 'missing';
                 if (res.status === 'error') status = 'error';
 
                 return {
                     ...e,
                     status,
-                    // If we found it in PATH (fallback), we might want to suggest that path in UI or just keep user input?
-                    // User requirement: "show actual resolved/used tool".
-                    // If fallback, resolvedPath is the system path. We shouldn't overwrite the user's input field (e.path) 
-                    // unless they explicitly asked to "Detect" or "Set".
-                    // Keeping e.path as user input. We can show resolved path in tooltip or separate label if needed.
                     version: res.version || undefined,
                     lastCheckedAt: res.lastCheckedAt
                 };
             }));
-
-            // Note: Removed alert to valid annoyance
         } catch (err) {
             console.error(err);
             alert("Error running tools check.");
@@ -332,7 +323,6 @@ export function SettingsPage() {
 
     // Global Actions
     const handleSave = async () => {
-        // Construct GesuSettings object
         const payload: GesuSettings = {
             paths: settings.paths,
             appearance: settings.appearance,
@@ -345,13 +335,11 @@ export function SettingsPage() {
             installPreference
         };
 
-        // Use shared hook to save (bridge avail check inside)
         try {
             await saveSettings(payload);
             console.log("Settings Saved to Disk via Shared Hook:", payload);
             alert("Settings saved successfully to disk!");
             setIsDirty(false);
-            // Auto-refresh tools
             checkAllTools();
         } catch (err) {
             console.error(err);
@@ -374,10 +362,10 @@ export function SettingsPage() {
             {/* Header */}
             <div className="flex justify-between items-center mb-2">
                 <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Gesu Settings</h1>
-                    <p className="text-gray-400 text-sm mt-1">Global configuration for paths, appearance, and tools.</p>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Settings</h1>
+                    <p className="text-tokens-muted text-sm mt-1">Global configuration for paths, appearance, and tools.</p>
                 </div>
-                <Link to="/" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700 transition-colors">
+                <Link to="/" className="px-4 py-2 bg-tokens-panel hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors">
                     ← Back
                 </Link>
             </div>
@@ -385,144 +373,105 @@ export function SettingsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Workspace Paths */}
-                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                    <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                <Card title={
+                    <div className="flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-cyan-500 rounded-full"></span>
                         Workspace Paths
-                    </h2>
-
+                    </div>
+                } className="lg:col-span-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-300">Workflow Root</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={settings.paths.workflowRoot}
-                                    onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
-                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                                />
-                                <button
-                                    onClick={() => handleBrowseFolder('paths', 'workflowRoot')}
-                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
-                                >
-                                    Browse
-                                </button>
+                            <Input
+                                label="Workflow Root"
+                                value={settings.paths.workflowRoot}
+                                onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
+                            />
+                            <div className="flex justify-between items-center">
+                                <p className="text-xs text-tokens-muted">Root folder for the entire Gesu ecosystem database.</p>
+                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'workflowRoot')}>Browse</Button>
                             </div>
-                            <p className="text-xs text-gray-500">Root folder for the entire Gesu ecosystem database.</p>
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-300">Projects Root</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={settings.paths.projectsRoot}
-                                    onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
-                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                                />
-                                <button
-                                    onClick={() => handleBrowseFolder('paths', 'projectsRoot')}
-                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
-                                >
-                                    Browse
-                                </button>
+                            <Input
+                                label="Projects Root"
+                                value={settings.paths.projectsRoot}
+                                onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
+                            />
+                            <div className="flex justify-between items-center">
+                                <p className="text-xs text-tokens-muted">Directory where new projects will be initialized.</p>
+                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'projectsRoot')}>Browse</Button>
                             </div>
-                            <p className="text-xs text-gray-500">Directory where new projects will be initialized.</p>
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-gray-300">Backup Location</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={settings.paths.backupRoot}
-                                    onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
-                                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 font-mono text-sm"
-                                />
-                                <button
-                                    onClick={() => handleBrowseFolder('paths', 'backupRoot')}
-                                    className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
-                                >
-                                    Browse
-                                </button>
+                            <Input
+                                label="Backup Location"
+                                value={settings.paths.backupRoot}
+                                onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
+                            />
+                            <div className="flex justify-end items-center">
+                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'backupRoot')}>Browse</Button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </Card>
 
                 {/* Engine Manager */}
-                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                                Engine Manager
-                            </h2>
-                            <p className="text-sm text-gray-400 mt-1">Configure paths and check the status of external tools used by Gesu.</p>
-                        </div>
-
-                        {/* Preference Selector */}
-                        <div className="text-right">
-                            <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Preferred Installer</div>
-                            <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700">
-                                {['Manual', 'Winget', 'Choco', 'Scoop'].map((method) => (
-                                    <button
-                                        key={method}
-                                        onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
-                                        className={`px-3 py-1 rounded text-xs font-medium transition-all ${installPreference === method.toLowerCase()
-                                            ? 'bg-orange-600 text-white shadow-sm'
-                                            : 'text-gray-400 hover:text-gray-200'
-                                            }`}
-                                    >
-                                        {method}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                <Card title={
+                    <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+                        Engine Manager
                     </div>
+                } headerAction={
+                    <div className="flex bg-tokens-panel2 p-0.5 rounded-lg border border-tokens-border">
+                        {['Manual', 'Winget', 'Choco', 'Scoop'].map((method) => (
+                            <button
+                                key={method}
+                                onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
+                                className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${installPreference === method.toLowerCase()
+                                    ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow-sm'
+                                    : 'text-tokens-muted hover:text-tokens-fg'
+                                    }`}
+                            >
+                                {method}
+                            </button>
+                        ))}
+                    </div>
+                } className="lg:col-span-2">
+                    <p className="text-sm text-tokens-muted -mt-4 mb-6">Configure paths and check the status of external tools used by Gesu.</p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {engines.map((engine) => (
-                            <div key={engine.id} className="bg-gray-800/40 border border-gray-700 rounded-xl p-4 flex flex-col gap-3">
+                            <div key={engine.id} className="bg-tokens-panel2/30 border border-tokens-border rounded-xl p-4 flex flex-col gap-3">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <div className="font-semibold text-gray-200">{engine.label}</div>
-                                        <div className="text-xs text-gray-500">{engine.description}</div>
+                                        <div className="font-semibold text-tokens-fg text-sm">{engine.label}</div>
+                                        <div className="text-[10px] text-tokens-muted">{engine.description}</div>
                                     </div>
                                     <StatusBadge status={engine.status} version={engine.version} />
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 items-center">
                                     <input
                                         type="text"
                                         value={engine.path}
                                         onChange={(e) => updateEnginePath(engine.id, e.target.value)}
                                         placeholder="Enter absolute path..."
-                                        className="flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-2 text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500/30 font-mono text-xs"
+                                        className="flex-1 bg-tokens-panel border border-tokens-border rounded-lg px-3 py-1.5 text-tokens-fg focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30 font-mono text-[10px]"
                                     />
-                                    <button
-                                        onClick={() => handleBrowseTool(engine.id)}
-                                        className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
-                                    >
-                                        Browse
-                                    </button>
-                                    <button
-                                        onClick={() => detectEngine(engine.id)}
-                                        className="px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-xs font-medium border border-gray-600 transition-colors"
-                                        title="Check this tool (runs global check)"
-                                    >
-                                        Check
-                                    </button>
+                                    <Button size="sm" variant="ghost" onClick={() => handleBrowseTool(engine.id)} className="h-7 px-2 text-xs">Browse</Button>
+                                    <Button size="sm" variant="ghost" onClick={() => detectEngine(engine.id)} title="Check this tool" className="h-7 px-2 text-xs">Check</Button>
                                 </div>
 
                                 <div className="flex justify-between items-center mt-1">
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-[10px] text-tokens-muted">
                                         Last check: {engine.lastCheckedAt ? new Date(engine.lastCheckedAt).toLocaleTimeString() : 'Never'}
                                     </div>
                                     {installPreference !== 'manual' && engine.installHint[installPreference] && (
                                         <button
                                             onClick={() => setShowInstallHints(!showInstallHints)}
-                                            className="text-xs text-orange-400 hover:text-orange-300 underline decoration-dotted"
+                                            className="text-[10px] text-tokens-brand-DEFAULT hover:underline decoration-dotted"
                                         >
                                             {showInstallHints ? 'Hide command' : 'Install command'}
                                         </button>
@@ -530,7 +479,7 @@ export function SettingsPage() {
                                 </div>
 
                                 {showInstallHints && installPreference !== 'manual' && engine.installHint[installPreference] && (
-                                    <div className="mt-1 bg-black/40 p-2 rounded border border-gray-700/50 font-mono text-xs text-gray-400 select-all">
+                                    <div className="mt-1 bg-black/40 p-2 rounded border border-tokens-border font-mono text-[10px] text-gray-400 select-all break-all">
                                         &gt; {engine.installHint[installPreference]}
                                     </div>
                                 )}
@@ -538,55 +487,56 @@ export function SettingsPage() {
                         ))}
                     </div>
 
-                    <button
+                    <Button
+                        variant="secondary"
+                        fullWidth
                         onClick={checkAllTools}
                         disabled={isCheckingTools}
-                        className="mt-6 w-full py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                        className="mt-6"
+                        icon={isCheckingTools ? "⏳" : "🔍"}
+                        iconPosition="circle"
                     >
                         {isCheckingTools ? 'Checking System...' : 'Run Global Tools Check'}
-                    </button>
-                </div>
+                    </Button>
+                </Card>
 
                 {/* Desktop Bridge Test (Dev) */}
-                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex justify-between items-center">
-                    <div>
-                        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
-                            Desktop Bridge Test
-                        </h2>
-                        <p className="text-sm text-gray-400 mt-1">Verify IPC communication between React and Electron.</p>
+                <Card title={
+                    <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
+                        Desktop Bridge Test
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className="font-mono text-xs text-gray-400 bg-black/30 px-3 py-1.5 rounded border border-gray-700/50">
-                            {desktopPingResult || 'No ping yet'}
-                        </span>
-                        <button
-                            onClick={handleTestDesktopBridge}
-                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 rounded-lg text-sm transition-colors"
-                        >
-                            Test Bridge
-                        </button>
+                } className="lg:col-span-2">
+                    <div className="flex justify-between items-center">
+                        <p className="text-sm text-tokens-muted">Verify IPC communication between React and Electron.</p>
+                        <div className="flex items-center gap-4">
+                            <span className="font-mono text-xs text-tokens-muted bg-tokens-panel2/50 px-3 py-1.5 rounded border border-tokens-border">
+                                {desktopPingResult || 'No ping yet'}
+                            </span>
+                            <Button onClick={handleTestDesktopBridge}>Test Bridge</Button>
+                        </div>
                     </div>
-                </div>
+                </Card>
 
-                {/* Appearance (Moved to bottom or kept side-by-side if space allows, usually bottom in single col or side in grid. Here sticking to grid flow) */}
-                <div className="lg:col-span-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg h-fit">
-                    <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                {/* Appearance */}
+                <Card title={
+                    <div className="flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
                         Appearance
-                    </h2>
+                    </div>
+                } className="lg:col-span-2">
 
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm font-medium text-gray-300">Color Theme</label>
-                            <div className="flex bg-gray-800 p-1 rounded-lg border border-gray-700 w-fit">
+                            <label className="text-sm font-medium text-tokens-muted">Color Theme</label>
+                            <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border w-fit">
                                 {['System', 'Dark', 'Light'].map((mode) => (
                                     <button
                                         key={mode}
                                         onClick={() => updateSettings('appearance', 'theme', mode.toLowerCase())}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${settings.appearance.theme === mode.toLowerCase()
-                                            ? 'bg-gray-600 text-white shadow-sm'
-                                            : 'text-gray-400 hover:text-gray-200'
+                                            ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow-sm'
+                                            : 'text-tokens-muted hover:text-tokens-fg'
                                             }`}
                                     >
                                         {mode}
@@ -596,13 +546,13 @@ export function SettingsPage() {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm font-medium text-gray-300">Accent Color</label>
+                            <label className="text-sm font-medium text-tokens-muted">Accent Color</label>
                             <div className="flex gap-3">
                                 {ACCENT_COLORS.map(color => (
                                     <button
                                         key={color.id}
                                         onClick={() => updateSettings('appearance', 'accentColor', color.id)}
-                                        className={`w-8 h-8 rounded-full ${color.class} transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-gray-400 ${settings.appearance.accentColor === color.id ? 'ring-2 ring-white scale-110' : ''
+                                        className={`w-8 h-8 rounded-full ${color.class} transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tokens-bg focus:ring-tokens-border ${settings.appearance.accentColor === color.id ? 'ring-2 ring-tokens-fg scale-110' : ''
                                             }`}
                                         title={color.label}
                                     />
@@ -615,31 +565,33 @@ export function SettingsPage() {
                                 type="checkbox"
                                 checked={settings.appearance.glassmorphism}
                                 onChange={(e) => updateSettings('appearance', 'glassmorphism', e.target.checked)}
-                                className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500/40"
+                                className="w-5 h-5 rounded border-tokens-border bg-tokens-panel2 text-purple-500 focus:ring-purple-500/40"
                             />
-                            <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Enable glassmorphism effects</span>
+                            <span className="text-sm text-tokens-muted group-hover:text-tokens-fg transition-colors">Enable glassmorphism effects</span>
                         </label>
                     </div>
-                </div>
+                </Card>
 
             </div>
 
             {/* Sticky Action Footer */}
-            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-full px-6 py-3 flex gap-4 items-center shadow-2xl transition-all duration-300 ${isDirty ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-                <span className="text-sm text-gray-400 font-medium">Unsaved changes</span>
-                <div className="h-4 w-px bg-gray-700"></div>
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-tokens-panel/90 backdrop-blur-md border border-tokens-border rounded-full px-6 py-3 flex gap-4 items-center shadow-2xl transition-all duration-300 ${isDirty ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+                <span className="text-sm text-tokens-muted font-medium">Unsaved changes</span>
+                <div className="h-4 w-px bg-tokens-border"></div>
                 <button
                     onClick={handleReset}
-                    className="text-sm text-gray-300 hover:text-white transition-colors"
+                    className="text-sm text-tokens-muted hover:text-tokens-fg transition-colors"
                 >
                     Reset
                 </button>
-                <button
+                <Button
+                    variant="primary"
                     onClick={handleSave}
-                    className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-full font-semibold shadow-lg shadow-cyan-900/40 transition-all active:scale-[0.98]"
+                    icon="💾"
+                    iconPosition="circle"
                 >
                     Save Settings
-                </button>
+                </Button>
             </div>
 
         </PageContainer>

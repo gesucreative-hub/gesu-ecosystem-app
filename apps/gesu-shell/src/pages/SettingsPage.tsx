@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { GesuSettings } from '../types/settings';
 import { Link } from 'react-router-dom';
+import { useGesuSettings } from '../lib/gesuSettings';
+import { PageContainer } from '../components/PageContainer';
 
 
 // --- Types & Interfaces ---
@@ -21,7 +23,7 @@ interface SettingsState {
 
 // Engine Manager
 type EngineId = 'ytDlp' | 'ffmpeg' | 'imageMagick' | 'libreOffice';
-type EngineStatus = 'unknown' | 'ok' | 'fallback' | 'missing' | 'error';
+type EngineStatus = 'unknown' | 'ok' | 'system' | 'fallback' | 'missing' | 'error';
 type InstallMethod = 'manual' | 'winget' | 'choco' | 'scoop';
 
 interface EngineConfig {
@@ -120,82 +122,75 @@ const StatusBadge = ({ status, version }: { status: EngineStatus; version?: stri
     const styles = {
         unknown: 'bg-gray-700 text-gray-300 border-gray-600',
         ok: 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30',
-        fallback: 'bg-yellow-900/50 text-yellow-300 border-yellow-500/30',
+        system: 'bg-blue-900/50 text-blue-300 border-blue-500/30',
+        fallback: 'bg-amber-900/50 text-amber-300 border-amber-500/30',
         missing: 'bg-red-900/50 text-red-300 border-red-500/30',
-        error: 'bg-amber-900/50 text-amber-300 border-amber-500/30'
+        error: 'bg-red-950/50 text-red-400 border-red-500/30'
     };
 
     const labels = {
         unknown: 'Unknown',
         ok: 'Ready (Configured)',
-        fallback: 'Ready (PATH)',
+        system: 'Ready (System PATH)',
+        fallback: 'Warning: Config Invalid (Using PATH)', // Explicit warning
         missing: 'Missing',
         error: 'Error'
     };
 
     return (
         <div className={`px-2 py-0.5 rounded text-xs font-medium border flex items-center gap-2 w-fit ${styles[status]}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'fallback' ? 'bg-yellow-400' : status === 'missing' ? 'bg-red-400' : 'bg-gray-400'}`}></span>
+            <span className={`w-1.5 h-1.5 rounded-full ${status === 'ok' ? 'bg-emerald-400' : status === 'system' ? 'bg-blue-400' : status === 'fallback' ? 'bg-amber-400' : status === 'missing' ? 'bg-red-400' : 'bg-gray-400'}`}></span>
             <span>{labels[status]}</span>
-            {version && (status === 'ok' || status === 'fallback') && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
+            {version && (status === 'ok' || status === 'system' || status === 'fallback') && <span className="opacity-75 border-l pl-2 ml-1 border-white/20">{version}</span>}
         </div>
     );
 };
 
 export function SettingsPage() {
+    // Shared Settings Hook
+    const { settings: loadedSettings, saveSettings } = useGesuSettings();
+
+    // Local State (for optimistic UI / editing before save)
+    // We hydrate this from loadedSettings when it changes
     const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
     const [engines, setEngines] = useState<EngineConfig[]>(DEFAULT_ENGINES);
+
     const [installPreference, setInstallPreference] = useState<InstallMethod>('manual');
     const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
     const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
     const [isCheckingTools, setIsCheckingTools] = useState(false);
 
-    // StrictMode guard
-    const didLoadRef = useRef(false);
-
-    // Load settings on mount
+    // Hydrate state from shared hook
     useEffect(() => {
-        if (didLoadRef.current) return;
-        didLoadRef.current = true;
+        if (loadedSettings) {
+            console.log('[SettingsPage] Hydrating from shared settings', loadedSettings);
 
-        if (window.gesu?.settings) {
-            window.gesu.settings.read().then(loaded => {
-                if (loaded) {
-                    console.log('Loaded settings from bridge:', loaded);
+            // Merge with defaults
+            const mergedPaths = { ...DEFAULT_SETTINGS.paths, ...(loadedSettings.paths || {}) };
+            const mergedAppearance = { ...DEFAULT_SETTINGS.appearance, ...(loadedSettings.appearance || {}) };
 
-                    // Merge with defaults to be safe on frontend side too
-                    const mergedPaths = { ...DEFAULT_SETTINGS.paths, ...(loaded.paths || {}) };
-                    const mergedAppearance = { ...DEFAULT_SETTINGS.appearance, ...(loaded.appearance || {}) };
+            setSettings({
+                paths: mergedPaths,
+                appearance: mergedAppearance
+            });
 
-                    // Hydrate state
-                    setSettings({
-                        paths: mergedPaths,
-                        appearance: mergedAppearance
-                    });
+            if (loadedSettings.installPreference) {
+                setInstallPreference(loadedSettings.installPreference);
+            }
 
-                    if (loaded.installPreference) {
-                        setInstallPreference(loaded.installPreference);
-                    }
-
-                    // Hydrate engines
-                    // Note: 'engines' allows for missing keys provided we check them safely
-                    if (loaded.engines) {
-                        setEngines(prev => prev.map(e => {
-                            let newPath = e.path;
-                            // Safe access with optional chaining or default fallback
-                            if (e.id === 'ytDlp') newPath = loaded.engines?.ytDlpPath ?? '';
-                            if (e.id === 'ffmpeg') newPath = loaded.engines?.ffmpegPath ?? '';
-                            if (e.id === 'imageMagick') newPath = loaded.engines?.imageMagickPath ?? '';
-                            if (e.id === 'libreOffice') newPath = loaded.engines?.libreOfficePath ?? '';
-
-                            return { ...e, path: newPath };
-                        }));
-                    }
-                }
-            }).catch(err => console.error('Failed to load settings:', err));
+            if (loadedSettings.engines) {
+                setEngines(prev => prev.map(e => {
+                    let newPath = e.path;
+                    if (e.id === 'ytDlp') newPath = loadedSettings.engines?.ytDlpPath ?? '';
+                    if (e.id === 'ffmpeg') newPath = loadedSettings.engines?.ffmpegPath ?? '';
+                    if (e.id === 'imageMagick') newPath = loadedSettings.engines?.imageMagickPath ?? '';
+                    if (e.id === 'libreOffice') newPath = loadedSettings.engines?.libreOfficePath ?? '';
+                    return { ...e, path: newPath };
+                }));
+            }
         }
-    }, []);
+    }, [loadedSettings]);
 
     // Handlers
     const handleTestDesktopBridge = async () => {
@@ -230,7 +225,7 @@ export function SettingsPage() {
         setIsDirty(true);
     };
 
-    const detectEngine = async (id: EngineId) => {
+    const detectEngine = async (_id: EngineId) => {
         // Just run a global check, it's fast enough and updates everything
         await checkAllTools();
     };
@@ -295,9 +290,19 @@ export function SettingsPage() {
                 let status: EngineStatus = 'unknown';
 
                 // Use resolution source to determine status
-                if (res.resolution === 'configured') status = 'ok';
-                else if (res.resolution === 'path') status = 'fallback';
-                else if (res.resolution === 'missing') status = 'missing';
+                // Use specific status from backend
+                if (res.status === 'ready_configured') status = 'ok';
+                else if (res.status === 'ready_path') status = 'system';
+                else if (res.status === 'fallback_path') status = 'fallback';
+                else if (res.status === 'missing') status = 'missing';
+                else if (res.status === 'error') status = 'error';
+
+                // Fallback for logic safety
+                if (status === 'unknown') {
+                    if (res.resolution === 'configured') status = 'ok';
+                    else if (res.resolution === 'path') status = 'system'; // Default to system if ambiguous
+                    else if (res.resolution === 'missing') status = 'missing';
+                }
 
                 // Fallback for logic safety
                 if (res.status === 'not_found') status = 'missing';
@@ -340,23 +345,17 @@ export function SettingsPage() {
             installPreference
         };
 
-        if (window.gesu?.settings) {
-            try {
-                await window.gesu.settings.write(payload);
-                console.log("Settings Saved to Disk:", payload);
-                alert("Settings saved successfully to disk!");
-                setIsDirty(false);
-                // Auto-refresh tools
-                checkAllTools();
-            } catch (err) {
-                console.error(err);
-                alert("Failed to save settings to key file.");
-                // Fallback mock alert if save failed or logic is weird
-            }
-        } else {
-            console.log("Settings Saved (Mock - No Bridge):", payload);
-            alert("Settings saved successfully (Mock - No Bridge).");
+        // Use shared hook to save (bridge avail check inside)
+        try {
+            await saveSettings(payload);
+            console.log("Settings Saved to Disk via Shared Hook:", payload);
+            alert("Settings saved successfully to disk!");
             setIsDirty(false);
+            // Auto-refresh tools
+            checkAllTools();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save settings.");
         }
     };
 
@@ -370,7 +369,7 @@ export function SettingsPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
+        <PageContainer className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
 
             {/* Header */}
             <div className="flex justify-between items-center mb-2">
@@ -643,6 +642,6 @@ export function SettingsPage() {
                 </button>
             </div>
 
-        </div>
+        </PageContainer>
     );
 }

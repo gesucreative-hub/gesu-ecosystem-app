@@ -1,0 +1,8 @@
+/* Font Wiring */
+@font-face {
+  font-family: 'Lexend Deca';
+  src: url('../assets/fonts/LexendDeca-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

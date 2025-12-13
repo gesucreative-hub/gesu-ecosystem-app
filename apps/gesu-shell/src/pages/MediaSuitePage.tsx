@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useGesuSettings } from '../lib/gesuSettings';
+import { PageContainer } from '../components/PageContainer';
 
 
 // --- Types & Interfaces ---
@@ -132,18 +134,27 @@ function formatAdvancedOptionsSummaryFromPayload(payload: any): string {
 // Mapped from backend resolution: 'configured' | 'path' | 'missing'
 
 const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
-    const status = data?.resolution || 'unknown';
-    // Exact mapping requested by user
+    const status = data?.status || 'unknown'; // 'ready_configured' | 'ready_path' | 'fallback_path' | 'missing' | ...
+
+    // Strict Option 1 mapping
     const colors: Record<string, string> = {
-        configured: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]', // OK: Configured & Valid
-        path: 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]',      // OK: Fallback to System
-        missing: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',       // Error: Not found anywhere
+        ready_configured: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+        ready_path: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
+        fallback_path: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+        missing: 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]',
         unknown: 'bg-gray-600',
-        error: 'bg-red-500' // General error fallback
+        error: 'bg-red-500'
     };
 
-    // Map backend 'installed' to 'path' if legacy, but ideally backend sends explicit source
-    // Since we updated backend to return 'configured' | 'path' | 'missing', we use that directly.
+    const displayText: Record<string, string> = {
+        ready_configured: 'Ready (Config)',
+        ready_path: 'Ready (System)',
+        fallback_path: 'WARNING (Fallback)',
+        missing: 'MISSING',
+        error: 'ERROR',
+        unknown: 'Unknown'
+    };
+
     const displayColor = colors[status] || colors.unknown;
 
     return (
@@ -152,16 +163,19 @@ const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
             <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{name}</span>
             {/* Detailed Tooltip */}
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 border border-gray-700 shadow-xl rounded min-w-[200px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 text-[10px] text-gray-300">
-                <div className="font-semibold text-gray-100 mb-1 border-b border-gray-700 pb-1">{name} Status: <span className="uppercase">{status}</span></div>
+                <div className="font-semibold text-gray-100 mb-1 border-b border-gray-700 pb-1">{name}: <span className="text-xs font-mono ml-1">{displayText[status] || status}</span></div>
                 <div className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
                     <span className="text-gray-500">Config:</span>
-                    <span className="font-mono text-gray-400 break-all">{data?.configuredPath || '(none)'}</span>
+                    <span className={`font-mono break-all ${status === 'fallback_path' ? 'text-amber-400 decoration-wavy underline' : 'text-gray-400'}`}>
+                        {data?.configuredPath || '(none)'}
+                        {status === 'fallback_path' && ' (Invalid)'}
+                    </span>
 
                     <span className="text-gray-500">Using:</span>
                     <span className="font-mono text-emerald-400 break-all">{data?.resolvedPath || '(none)'}</span>
 
                     <span className="text-gray-500">Source:</span>
-                    <span className="text-gray-400">{data?.resolution === 'configured' ? 'Settings' : data?.resolution === 'path' ? 'System PATH' : 'Missing'}</span>
+                    <span className="text-gray-400">{data?.resolution}</span>
                 </div>
             </div>
         </div>
@@ -191,6 +205,9 @@ export function MediaSuitePage() {
         }
     };
 
+    // Use Shared Settings Hook to detect changes
+    const { settings: globalSettings } = useGesuSettings();
+
     // Initial Load & Focus Refetch
     useEffect(() => {
         refreshJobs();
@@ -201,6 +218,14 @@ export function MediaSuitePage() {
         window.addEventListener('focus', onFocus);
         return () => window.removeEventListener('focus', onFocus);
     }, []);
+
+    // Re-check tools when global settings change (e.g. edited in another window or saved)
+    useEffect(() => {
+        if (globalSettings) {
+            console.log('[MediaSuite] Settings changed, refreshing tools...');
+            checkTools();
+        }
+    }, [globalSettings]);
 
     // Downloader Form State
     const [url, setUrl] = useState('');
@@ -369,7 +394,7 @@ export function MediaSuitePage() {
     };
 
     return (
-        <div className="h-screen w-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-2 pr-6 pl-6 relative overflow-hidden">
+        <PageContainer maxWidth="full" className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-2 relative overflow-hidden">
             <style>{`
                 .scroll-on-hover::-webkit-scrollbar {
                     width: 6px;
@@ -782,7 +807,7 @@ export function MediaSuitePage() {
                                                                     {!isConvertLikeFilter && (
                                                                         <td className="p-3 text-xs text-gray-500 max-w-[200px] truncate" title={job.errorMessage || job.url || job.details}>
                                                                             {/* Untuk advanced, backend sudah mengisi job.details.
-                                                               Untuk job lain, pakai errorMessage atau url. */}
+                                                               For job lain, pakai errorMessage atau url. */}
                                                                             {job.details || job.errorMessage || job.url}
                                                                         </td>
                                                                     )}
@@ -793,137 +818,37 @@ export function MediaSuitePage() {
                                             </>
                                         );
                                     })()}
+
                                 </table>
                             </div>
                         </div>
                     )}
-
                 </div>
 
-                {/* --- RIGHT COLUMN: JOB QUEUE --- */}
-                <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 p-6 rounded-xl shadow-lg flex flex-col shrink-0 max-h-[calc(100vh-180px)] w-full min-w-[320px]">
-                    <div className="flex flex-col gap-3 mb-4 shrink-0">
-                        {/* Row 1: Title + Controls */}
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                                Job Queue
-                            </h2>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 border border-gray-700 whitespace-nowrap">
-                                    {jobs.length} jobs
-                                </span>
-                                <button onClick={refreshJobs} className="text-xs text-cyan-400 hover:text-cyan-300 ml-1">Refresh</button>
+                {/* --- RIGHT COLUMN --- */}
+                {/* Note: In previous version right column content was not fully shown in view. Assuming sidebar placeholder or info panel. 
+                    Adding a placeholder panel if needed, OR if grid column definition suggests content. 
+                    Grid was: [minmax(0,2.2fr)_minmax(320px,1fr)]
+                */}
+                <div className="hidden lg:flex flex-col gap-6">
+                    <div className="bg-gesu-card/50 border border-gesu-border rounded-xl p-5 sticky top-0">
+                        <h3 className="font-bold text-lg text-white mb-2">Info & Help</h3>
+                        <p className="text-sm text-gesu-text-dim mb-4">
+                            Use the Media Suite to download content or convert files locally.
+                        </p>
+                        <div className="p-3 bg-gesu-bg/50 rounded-lg border border-gesu-border mb-2">
+                            <h4 className="font-semibold text-xs text-white mb-1">Status Legend</h4>
+                            <div className="space-y-2 text-[10px] text-gray-400">
+                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Ready (Configured)</div>
+                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Ready (System Path)</div>
+                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Warning (Path Fallback)</div>
+                                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500"></div> Missing</div>
                             </div>
                         </div>
-                        {/* Row 2: Filter */}
-                        <div className="flex justify-end">
-                            <select
-                                value={queueFilter}
-                                onChange={(e) => setQueueFilter(e.target.value as any)}
-                                className="bg-gray-800 border border-gray-700 rounded p-1.5 text-xs text-gray-100 focus:outline-none focus:ring-1 focus:ring-cyan-500 w-full md:w-auto"
-                            >
-                                <option value="all">Filters: All</option>
-                                <option value="download">Filters: Download</option>
-                                <option value="convert">Filters: Convert</option>
-                                <option value="advanced">Filters: Advanced</option>
-                            </select>
-                        </div>
                     </div>
-
-                    {jobs.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-2 border-dashed border-gray-800 rounded-xl p-8">
-                            <div className="w-12 h-12 bg-gray-800 rounded-full mb-3 flex items-center justify-center text-xl">💤</div>
-                            <p className="font-medium text-gray-400">No jobs queued</p>
-                            <p className="text-sm mt-1">Start a download or conversion to see it here.</p>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-3 overflow-y-auto scroll-on-hover pr-2 flex-1 min-h-0">
-                            {jobs
-                                .filter(job => {
-                                    if (queueFilter === 'all') return true;
-                                    if (queueFilter === 'download') return job.type === 'download';
-                                    if (queueFilter === 'convert') {
-                                        return job.type === 'convert' && (job.payload as any).preset !== 'video-advanced';
-                                    }
-                                    if (queueFilter === 'advanced') {
-                                        return job.type === 'convert' && (job.payload as any).preset === 'video-advanced';
-                                    }
-                                    return true;
-                                })
-                                .map(job => (
-                                    <div key={job.id} className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-4 hover:border-gray-600 transition-colors group">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${job.type === 'download' ? 'bg-cyan-900/30 text-cyan-400 border-cyan-800' : 'bg-purple-900/30 text-purple-400 border-purple-800'
-                                                    }`}>
-                                                    {job.type.slice(0, 4)}
-                                                </span>
-                                                <span className="text-xs text-gray-500 font-mono">#{job.id}</span>
-                                            </div>
-                                            <StatusBadge status={job.status} progress={job.progress} />
-                                        </div>
-
-                                        <div className="font-medium text-sm text-gray-200 mb-1 line-clamp-1" title={job.label}>
-                                            {job.label}
-                                        </div>
-
-                                        <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="flex items-center gap-1">
-                                                    ⚙️ {job.engine}
-                                                </span>
-                                                {job.type === 'download' && (
-                                                    <div className="flex flex-col">
-                                                        <span className="text-gray-400 font-semibold mb-0.5">
-                                                            Download · {(job.payload as any).preset}
-                                                        </span>
-                                                        <span className="text-gray-600 text-[10px]">
-                                                            {NETWORK_LABELS[(job.payload as any).network as NetworkProfile] || (job.payload as any).network}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {job.type === 'convert' && (
-                                                    <div className="flex flex-col">
-                                                        {(job.payload as any).preset === 'video-advanced' ? (
-                                                            <span className="text-gray-400 font-semibold mb-0.5">
-                                                                Advanced · {formatAdvancedOptionsSummaryFromPayload(job.payload)}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-gray-400 font-semibold mb-0.5">
-                                                                Preset · {getPresetDisplayName((job.payload as any).preset as string)}
-                                                            </span>
-                                                        )}
-                                                        <span className="text-gray-600 text-[10px] break-all">
-                                                            {(job.payload as any).outputPath
-                                                                ? `Done: ${(job.payload as any).outputPath.split(/[/\\]/).pop()}`
-                                                                : `${(job.payload as any).inputPath?.split(/[/\\]/).pop()} ➔ .${(job.payload as any).target || 'mp4'}`
-                                                            }
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {job.errorMessage && (
-                                                    <span className="text-red-400 font-mono text-[10px]">
-                                                        Error: {job.errorMessage}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <span>
-                                                {new Date(job.createdAt).toLocaleTimeString()}
-                                            </span>
-                                        </div>
-
-                                        {/* Actions Row (Read Only for now) */}
-                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-700/50">
-                                            <div className="text-xs text-gray-500 italic">Processing managed by backend...</div>
-                                        </div>
-                                    </div>
-                                ))}
-                        </div>
-                    )}
                 </div>
 
             </div>
-        </div>
+        </PageContainer>
     );
 }

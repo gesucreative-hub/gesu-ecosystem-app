@@ -1,0 +1,34 @@
+:root {
+  /* Core Palette (Tailwind Mapping) */
+  --gesu-bg: #030712;
+  /* gray-950 */
+  --gesu-card: #111827;
+  /* gray-900 */
+  --gesu-card-hover: #1f2937;
+  /* gray-800 */
+  --gesu-border: #1f2937;
+  /* gray-800 */
+  --gesu-border-light: #374151;
+  /* gray-700 */
+
+  /* Primary (Cyan) */
+  --gesu-primary: #06b6d4;
+  /* cyan-500 */
+  --gesu-primary-hover: #0891b2;
+  /* cyan-600 */
+  --gesu-primary-light: #67e8f9;
+  /* cyan-300 */
+  --gesu-primary-bg: rgba(6, 182, 212, 0.1);
+
+  /* Secondary (Red/Rose) */
+  --gesu-secondary: #ef4444;
+  /* red-500 */
+
+  /* Text */
+  --gesu-text-main: #f3f4f6;
+  /* gray-100 */
+  --gesu-text-muted: #9ca3af;
+  /* gray-400 */
+  --gesu-text-dim: #6b7280;
+  /* gray-500 */
+}

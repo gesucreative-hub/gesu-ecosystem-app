@@ -99,6 +99,7 @@ declare global {
             settings?: {
                 read: () => Promise<GesuSettings>;
                 write: (settings: Partial<GesuSettings>) => Promise<GesuSettings>;
+                onSettingsChanged: (callback: (settings: GesuSettings) => void) => () => void;
             };
             dialog?: {
                 pickFolder: (defaultPath?: string) => Promise<string | null>;

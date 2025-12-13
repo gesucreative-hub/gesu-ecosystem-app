@@ -1,7 +1,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 
 // --- Configuration ---
 
@@ -106,6 +106,11 @@ async function saveGlobalSettings(partial) {
         await fs.promises.rename(tempPath, SETTINGS_FILE_PATH);
 
         console.log('[Settings] Saved via atomic write to:', SETTINGS_FILE_PATH);
+
+        // Emit change event to all renderers
+        BrowserWindow.getAllWindows().forEach(win => {
+            win.webContents.send('gesu:settings:changed', next);
+        });
 
         return next;
     } catch (err) {

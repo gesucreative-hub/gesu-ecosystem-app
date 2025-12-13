@@ -834,6 +834,7 @@ ipcMain.handle('dialog:pick-folder', async () => {
 - [x] File picker dialogs functional (Settings UI browse)
 - [x] Refactor Media Suite to read tool paths from Settings
 - [x] Tool status sync: configured vs PATH fallback, refresh in Settings + Media Suite
+- [x] Centralize settings usage (shared hook + IPC sync)
 - [ ] Manual test: Edit config, restart app, verify changes persist
 - [ ] Manual test: Edit config, restart app, verify changes persist
 

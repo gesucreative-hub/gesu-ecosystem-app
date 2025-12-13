@@ -70,29 +70,44 @@ export async function resolveToolPath(manualPath, defaultCommand) {
  */
 async function checkTool(name, manualPath, defaultCommand, versionArgs = ['--version']) {
     const resolution = await resolveToolPath(manualPath, defaultCommand);
-    const { path: resolvedPath, source } = resolution;
+    const { path: resolvedPath, source, configuredPath } = resolution;
 
     const result = {
         name,
-        status: 'unknown',
+        status: 'unknown', // 'ready_configured' | 'ready_path' | 'fallback_path' | 'missing' | 'error'
         resolution: source, // 'configured' | 'path' | 'missing'
         resolvedPath,
-        configuredPath: resolution.configuredPath,
+        configuredPath,
         version: null,
         lastCheckedAt: new Date().toISOString(),
         errorMessage: undefined,
     };
 
     if (!resolvedPath) {
-        result.status = 'not_found';
+        result.status = 'missing';
         return result;
+    }
+
+    // STRICT Logic (Option 1)
+    if (source === 'configured') {
+        // We found the tool at the user's manual path
+        result.status = 'ready_configured';
+    } else if (source === 'path') {
+        // We found it in system PATH
+        if (configuredPath && configuredPath.trim() !== '') {
+            // User tried to configure, but that failed (otherwise source would be 'configured')
+            // So this is a Fallback scenario
+            result.status = 'fallback_path';
+        } else {
+            // No configuration attempted; just using system default
+            result.status = 'ready_path';
+        }
     }
 
     try {
         const { stdout } = await execFileAsync(resolvedPath, versionArgs);
         // Take the first line as version info (or part of it)
         result.version = stdout.split('\n')[0].trim();
-        result.status = 'installed';
     } catch (error) {
         result.status = 'error';
         result.errorMessage = error.message;

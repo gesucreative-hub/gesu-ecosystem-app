@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('gesu', {
     settings: {
         read: () => ipcRenderer.invoke('gesu:settings:read'),
         write: (settings) => ipcRenderer.invoke('gesu:settings:write', settings),
+        onSettingsChanged: (callback) => {
+            const subscription = (event, newSettings) => callback(newSettings);
+            ipcRenderer.on('gesu:settings:changed', subscription);
+            // Return unsubscribe function
+            return () => ipcRenderer.removeListener('gesu:settings:changed', subscription);
+        },
     },
     dialog: {
         pickFolder: (defaultPath) => ipcRenderer.invoke('gesu:dialog:pickFolder', defaultPath),

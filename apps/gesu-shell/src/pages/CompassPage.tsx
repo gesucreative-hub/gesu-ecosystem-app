@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, Target, Play, Square, Trash2 } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, TestTube } from 'lucide-react';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -19,10 +19,13 @@ import {
     clearSession,
     FinishSession,
 } from '../stores/finishModeStore';
+import { useGesuSettings } from '../lib/gesuSettings';
 import {
-    saveSnapshot as persistSnapshot,
-    getTodaySnapshot,
-} from '../stores/compassSnapshotStore';
+    listSnapshots,
+    appendSnapshot,
+    getStorageMode,
+    CompassSnapshotListItem,
+} from '../services/compassSnapshotsService';
 
 // --- Types & Interfaces ---
 
@@ -72,6 +75,10 @@ const SliderControl = ({
 // --- Main Component ---
 
 export function CompassPage() {
+    // Settings
+    const { settings } = useGesuSettings();
+    const workflowRoot = settings?.paths?.workflowRoot;
+
     // State
     const [energy, setEnergy] = useState<number>(5);
 
@@ -91,6 +98,10 @@ export function CompassPage() {
         { id: '4', label: 'Physical Activity', completed: false }
     ]);
 
+    // Recent Snapshots State
+    const [recentSnapshots, setRecentSnapshots] = useState<CompassSnapshotListItem[]>([]);
+    const [snapshotsLoading, setSnapshotsLoading] = useState(true);
+
     // Project Hub Tasks State
     const [projectHubTasks, setProjectHubTasks] = useState<ProjectHubTask[]>([]);
 
@@ -102,6 +113,23 @@ export function CompassPage() {
         const interval = setInterval(loadTasks, 5000);
         return () => clearInterval(interval);
     }, []);
+
+    // Load recent snapshots on mount
+    const loadRecentSnapshots = useCallback(async () => {
+        setSnapshotsLoading(true);
+        try {
+            const snapshots = await listSnapshots(workflowRoot, 10);
+            setRecentSnapshots(snapshots);
+        } catch (err) {
+            console.error('Failed to load recent snapshots:', err);
+        } finally {
+            setSnapshotsLoading(false);
+        }
+    }, [workflowRoot]);
+
+    useEffect(() => {
+        loadRecentSnapshots();
+    }, [loadRecentSnapshots]);
 
     // Handler for toggling project hub task
     const handleToggleProjectHubTask = useCallback((taskId: string) => {
@@ -168,14 +196,32 @@ export function CompassPage() {
         ));
     };
 
-    const saveSnapshot = () => {
+    const saveSnapshot = async () => {
         try {
-            persistSnapshot({
+            // Calculate focus from focusAreas average (meaningful representation)
+            const focusValues = Object.values(focusAreas);
+            const focus = Math.round(
+                focusValues.reduce((sum, val) => sum + val, 0) / focusValues.length
+            );
+
+            // Get completed sessions only
+            const completedSessions = sessions
+                .filter(s => s.completed)
+                .map(s => s.label);
+
+            const result = await appendSnapshot(workflowRoot, {
                 energy,
-                focusAreas,
-                sessions,
+                focus, // Focus derived from focusAreas average
+                sessions: completedSessions,
             });
-            alert('Snapshot saved!');
+
+            if (result.ok) {
+                alert('Snapshot saved successfully!');
+                // Refresh the recent snapshots list
+                await loadRecentSnapshots();
+            } else {
+                alert(`Failed to save snapshot: ${result.error}`);
+            }
         } catch (err) {
             console.error('Failed to save snapshot:', err);
             alert('Failed to save snapshot.');
@@ -426,6 +472,26 @@ export function CompassPage() {
                         </div>
 
                         <div className="mt-auto border-t border-tokens-border pt-6">
+                            <div className="flex items-center gap-2 mb-2">
+                                {getStorageMode(workflowRoot) === 'file-backed' ? (
+                                    <Badge variant="success" className="text-xs">
+                                        <Database size={12} className="mr-1" />
+                                        File-backed
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="warning" className="text-xs">
+                                        <TestTube size={12} className="mr-1" />
+                                        Simulation
+                                    </Badge>
+                                )}
+                                {!workflowRoot && (
+                                    <span className="text-xs text-tokens-muted">
+                                        <Link to="/settings" className="text-tokens-brand-DEFAULT hover:underline">
+                                            Set Workflow Root in Settings
+                                        </Link>
+                                    </span>
+                                )}
+                            </div>
                             <Button
                                 variant="primary"
                                 size="lg"
@@ -433,10 +499,79 @@ export function CompassPage() {
                                 onClick={saveSnapshot}
                                 className="shadow-lg shadow-tokens-brand-DEFAULT/20"
                             >
-                                <span>Save Snapshot</span>
-                                <span className="text-xs bg-black/20 px-1.5 py-0.5 rounded border border-white/10 ml-2">(Mock)</span>
+                                Save Snapshot
                             </Button>
                         </div>
+                    </Card>
+
+                    {/* Recent Snapshots Card */}
+                    <Card
+                        title={
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                                Recent Snapshots
+                            </div>
+                        }
+                        className="flex flex-col"
+                    >
+                        {snapshotsLoading ? (
+                            <div className="text-sm text-tokens-muted text-center py-4">
+                                Loading snapshots...
+                            </div>
+                        ) : recentSnapshots.length === 0 ? (
+                            <div className="text-sm text-tokens-muted text-center py-4">
+                                No snapshots yet. Save your first snapshot!
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+                                {recentSnapshots.map((snapshot) => {
+                                    const date = new Date(snapshot.timestamp);
+                                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                    const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                                    return (
+                                        <div
+                                            key={snapshot.id}
+                                            className="p-3 rounded-lg border border-tokens-border bg-tokens-bg hover:bg-tokens-panel2 transition-colors"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="text-xs text-tokens-muted">
+                                                    {dateStr} at {timeStr}
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Badge
+                                                        variant={snapshot.energy >= 7 ? 'success' : snapshot.energy >= 4 ? 'warning' : 'error'}
+                                                        className="text-xs"
+                                                    >
+                                                        Energy {snapshot.energy}/10
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-tokens-muted">
+                                                Focus: {snapshot.focus}/10 • {snapshot.sessions.length} session{snapshot.sessions.length !== 1 ? 's' : ''} completed
+                                            </div>
+                                            {snapshot.sessions.length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-1">
+                                                    {snapshot.sessions.slice(0, 3).map((session, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded"
+                                                        >
+                                                            {session}
+                                                        </span>
+                                                    ))}
+                                                    {snapshot.sessions.length > 3 && (
+                                                        <span className="text-xs text-tokens-muted px-2 py-0.5">
+                                                            +{snapshot.sessions.length - 3} more
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </Card>
 
 

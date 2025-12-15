@@ -142,6 +142,17 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.10.1] - Compass Snapshots UI Integration (2025-12-16)
+- **Renderer Service Layer**: Created src/services/compassSnapshotsService.ts with bridge detection and localStorage fallback.
+- **CompassPage Updates**: Added Recent Snapshots section (limit 10 newest-first), wired Save Snapshot to call append + refresh.
+- **Storage Mode Badges**: Shows File-backed indicator when using bridge + workflowRoot; Simulation badge when using fallback.
+- **WorkflowRoot Guidance**: Displays link to Settings when workflowRoot missing.
+- **Focus Derivation**: Focus calculated from focusAreas average (meaningful representation of multi-dimensional focus).
+- **Data Transformation**: Service layer maps between rich UI format (focusAreas object, SessionData array) and simple bridge format (energy/focus numbers, sessions string array).
+- **Newest-First Ordering**: Consistent ordering in both file-backed and localStorage fallback modes.
+- **Safety**: Desktop mode saves to workflowRoot/_Index/CompassSnapshots.jsonl; web/simulation uses localStorage; never crashes UI.
+- **Status**: Sprint 11 complete; Compass snapshots fully functional in both desktop and web modes.
+
 ### [0.10.0] - Compass File-Backed Snapshots (Backend) (2025-12-16)
 - **Compass Snapshots Module**: Created electron/compass-snapshots.js for append-only JSONL persistence.
 - **Storage Location**: Snapshots saved to workflowRoot/_Index/CompassSnapshots.jsonl (append-only format).
@@ -149,7 +160,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Preload Bridge**: Exposed window.gesu.compassSnapshots.append/list in electron/preload.cjs.
 - **Safety**: Reused assertPathWithin pattern; BACKUP_ROOT defense maintained.
 - **Typing**: Added compassSnapshots API to src/types/global.d.ts with full TypeScript support.
-- **Status**: Backend infrastructure complete; CompassPage UI integration pending.
+- **Status**: Backend infrastructure complete; UI integration completed in Sprint 11 (v0.10.1).
 
 ### [0.9.1] - Checklist Reconciliation (2025-12-16)
 - **Documentation Only**: Reconciled task.md PHASE 6 and PHASE 7 checkboxes with actual Sprint 9/10 deliverables.

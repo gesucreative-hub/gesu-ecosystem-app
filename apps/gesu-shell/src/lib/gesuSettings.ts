@@ -1,22 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GesuSettings } from '../types/settings';
-
-
+import {
+    GesuSettings,
+    loadSettings,
+    saveSettings as persistSettings
+} from '../stores/settingsStore';
 
 export function useGesuSettings() {
     const [settings, setSettings] = useState<GesuSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadSettings = useCallback(async () => {
-        if (!window.gesu?.settings) {
-            setError('Bridge not available');
-            setLoading(false);
-            return;
-        }
+    const loadSettingsFromStore = useCallback(() => {
         try {
             setLoading(true);
-            const loaded = await window.gesu.settings.read();
+            const loaded = loadSettings();
             setSettings(loaded);
             setError(null);
         } catch (err) {
@@ -27,16 +24,14 @@ export function useGesuSettings() {
         }
     }, []);
 
-    const saveSettings = useCallback(async (newSettings: GesuSettings) => {
-        if (!window.gesu?.settings) {
-            console.warn('Bridge not available (mock save)');
-            return;
-        }
+    const saveSettingsToStore = useCallback((newSettings: GesuSettings) => {
         try {
-            await window.gesu.settings.write(newSettings);
-            // We assume the backend emits 'changed' event which updates us, 
-            // but we can opt. update locally if needed. 
-            // The IPC event is safer for consistency.
+            const success = persistSettings(newSettings);
+            if (success) {
+                setSettings(newSettings);
+            } else {
+                throw new Error('Failed to persist settings');
+            }
         } catch (err) {
             console.error('[useGesuSettings] Save Error:', err);
             throw err;
@@ -44,22 +39,14 @@ export function useGesuSettings() {
     }, []);
 
     useEffect(() => {
-        loadSettings();
-
-        if (window.gesu?.settings?.onSettingsChanged) {
-            const unsubscribe = window.gesu.settings.onSettingsChanged((newSettings) => {
-                console.log('[useGesuSettings] Received external update:', newSettings);
-                setSettings(newSettings);
-            });
-            return unsubscribe;
-        }
-    }, [loadSettings]);
+        loadSettingsFromStore();
+    }, [loadSettingsFromStore]);
 
     return {
         settings,
         loading,
         error,
-        refresh: loadSettings,
-        saveSettings
+        refresh: loadSettingsFromStore,
+        saveSettings: saveSettingsToStore
     };
 }

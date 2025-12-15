@@ -59,25 +59,27 @@ export function DashboardPage() {
     const [recentJobs, setRecentJobs] = useState<any[]>([]);
 
     useEffect(() => {
-        // Load engine status
-        if (window.gesu?.checkTools) {
-            window.gesu.checkTools({}).then(res => {
-                setEngineStatus({
-                    ytDlp: res.ytDlp?.status,
-                    ffmpeg: res.ffmpeg?.status,
-                    magick: res.imageMagick?.status,
-                    office: res.libreOffice?.status
-                });
-            }).catch(console.error);
+        // Load engine status from global settings
+        // Check for actual non-empty paths (not just truthy - null is valid "not set")
+        if (settings?.engines) {
+            const hasPath = (p: string | null | undefined): boolean =>
+                p !== null && p !== undefined && p.trim() !== '';
+
+            setEngineStatus({
+                ytDlp: hasPath(settings.engines.ytDlpPath) ? 'ready_configured' : 'missing',
+                ffmpeg: hasPath(settings.engines.ffmpegPath) ? 'ready_configured' : 'missing',
+                magick: hasPath(settings.engines.imageMagickPath) ? 'ready_configured' : 'missing',
+                office: hasPath(settings.engines.libreOfficePath) ? 'ready_configured' : 'missing'
+            });
         }
 
-        // Load recent jobs
+        // Load recent jobs (if available)
         if (window.gesu?.mediaSuite?.getRecentJobs) {
             window.gesu.mediaSuite.getRecentJobs().then(jobs => {
                 setRecentJobs(jobs.slice(0, 5));
             }).catch(console.error);
         }
-    }, []);
+    }, [settings]);
 
     const openFolder = async (target: 'workflow' | 'projects') => {
         if (window.gesu?.mediaSuite?.openFolder) {
@@ -181,7 +183,7 @@ export function DashboardPage() {
 
             <div className="mt-auto pt-6 border-t border-tokens-border text-[10px] text-tokens-muted flex justify-between">
                 <span>Gesu Shell v2.0.0-alpha</span>
-                <span>WorkFlow Root: <span className="font-mono text-tokens-fg">{settings?.paths?.workflowRoot || 'Nt Set'}</span></span>
+                <span>WorkFlow Root: <span className="font-mono text-tokens-fg">{settings?.paths?.workflowRoot || 'Not Set'}</span></span>
             </div>
         </PageContainer>
     );

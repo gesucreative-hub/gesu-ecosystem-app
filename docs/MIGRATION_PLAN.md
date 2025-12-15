@@ -142,6 +142,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.3.0] - Settings MVP (2025-12-15)
+- **Global Settings Model**: Created typed GesuSettings interface with workflowRoot, projectsRoot, backupRoot, and toolPaths (yt-dlp, ffmpeg, imagemagick, libreoffice).
+- **localStorage Adapter**: Implemented settingsStore.ts with schema versioning and migration support.
+- **Settings Persistence**: Rewrote useGesuSettings hook to use localStorage instead of window.gesu bridge.
+- **Engine Status Wiring**: Dashboard now derives engine status (configured/missing) from global settings.
+- **Consumption Proven**: Dashboard engine chips update after settings save and app refresh.
+- **Milestone**: Global Configuration Persists achieved.
+
 ### [0.2.0] - Project Hub MVP (2025-12-15)
 - **Project Hub**: Renamed Initiator to Project Hub with Workflow/Generator tabs.
 - **Workflow Canvas**: Pannable canvas with 5 swimlanes, 16 fixed nodes, bezier connectors.

@@ -151,7 +151,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Data Transformation**: Service layer maps between rich UI format (focusAreas object, SessionData array) and simple bridge format (energy/focus numbers, sessions string array).
 - **Newest-First Ordering**: Consistent ordering in both file-backed and localStorage fallback modes.
 - **Safety**: Desktop mode saves to workflowRoot/_Index/CompassSnapshots.jsonl; web/simulation uses localStorage; never crashes UI.
-- **Status**: Sprint 11 complete; Compass snapshots fully functional in both desktop and web modes.
+- **Status**: Sprint 11 complete; web/simulation mode live-tested, desktop mode code-verified (preload bridge + IPC handlers + backend module confirmed present and correctly wired).
 
 ### [0.10.0] - Compass File-Backed Snapshots (Backend) (2025-12-16)
 - **Compass Snapshots Module**: Created electron/compass-snapshots.js for append-only JSONL persistence.

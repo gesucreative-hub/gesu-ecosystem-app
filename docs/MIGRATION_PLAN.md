@@ -142,6 +142,12 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.9.1] - Checklist Reconciliation (2025-12-16)
+- **Documentation Only**: Reconciled task.md PHASE 6 and PHASE 7 checkboxes with actual Sprint 9/10 deliverables.
+- **PHASE 6 Complete**: Ticked all items (template structures, folder generation, project.meta.json, Brief.md, ProjectLog).
+- **PHASE 7 Partial**: Ticked Native File Dialogs (completed in Sprint 8); process spawning items remain pending.
+- **No Code Changes**: This version contains documentation updates only.
+
 ### [0.9.0] - Generator Bridge + Disk Discovery + ProjectLog (2025-12-16)
 - **Projects Registry**: Created electron/projects-registry.js to scan disk for existing projects by detecting project.meta.json files.
 - **Disk Discovery**: Added projects:list IPC handler to return projects from projectsRoot with safe path validation.

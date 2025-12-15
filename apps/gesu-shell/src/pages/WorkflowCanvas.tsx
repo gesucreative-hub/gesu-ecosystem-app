@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useMemo } from 'react';
+import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import {
     WORKFLOW_PHASES,
@@ -8,6 +8,13 @@ import {
     WorkflowNode,
 } from './workflowData';
 import { StepDetailPanel } from './StepDetailPanel';
+import {
+    mergeNodesWithProgress,
+    toggleDoDItem as persistToggleDoDItem,
+    markNodeDone as persistMarkNodeDone,
+    getActiveProgress,
+} from '../stores/workflowProgressStore';
+import { getActiveProjectId } from '../stores/projectStore';
 
 // --- Node Component ---
 interface WorkflowNodeCardProps {
@@ -111,40 +118,35 @@ export function WorkflowCanvas() {
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-    // Local state for nodes (allows DoD updates without persistence)
-    const [nodes, setNodes] = useState<WorkflowNode[]>(WORKFLOW_NODES);
+    // Local state for nodes (merged with persisted progress)
+    const [nodes, setNodes] = useState<WorkflowNode[]>(() => mergeNodesWithProgress(WORKFLOW_NODES));
+
+    // Reload nodes when project changes
+    useEffect(() => {
+        const projectId = getActiveProjectId();
+        // Re-merge on mount and when project might change
+        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+    }, []);
+
+    // Refresh helper for external triggers
+    const refreshNodes = useCallback(() => {
+        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+    }, []);
 
     // Find selected node
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
-    // Handler to toggle DoD item
+    // Handler to toggle DoD item (persists to store)
     const handleToggleDoDItem = useCallback((nodeId: string, dodItemId: string) => {
-        setNodes(prevNodes =>
-            prevNodes.map(node => {
-                if (node.id === nodeId) {
-                    return {
-                        ...node,
-                        dodChecklist: node.dodChecklist.map(item =>
-                            item.id === dodItemId
-                                ? { ...item, done: !item.done }
-                                : item
-                        )
-                    };
-                }
-                return node;
-            })
-        );
+        persistToggleDoDItem(nodeId, dodItemId);
+        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
     }, []);
 
     // Handler to mark node as done
+    // Handler to mark node as done (persists to store)
     const handleMarkAsDone = useCallback((nodeId: string) => {
-        setNodes(prevNodes =>
-            prevNodes.map(node =>
-                node.id === nodeId
-                    ? { ...node, status: 'done' as const }
-                    : node
-            )
-        );
+        persistMarkNodeDone(nodeId);
+        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
     }, []);
 
     // --- Calculate Node Positions ---

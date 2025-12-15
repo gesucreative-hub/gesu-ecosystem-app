@@ -142,6 +142,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.6.0] - Post-MVP Hardening (2025-12-16)
+- **Project Store**: Created projectStore.ts with Project model (id, name, createdAt, updatedAt, archived), CRUD operations, and schemaVersion.
+- **Workflow Progress Store**: Created workflowProgressStore.ts for per-project persistence of node status and DoD completion.
+- **Project Selector UI**: Added project dropdown to InitiatorPage header with create/switch capabilities.
+- **Persistence Wiring**: WorkflowCanvas now merges static nodes with persisted progress; DoD/status changes persist to localStorage.
+- **Store Hardening**: Added schemaVersion to projectHubTasksStore with legacy array migration.
+- **Placeholder Removal**: Replaced "Current Project" with activeProject.name in StepDetailPanel.
+
 ### [0.5.0] - Tech Debt + UI Sanity (2025-12-16)
 - **Unified Engine Status**: Created engineStatusStore.ts with single source of truth, subscription model, refresh capability, and last-checked timestamp.
 - **useEngineStatus Hook**: React hook for consuming unified engine status store.

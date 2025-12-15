@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -8,6 +8,14 @@ import { SelectDropdown } from '../components/Dropdown';
 import { Tabs } from '../components/Tabs';
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { Zap, FileText } from 'lucide-react';
+import {
+    listProjects,
+    getActiveProject,
+    setActiveProject,
+    createProject,
+    ensureDefaultProject,
+    Project,
+} from '../stores/projectStore';
 
 // --- Types & Interfaces ---
 
@@ -279,26 +287,99 @@ export function ProjectHubPage() {
     const tabFromUrl = searchParams.get('tab') || 'workflow';
     const activeTab = tabFromUrl === 'generator' ? 'generator' : 'workflow';
 
+    // Project state
+    const [activeProject, setActiveProjectState] = useState<Project | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [showNewProjectInput, setShowNewProjectInput] = useState(false);
+    const [newProjectName, setNewProjectName] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    // Load projects on mount
+    useEffect(() => {
+        const active = ensureDefaultProject();
+        setActiveProjectState(active);
+        setProjects(listProjects());
+    }, []);
+
     const handleTabChange = (tabId: string) => {
         setSearchParams({ tab: tabId });
     };
+
+    const handleProjectChange = useCallback((projectId: string) => {
+        if (projectId === '__new__') {
+            setShowNewProjectInput(true);
+            return;
+        }
+        setActiveProject(projectId);
+        const active = getActiveProject();
+        setActiveProjectState(active);
+        setRefreshKey(k => k + 1); // Force canvas refresh
+    }, []);
+
+    const handleCreateProject = useCallback(() => {
+        if (!newProjectName.trim()) return;
+        const project = createProject(newProjectName.trim());
+        setActiveProjectState(project);
+        setProjects(listProjects());
+        setNewProjectName('');
+        setShowNewProjectInput(false);
+        setRefreshKey(k => k + 1);
+    }, [newProjectName]);
 
     const tabs = [
         { id: 'workflow', label: 'Workflow', icon: <FileText size={16} /> },
         { id: 'generator', label: 'Generator', icon: <Zap size={16} /> }
     ];
 
+    const projectOptions = [
+        ...projects.map(p => ({ value: p.id, label: p.name })),
+        { value: '__new__', label: '+ New Project' },
+    ];
+
     return (
         <PageContainer>
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-start mb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Project Hub</h1>
                     <p className="text-tokens-muted text-sm mt-1">Manage projects from start to finish.</p>
                 </div>
-                <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
-                    ← Back
-                </Link>
+                <div className="flex items-center gap-3">
+                    {/* Project Selector */}
+                    <div className="flex items-center gap-2">
+                        {showNewProjectInput ? (
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    value={newProjectName}
+                                    onChange={(e) => setNewProjectName(e.target.value)}
+                                    placeholder="Project name"
+                                    className="w-40"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleCreateProject();
+                                        if (e.key === 'Escape') setShowNewProjectInput(false);
+                                    }}
+                                />
+                                <Button size="sm" variant="primary" onClick={handleCreateProject}>
+                                    Create
+                                </Button>
+                                <Button size="sm" variant="secondary" onClick={() => setShowNewProjectInput(false)}>
+                                    Cancel
+                                </Button>
+                            </div>
+                        ) : (
+                            <SelectDropdown
+                                value={activeProject?.id || ''}
+                                options={projectOptions}
+                                onChange={handleProjectChange}
+                                className="min-w-[180px]"
+                            />
+                        )}
+                    </div>
+                    <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
+                        Back
+                    </Link>
+                </div>
             </div>
 
             {/* Tabs */}

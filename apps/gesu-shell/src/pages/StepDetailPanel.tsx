@@ -13,6 +13,7 @@ import {
     isActiveForStep,
     startFinishMode,
 } from '../stores/finishModeStore';
+import { getActiveProject } from '../stores/projectStore';
 
 interface StepDetailPanelProps {
     selectedNode: WorkflowNode | null;
@@ -72,7 +73,7 @@ export function StepDetailPanel({
                     stepTitle: selectedNode.title,
                     dodItemId: item.id,
                     dodItemLabel: item.label,
-                    projectName: 'Current Project',
+                    projectName: getActiveProject()?.name || 'Project',
                 });
             }
         });
@@ -148,7 +149,7 @@ export function StepDetailPanel({
                         stepTitle: selectedNode.title,
                         dodItemId: item.id,
                         dodItemLabel: item.label,
-                        projectName: 'Current Project',
+                        projectName: getActiveProject()?.name || 'Project',
                     });
                 }
             });

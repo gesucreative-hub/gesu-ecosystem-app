@@ -32,31 +32,56 @@ function generateId(): string {
     return `ph-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-// --- Storage Operations ---
+// --- Storage Operations (with schemaVersion) ---
 
-export function loadTasksForDate(dateKey: string): ProjectHubTask[] {
+interface StoredTasksState {
+    schemaVersion: number;
+    tasks: ProjectHubTask[];
+}
+
+const CURRENT_SCHEMA_VERSION = 1;
+
+function loadState(): StoredTasksState {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const allTasks: ProjectHubTask[] = JSON.parse(raw);
-        return allTasks.filter(t => t.dateKey === dateKey);
+        if (!raw) return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+
+        const parsed = JSON.parse(raw);
+
+        // Handle legacy format (array without schema wrapper)
+        if (Array.isArray(parsed)) {
+            console.log('Migrating projectHubTasksStore to schemaVersion 1');
+            return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: parsed };
+        }
+
+        // Handle new format with schemaVersion
+        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+            console.warn('ProjectHubTasks schema mismatch. Resetting.');
+            return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+        }
+
+        return parsed;
     } catch {
-        return [];
+        return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
     }
+}
+
+function saveState(tasks: ProjectHubTask[]): void {
+    const payload: StoredTasksState = { schemaVersion: CURRENT_SCHEMA_VERSION, tasks };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+export function loadTasksForDate(dateKey: string): ProjectHubTask[] {
+    const state = loadState();
+    return state.tasks.filter(t => t.dateKey === dateKey);
 }
 
 export function loadAllTasks(): ProjectHubTask[] {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        return JSON.parse(raw);
-    } catch {
-        return [];
-    }
+    return loadState().tasks;
 }
 
 export function saveAllTasks(tasks: ProjectHubTask[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    saveState(tasks);
 }
 
 export function saveTasksForDate(dateKey: string, dateTasks: ProjectHubTask[]): void {

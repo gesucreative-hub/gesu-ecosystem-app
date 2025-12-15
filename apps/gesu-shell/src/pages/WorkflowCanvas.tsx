@@ -7,6 +7,7 @@ import {
     CANVAS_CONFIG,
     WorkflowNode,
 } from './workflowData';
+import { StepDetailPanel } from './StepDetailPanel';
 
 // --- Node Component ---
 interface WorkflowNodeCardProps {
@@ -110,6 +111,42 @@ export function WorkflowCanvas() {
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
+    // Local state for nodes (allows DoD updates without persistence)
+    const [nodes, setNodes] = useState<WorkflowNode[]>(WORKFLOW_NODES);
+
+    // Find selected node
+    const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+
+    // Handler to toggle DoD item
+    const handleToggleDoDItem = useCallback((nodeId: string, dodItemId: string) => {
+        setNodes(prevNodes =>
+            prevNodes.map(node => {
+                if (node.id === nodeId) {
+                    return {
+                        ...node,
+                        dodChecklist: node.dodChecklist.map(item =>
+                            item.id === dodItemId
+                                ? { ...item, done: !item.done }
+                                : item
+                        )
+                    };
+                }
+                return node;
+            })
+        );
+    }, []);
+
+    // Handler to mark node as done
+    const handleMarkAsDone = useCallback((nodeId: string) => {
+        setNodes(prevNodes =>
+            prevNodes.map(node =>
+                node.id === nodeId
+                    ? { ...node, status: 'done' as const }
+                    : node
+            )
+        );
+    }, []);
+
     // --- Calculate Node Positions ---
     const nodePositions = useMemo(() => {
         const positions: Record<string, { x: number; y: number }> = {};
@@ -195,126 +232,136 @@ export function WorkflowCanvas() {
     }, [nodePositions]);
 
     return (
-        <div className="relative w-full h-[500px] bg-tokens-panel2 rounded-xl border border-tokens-border overflow-hidden">
-            {/* Reset View Button */}
-            <button
-                onClick={handleReset}
-                className="absolute top-3 right-3 z-20 px-3 py-1.5 bg-tokens-panel border border-tokens-border 
-                           rounded-lg text-xs font-medium text-tokens-muted hover:text-tokens-fg 
-                           hover:bg-tokens-panel2 transition-colors flex items-center gap-1.5 shadow-sm"
-                title="Reset view"
-            >
-                <RotateCcw size={14} />
-                Reset
-            </button>
-
-            {/* Pannable Container */}
-            <div
-                ref={containerRef}
-                className={`absolute inset-0 ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-            >
-                {/* Background layer for pan detection - always receives pointer events */}
-                <div
-                    data-pannable-background="true"
-                    className="absolute inset-0"
-                    style={{ width: '200%', height: '200%', left: '-50%', top: '-50%' }}
-                />
-
-                {/* Transformed Layer */}
-                <div
-                    className="absolute pointer-events-none"
-                    style={{
-                        transform: `translate(${pan.x}px, ${pan.y}px)`,
-                        width: canvasSize.width,
-                        height: canvasSize.height,
-                    }}
+        <div className="flex gap-6 h-[600px]">
+            {/* Canvas Column */}
+            <div className="flex-1 relative bg-tokens-panel2 rounded-xl border border-tokens-border overflow-hidden">
+                {/* Reset View Button */}
+                <button
+                    onClick={handleReset}
+                    className="absolute top-3 right-3 z-20 px-3 py-1.5 bg-tokens-panel border border-tokens-border 
+                               rounded-lg text-xs font-medium text-tokens-muted hover:text-tokens-fg 
+                               hover:bg-tokens-panel2 transition-colors flex items-center gap-1.5 shadow-sm"
+                    title="Reset view"
                 >
-                    {/* SVG Layer for Connectors */}
-                    <svg
-                        className="absolute inset-0 pointer-events-none"
-                        width={canvasSize.width}
-                        height={canvasSize.height}
+                    <RotateCcw size={14} />
+                    Reset
+                </button>
+
+                {/* Pannable Container */}
+                <div
+                    ref={containerRef}
+                    className={`absolute inset-0 ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                >
+                    {/* Background layer for pan detection - always receives pointer events */}
+                    <div
+                        data-pannable-background="true"
+                        className="absolute inset-0"
+                        style={{ width: '200%', height: '200%', left: '-50%', top: '-50%' }}
+                    />
+
+                    {/* Transformed Layer */}
+                    <div
+                        className="absolute pointer-events-none"
+                        style={{
+                            transform: `translate(${pan.x}px, ${pan.y}px)`,
+                            width: canvasSize.width,
+                            height: canvasSize.height,
+                        }}
                     >
-                        <defs>
-                            <marker
-                                id="arrowhead"
-                                markerWidth="10"
-                                markerHeight="7"
-                                refX="9"
-                                refY="3.5"
-                                orient="auto"
-                            >
-                                <polygon
-                                    points="0 0, 10 3.5, 0 7"
-                                    className="fill-tokens-border"
+                        {/* SVG Layer for Connectors */}
+                        <svg
+                            className="absolute inset-0 pointer-events-none"
+                            width={canvasSize.width}
+                            height={canvasSize.height}
+                        >
+                            <defs>
+                                <marker
+                                    id="arrowhead"
+                                    markerWidth="10"
+                                    markerHeight="7"
+                                    refX="9"
+                                    refY="3.5"
+                                    orient="auto"
+                                >
+                                    <polygon
+                                        points="0 0, 10 3.5, 0 7"
+                                        className="fill-tokens-border"
+                                    />
+                                </marker>
+                            </defs>
+                            {edgeLines.map(edge => (
+                                <Connector
+                                    key={edge.id}
+                                    fromX={edge.fromX}
+                                    fromY={edge.fromY}
+                                    toX={edge.toX}
+                                    toY={edge.toY}
                                 />
-                            </marker>
-                        </defs>
-                        {edgeLines.map(edge => (
-                            <Connector
-                                key={edge.id}
-                                fromX={edge.fromX}
-                                fromY={edge.fromY}
-                                toX={edge.toX}
-                                toY={edge.toY}
-                            />
-                        ))}
-                    </svg>
+                            ))}
+                        </svg>
 
-                    {/* Swimlane Headers */}
-                    {WORKFLOW_PHASES.map((phase, index) => {
-                        const { nodeWidth, nodeGapX, swimlanePadding, swimlaneHeaderHeight } = CANVAS_CONFIG;
-                        const phaseX = index * (nodeWidth + nodeGapX * 2) + swimlanePadding;
+                        {/* Swimlane Headers */}
+                        {WORKFLOW_PHASES.map((phase, index) => {
+                            const { nodeWidth, nodeGapX, swimlanePadding, swimlaneHeaderHeight } = CANVAS_CONFIG;
+                            const phaseX = index * (nodeWidth + nodeGapX * 2) + swimlanePadding;
 
-                        return (
-                            <div
-                                key={phase.id}
-                                className="absolute flex items-center gap-2 px-3"
-                                style={{
-                                    left: phaseX,
-                                    top: 8,
-                                    width: nodeWidth,
-                                    height: swimlaneHeaderHeight - 16,
-                                }}
-                            >
+                            return (
                                 <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: phase.color }}
+                                    key={phase.id}
+                                    className="absolute flex items-center gap-2 px-3"
+                                    style={{
+                                        left: phaseX,
+                                        top: 8,
+                                        width: nodeWidth,
+                                        height: swimlaneHeaderHeight - 16,
+                                    }}
+                                >
+                                    <div
+                                        className="w-2 h-2 rounded-full"
+                                        style={{ backgroundColor: phase.color }}
+                                    />
+                                    <span className="text-xs font-semibold text-tokens-muted uppercase tracking-wider">
+                                        {phase.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+
+                        {/* Nodes - Use local state */}
+                        {nodes.map(node => {
+                            const pos = nodePositions[node.id];
+                            if (!pos) return null;
+
+                            return (
+                                <WorkflowNodeCard
+                                    key={node.id}
+                                    node={node}
+                                    x={pos.x}
+                                    y={pos.y}
+                                    isSelected={selectedNodeId === node.id}
+                                    onSelect={setSelectedNodeId}
                                 />
-                                <span className="text-xs font-semibold text-tokens-muted uppercase tracking-wider">
-                                    {phase.label}
-                                </span>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
+                </div>
 
-                    {/* Nodes */}
-                    {WORKFLOW_NODES.map(node => {
-                        const pos = nodePositions[node.id];
-                        if (!pos) return null;
-
-                        return (
-                            <WorkflowNodeCard
-                                key={node.id}
-                                node={node}
-                                x={pos.x}
-                                y={pos.y}
-                                isSelected={selectedNodeId === node.id}
-                                onSelect={setSelectedNodeId}
-                            />
-                        );
-                    })}
+                {/* Visual hint for panning */}
+                <div className="absolute bottom-3 left-3 text-[10px] text-tokens-muted/50 pointer-events-none">
+                    Drag to pan • Click node to select
                 </div>
             </div>
 
-            {/* Visual hint for panning */}
-            <div className="absolute bottom-3 left-3 text-[10px] text-tokens-muted/50 pointer-events-none">
-                Drag to pan • Click node to select
-            </div>
+            {/* Step Detail Panel Column */}
+            <StepDetailPanel
+                selectedNode={selectedNode}
+                onToggleDoDItem={handleToggleDoDItem}
+                onMarkAsDone={handleMarkAsDone}
+            />
         </div>
     );
 }

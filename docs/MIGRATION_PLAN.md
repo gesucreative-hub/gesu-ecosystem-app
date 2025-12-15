@@ -142,6 +142,21 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.8.0] - Generator Real Scaffolding (2025-12-16)
+- **Electron Scaffolding Module**: Created electron/scaffolding.js with sanitizeProjectName, assertPathWithin (allowlist + BACKUP_ROOT defense), buildPlan, and applyPlan.
+- **IPC Handlers**: Added scaffold:preview and scaffold:create to electron/main.js using projectsRoot from settings.
+- **Preload Bridge**: Exposed window.gesu.scaffold.preview/create in electron/preload.cjs.
+- **Window Typing**: Added scaffold API types to src/types/global.d.ts.
+- **Service Layer**: Updated scaffoldingService.ts to use Electron bridge when available with simulation fallback.
+- **Generator UI**: Added Preview and Generate buttons to InitiatorPage with error display and simulation mode badge.
+- **Safety**: Strict allowlist validation (projectsRoot only), BACKUP_ROOT defense, 'wx' flag prevents overwrite, sanitized project names.
+
+### [0.7.0] - Real I/O Foundation (2025-12-16)
+- **File-Backed Settings**: Updated useGesuSettings to prioritize window.gesu.settings (reads/writes Gesu.GlobalSettings.json via Electron) with localStorage fallback for web dev.
+- **Native Path Dialogs**: Confirmed window.gesu.dialog.pickFolder/pickFile already wired and functional in SettingsPage.
+- **Real Engine Status**: Validated electron/tools-check.js provides real file existence checks via IPC 'tools:check' handler.
+- **Infrastructure Complete**: All Real I/O foundation components already implemented and functional.
+
 ### [0.6.0] - Post-MVP Hardening (2025-12-16)
 - **Project Store**: Created projectStore.ts with Project model (id, name, createdAt, updatedAt, archived), CRUD operations, and schemaVersion.
 - **Workflow Progress Store**: Created workflowProgressStore.ts for per-project persistence of node status and DoD completion.

@@ -142,5 +142,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.2.0] - Project Hub MVP (2025-12-15)
+- **Project Hub**: Renamed Initiator to Project Hub with Workflow/Generator tabs.
+- **Workflow Canvas**: Pannable canvas with 5 swimlanes, 16 fixed nodes, bezier connectors.
+- **Step Detail Panel**: Right panel with phase badge, DoD checklist, mark as done, tools chips.
+- **Compass Integration**: Send 1-3 DoD items to Compass with WIP limit (max 3 active tasks/day).
+- **localStorage Store**: Date-scoped task persistence with duplicate prevention.
+- **QA Verified**: All features working, no regressions across Dashboard/Media/Compass/Refocus/Settings.
+- **Milestone**: Project Hub MVP usable end-to-end achieved.
+
 ### [0.1.0] - Alpha
 - Skeleton setup.
+

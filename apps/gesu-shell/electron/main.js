@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
 import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.js';
+import { buildPlan, applyPlan } from './scaffolding.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -210,6 +211,54 @@ ipcMain.handle('gesu:dialog:pickFile', async (event, { defaultPath, filters }) =
     if (canceled || filePaths.length === 0) return null;
     return filePaths[0];
 });
+
+// --- Scaffolding Handlers ---
+
+ipcMain.handle('scaffold:preview', async (event, { projectName, templateId }) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const projectsRoot = settings.paths?.projectsRoot;
+
+        if (!projectsRoot || projectsRoot.trim() === '') {
+            throw new Error('Projects root not configured. Please set it in Settings.');
+        }
+
+        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId });
+
+        return {
+            ok: true,
+            projectPath,
+            plan
+        };
+    } catch (err) {
+        return {
+            ok: false,
+            error: err.message
+        };
+    }
+});
+
+ipcMain.handle('scaffold:create', async (event, { projectName, templateId }) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const projectsRoot = settings.paths?.projectsRoot;
+
+        if (!projectsRoot || projectsRoot.trim() === '') {
+            throw new Error('Projects root not configured. Please set it in Settings.');
+        }
+
+        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId });
+        const result = await applyPlan({ projectsRoot, plan, projectPath });
+
+        return result;
+    } catch (err) {
+        return {
+            ok: false,
+            error: err.message
+        };
+    }
+});
+
 
 // Re-add helpers removed during replacement block optimization
 function buildPresetArgs(preset, downloadsDir) {

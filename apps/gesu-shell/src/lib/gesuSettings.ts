@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     GesuSettings,
-    loadSettings,
-    saveSettings as persistSettings
+    loadSettings as loadFromLocalStorage,
+    saveSettings as saveToLocalStorage
 } from '../stores/settingsStore';
 
 export function useGesuSettings() {
@@ -10,11 +10,20 @@ export function useGesuSettings() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadSettingsFromStore = useCallback(() => {
+    const loadSettingsFromStore = useCallback(async () => {
         try {
             setLoading(true);
-            const loaded = loadSettings();
-            setSettings(loaded);
+
+            // Prioritize window.gesu.settings (file-backed) when available
+            if (window.gesu?.settings?.read) {
+                const loaded = await window.gesu.settings.read();
+                setSettings(loaded);
+            } else {
+                // Fallback to localStorage for web dev
+                const loaded = loadFromLocalStorage();
+                setSettings(loaded);
+            }
+
             setError(null);
         } catch (err) {
             console.error('[useGesuSettings] Load Error:', err);
@@ -24,13 +33,20 @@ export function useGesuSettings() {
         }
     }, []);
 
-    const saveSettingsToStore = useCallback((newSettings: GesuSettings) => {
+    const saveSettingsToStore = useCallback(async (newSettings: GesuSettings) => {
         try {
-            const success = persistSettings(newSettings);
-            if (success) {
-                setSettings(newSettings);
+            // Prioritize window.gesu.settings (file-backed) when available
+            if (window.gesu?.settings?.write) {
+                const saved = await window.gesu.settings.write(newSettings);
+                setSettings(saved);
             } else {
-                throw new Error('Failed to persist settings');
+                // Fallback to localStorage for web dev
+                const success = saveToLocalStorage(newSettings);
+                if (success) {
+                    setSettings(newSettings);
+                } else {
+                    throw new Error('Failed to persist settings');
+                }
             }
         } catch (err) {
             console.error('[useGesuSettings] Save Error:', err);

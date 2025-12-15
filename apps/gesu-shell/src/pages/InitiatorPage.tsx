@@ -16,6 +16,8 @@ import {
     ensureDefaultProject,
     Project,
 } from '../stores/projectStore';
+import { scaffoldingService, ScaffoldPreviewResult } from '../services/scaffoldingService';
+
 
 // --- Types & Interfaces ---
 
@@ -86,38 +88,68 @@ function ProjectGeneratorForm() {
         gitInit: false
     });
 
+    // Preview/Generate state
+    const [previewResult, setPreviewResult] = useState<ScaffoldPreviewResult | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     // Derived State
     const projectCode = useMemo(() => generateProjectCode(type, name), [type, name]);
     const selectedTemplate = TEMPLATES.find(t => t.id === templateId) || TEMPLATES[0];
-    const projectRoot = `D:\\01. Projects\\${projectCode}_${name.trim().replace(/[\s\W]+/g, '-') || 'Untitled'}`;
+    const isSimulationMode = scaffoldingService.isSimulationMode();
 
     // Handlers
     const handleOptionToggle = (key: keyof ProjectOptions) => {
         setOptions(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const handleGenerate = () => {
+    const handlePreview = async () => {
         if (!name.trim()) {
-            alert("Please enter a project name.");
+            setError('Please enter a project name.');
             return;
         }
 
-        const payload = {
-            timestamp: new Date().toISOString(),
-            project: {
-                name,
-                code: projectCode,
-                type,
-                category,
-                description,
-                rootPath: projectRoot
-            },
-            template: selectedTemplate,
-            options
-        };
+        setIsLoading(true);
+        setError(null);
 
-        console.log("Generate Project (Mock):", payload);
-        alert(`Mock Project Generated:\n${projectCode}\n\nCheck console for payload.`);
+        try {
+            const result = await scaffoldingService.preview(name.trim(), templateId);
+            if (result.ok) {
+                setPreviewResult(result);
+            } else {
+                setError(result.error || 'Failed to generate preview');
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGenerate = async () => {
+        if (!name.trim()) {
+            setError('Please enter a project name.');
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await scaffoldingService.scaffold(name.trim(), templateId);
+            if (result.ok) {
+                alert(`Project created successfully!\n\nPath: ${result.projectPath}`);
+                // Reset form
+                setName('');
+                setPreviewResult(null);
+            } else {
+                setError(result.error || 'Failed to create project');
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -223,14 +255,40 @@ function ProjectGeneratorForm() {
                             </div>
                         </div>
 
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            onClick={handleGenerate}
-                            className="mt-4 w-full justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
-                        >
-                            Generate Project (Mock)
-                        </Button>
+                        {/* Error Display */}
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Buttons */}
+                        <div className="flex gap-3 mt-4">
+                            <Button
+                                variant="secondary"
+                                size="lg"
+                                onClick={handlePreview}
+                                disabled={isLoading || !name.trim()}
+                                className="flex-1 justify-center"
+                            >
+                                {isLoading ? 'Loading...' : 'Preview'}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={handleGenerate}
+                                disabled={isLoading || !previewResult || isSimulationMode}
+                                className="flex-1 justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
+                            >
+                                Generate Project
+                            </Button>
+                        </div>
+
+                        {isSimulationMode && (
+                            <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/50 rounded px-2 py-1 text-center">
+                                Simulation Mode - Generate disabled. Run in Electron for real scaffolding.
+                            </div>
+                        )}
                     </div>
                 </Card>
             </div>
@@ -252,7 +310,7 @@ function ProjectGeneratorForm() {
                         <div>
                             <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-1">Target Path</div>
                             <div className="font-mono text-xs text-tokens-muted break-all bg-tokens-panel2 p-2 rounded border border-tokens-border">
-                                {projectRoot}
+                                {previewResult?.projectPath || '(click Preview to generate)'}
                             </div>
                         </div>
 

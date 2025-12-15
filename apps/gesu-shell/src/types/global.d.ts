@@ -105,6 +105,20 @@ declare global {
                 pickFolder: (defaultPath?: string) => Promise<string | null>;
                 pickFile: (opts: { defaultPath?: string; filters?: Electron.FileFilter[] }) => Promise<string | null>;
             };
+            scaffold?: {
+                preview: (input: { projectName: string; templateId: string }) => Promise<{
+                    ok: boolean;
+                    projectPath?: string;
+                    plan?: Array<{ kind: 'dir' | 'file'; relativePath: string; content?: string }>;
+                    error?: string;
+                }>;
+                create: (input: { projectName: string; templateId: string }) => Promise<{
+                    ok: boolean;
+                    projectPath?: string;
+                    warnings?: string[];
+                    error?: string;
+                }>;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;

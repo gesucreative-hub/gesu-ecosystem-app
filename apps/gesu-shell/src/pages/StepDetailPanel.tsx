@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Check, CheckCircle2, Send, Compass } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Check, CheckCircle2, Send, Compass, Target } from 'lucide-react';
 import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
 import { Button } from '../components/Button';
 import {
@@ -8,6 +9,10 @@ import {
     addTaskToToday,
     canAddMoreTasksToday,
 } from '../stores/projectHubTasksStore';
+import {
+    isActiveForStep,
+    startFinishMode,
+} from '../stores/finishModeStore';
 
 interface StepDetailPanelProps {
     selectedNode: WorkflowNode | null;
@@ -81,6 +86,77 @@ export function StepDetailPanel({
         setSelectedForCompass(new Set());
         setRemainingSlots(getRemainingSlots());
     }, [selectedNode, selectedForCompass]);
+
+    // --- Finish Mode State ---
+    const navigate = useNavigate();
+    const [selectedForFinish, setSelectedForFinish] = useState<Set<string>>(new Set());
+    const [isFinishModeActive, setIsFinishModeActive] = useState(false);
+
+    // Check if Finish Mode is active for this step
+    useEffect(() => {
+        if (selectedNode) {
+            setIsFinishModeActive(isActiveForStep(selectedNode.id));
+            setSelectedForFinish(new Set());
+        }
+    }, [selectedNode?.id]);
+
+    const handleToggleFinishSelection = useCallback((dodItemId: string) => {
+        setSelectedForFinish(prev => {
+            const next = new Set(prev);
+            if (next.has(dodItemId)) {
+                next.delete(dodItemId);
+            } else {
+                // Max 3 actions for Finish Mode
+                if (next.size < 3) {
+                    next.add(dodItemId);
+                }
+            }
+            return next;
+        });
+    }, []);
+
+    const handleStartFinishMode = useCallback(() => {
+        if (!selectedNode || selectedForFinish.size === 0) return;
+
+        // Check WIP limit
+        if (!canAddMoreTasksToday()) {
+            alert('Batas 3 task Project Hub untuk hari ini tercapai. Selesaikan dulu sebelum memulai Finish Mode.');
+            return;
+        }
+
+        // Build actions from selected DoD items
+        const actions = Array.from(selectedForFinish).map(id => {
+            const item = selectedNode.dodChecklist.find(d => d.id === id);
+            return { id, label: item?.label || 'Action' };
+        });
+
+        // Start Finish Mode session
+        const session = startFinishMode({
+            projectName: 'Current Project',
+            stepId: selectedNode.id,
+            stepTitle: selectedNode.title,
+            actions,
+        });
+
+        if (session) {
+            // Also add to Compass tasks (sync)
+            actions.forEach(action => {
+                const item = selectedNode.dodChecklist.find(d => d.id === action.id);
+                if (item && !isDodItemAlreadySentToday(selectedNode.id, item.id)) {
+                    addTaskToToday({
+                        stepId: selectedNode.id,
+                        stepTitle: selectedNode.title,
+                        dodItemId: item.id,
+                        dodItemLabel: item.label,
+                        projectName: 'Current Project',
+                    });
+                }
+            });
+
+            // Navigate to Compass
+            navigate('/compass');
+        }
+    }, [selectedNode, selectedForFinish, navigate]);
 
     // Empty state
     if (!selectedNode) {
@@ -272,6 +348,76 @@ export function StepDetailPanel({
                                 icon={<Send size={14} />}
                             >
                                 Kirim ke Compass ({selectedForCompass.size})
+                            </Button>
+                        </>
+                    )}
+                </div>
+
+                {/* Finish Mode Section */}
+                <div className="border-t border-tokens-border pt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Target size={16} className="text-amber-500" />
+                        <h3 className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
+                            Finish Mode
+                        </h3>
+                        {isFinishModeActive && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                Active
+                            </span>
+                        )}
+                    </div>
+
+                    {isFinishModeActive ? (
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
+                            Finish Mode aktif untuk step ini. Buka Compass untuk melanjutkan.
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-xs text-tokens-muted mb-3">
+                                Pilih 1-3 aksi untuk fokus (max 3). Selesaikan sebelum menambah task baru.
+                            </p>
+
+                            <div className="space-y-2 mb-4">
+                                {selectedNode.dodChecklist.map((item) => {
+                                    const isSelected = selectedForFinish.has(item.id);
+                                    const isDisabled = !isSelected && selectedForFinish.size >= 3;
+
+                                    return (
+                                        <label
+                                            key={`finish-${item.id}`}
+                                            className={`flex items-center gap-3 p-2 rounded-lg border transition-all
+                                                      ${isDisabled
+                                                    ? 'opacity-50 cursor-not-allowed bg-tokens-panel border-tokens-border'
+                                                    : isSelected
+                                                        ? 'bg-amber-500/10 border-amber-500/50 cursor-pointer'
+                                                        : 'bg-tokens-panel border-tokens-border hover:border-amber-500/30 cursor-pointer'}`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => !isDisabled && handleToggleFinishSelection(item.id)}
+                                                disabled={isDisabled}
+                                                className="rounded border-tokens-border bg-tokens-panel2
+                                                         text-amber-500 focus:ring-amber-500/40"
+                                            />
+                                            <span className={`text-xs flex-1 ${isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-tokens-fg'}`}>
+                                                {item.label}
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                fullWidth
+                                onClick={handleStartFinishMode}
+                                disabled={selectedForFinish.size === 0}
+                                icon={<Target size={14} />}
+                                className="!bg-amber-500 hover:!bg-amber-600"
+                            >
+                                Mulai Finish Mode ({selectedForFinish.size}/3)
                             </Button>
                         </>
                     )}

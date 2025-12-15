@@ -142,6 +142,13 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.4.0] - Finish Mode Guardrails (2025-12-15)
+- **Finish Mode Store**: Created finishModeStore.ts with session management, action toggling, and localStorage persistence.
+- **StepDetailPanel**: Added Finish Mode section with action selection (max 3), active indicator, and "Mulai Finish Mode" button.
+- **CompassPage**: Added Finish Mode card at top when session active - shows current step, action checklist, start/end/clear buttons, guidance text.
+- **Anti-planning trap**: User cannot create >3 actions, WIP limit enforced, one step at a time, survives reload.
+- **Integration**: Selected actions sync to "Project Hub Tasks (Today)" on Compass.
+
 ### [0.3.0] - Settings MVP (2025-12-15)
 - **Global Settings Model**: Created typed GesuSettings interface with workflowRoot, projectsRoot, backupRoot, and toolPaths (yt-dlp, ffmpeg, imagemagick, libreoffice).
 - **localStorage Adapter**: Implemented settingsStore.ts with schema versioning and migration support.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2 } from 'lucide-react';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -10,6 +10,15 @@ import {
     toggleTaskDone,
     ProjectHubTask
 } from '../stores/projectHubTasksStore';
+import {
+    getFinishSession,
+    isActiveToday,
+    toggleAction,
+    startSession,
+    endSession,
+    clearSession,
+    FinishSession,
+} from '../stores/finishModeStore';
 
 // --- Types & Interfaces ---
 
@@ -96,6 +105,45 @@ export function CompassPage() {
         setProjectHubTasks(getTodayTasks());
     }, []);
 
+    // --- Finish Mode State ---
+    const [finishSession, setFinishSession] = useState<FinishSession | null>(null);
+
+    // Load Finish Mode session on mount and refresh periodically
+    useEffect(() => {
+        const loadSession = () => {
+            if (isActiveToday()) {
+                setFinishSession(getFinishSession());
+            } else {
+                setFinishSession(null);
+            }
+        };
+        loadSession();
+        const interval = setInterval(loadSession, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleToggleFinishAction = useCallback((actionId: string) => {
+        toggleAction(actionId);
+        setFinishSession(getFinishSession());
+    }, []);
+
+    const handleStartSession = useCallback(() => {
+        startSession();
+        setFinishSession(getFinishSession());
+    }, []);
+
+    const handleEndSession = useCallback(() => {
+        endSession();
+        setFinishSession(getFinishSession());
+    }, []);
+
+    const handleClearSession = useCallback(() => {
+        if (confirm('Hapus Finish Mode session ini? Ini tidak bisa dibatalkan.')) {
+            clearSession();
+            setFinishSession(null);
+        }
+    }, []);
+
     // Derived State
     const getEnergyLabel = (val: number) => {
         if (val <= 3) return { text: "Low Energy", color: "text-red-500" };
@@ -139,6 +187,104 @@ export function CompassPage() {
                     ← Back
                 </Link>
             </div>
+
+            {/* Finish Mode Card - Top when active */}
+            {finishSession && (
+                <Card
+                    title={
+                        <div className="flex items-center gap-2">
+                            <Target size={18} className="text-amber-500" />
+                            <span className="text-amber-500">Finish Mode</span>
+                        </div>
+                    }
+                    className="mb-6 border-amber-500/30 bg-amber-500/5"
+                >
+                    <div className="space-y-4">
+                        {/* Current Step */}
+                        <div>
+                            <p className="text-xs text-tokens-muted mb-1">Current Step</p>
+                            <p className="text-sm font-medium text-tokens-fg">{finishSession.stepTitle}</p>
+                            <p className="text-xs text-tokens-muted">{finishSession.projectName}</p>
+                        </div>
+
+                        {/* Actions Checklist */}
+                        <div>
+                            <p className="text-xs text-tokens-muted mb-2">Actions ({finishSession.actions.filter(a => a.done).length}/{finishSession.actions.length})</p>
+                            <div className="space-y-2">
+                                {finishSession.actions.map(action => (
+                                    <label
+                                        key={action.id}
+                                        className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-all
+                                            ${action.done
+                                                ? 'bg-emerald-500/10 border-emerald-500/30'
+                                                : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={action.done}
+                                            onChange={() => handleToggleFinishAction(action.id)}
+                                            className="w-4 h-4 rounded border-tokens-border text-amber-500 focus:ring-amber-500/20 bg-tokens-bg cursor-pointer"
+                                        />
+                                        <span className={`text-sm ${action.done ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
+                                            {action.label}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Guidance */}
+                        <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-500/10 p-2 rounded">
+                            Selesaikan 3 aksi ini sebelum menambah task baru.
+                        </p>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                            {!finishSession.startedAt ? (
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={handleStartSession}
+                                    icon={<Play size={14} />}
+                                    className="flex-1 !bg-amber-500 hover:!bg-amber-600"
+                                >
+                                    Start Session
+                                </Button>
+                            ) : !finishSession.endedAt ? (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={handleEndSession}
+                                    icon={<Square size={14} />}
+                                    className="flex-1"
+                                >
+                                    End Session
+                                </Button>
+                            ) : (
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400 flex-1 text-center py-2">
+                                    Session completed!
+                                </span>
+                            )}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleClearSession}
+                                icon={<Trash2 size={14} />}
+                            >
+                                Clear
+                            </Button>
+                        </div>
+
+                        {/* Link to Project Hub */}
+                        <Link
+                            to={`/initiator?stepId=${finishSession.stepId}`}
+                            className="text-xs text-tokens-brand-DEFAULT hover:underline block text-center"
+                        >
+                            Open in Project Hub
+                        </Link>
+                    </div>
+                </Card>
+            )}
 
             <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
@@ -197,6 +343,45 @@ export function CompassPage() {
                             ))}
                         </div>
                     </Card>
+
+                    {/* Project Hub Tasks (Today) */}
+                    {projectHubTasks.length > 0 && (
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Briefcase size={16} className="text-tokens-brand-DEFAULT" />
+                                <span>Project Hub Tasks (Today)</span>
+                            </div>
+                        }>
+                            <div className="flex flex-col gap-2">
+                                {projectHubTasks.map(task => (
+                                    <label
+                                        key={task.id}
+                                        className={`
+                                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                                            ${task.done
+                                                ? 'bg-emerald-500/10 border-emerald-500/30'
+                                                : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
+                                        `}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={task.done}
+                                            onChange={() => handleToggleProjectHubTask(task.id)}
+                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                            <span className={`text-sm block ${task.done ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
+                                                {task.title}
+                                            </span>
+                                            <span className="text-xs text-tokens-muted">
+                                                {task.stepTitle} - {task.projectName}
+                                            </span>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        </Card>
+                    )}
                 </div>
 
                 {/* RIGHT COLUMN (1/3 width) */}
@@ -247,47 +432,10 @@ export function CompassPage() {
                         </div>
                     </Card>
 
-                    {/* Project Hub Tasks (Today) */}
-                    {projectHubTasks.length > 0 && (
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <Briefcase size={16} className="text-tokens-brand-DEFAULT" />
-                                <span>Project Hub Tasks (Today)</span>
-                            </div>
-                        }>
-                            <div className="flex flex-col gap-2">
-                                {projectHubTasks.map(task => (
-                                    <label
-                                        key={task.id}
-                                        className={`
-                                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
-                                            ${task.done
-                                                ? 'bg-emerald-500/10 border-emerald-500/30'
-                                                : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
-                                        `}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={task.done}
-                                            onChange={() => handleToggleProjectHubTask(task.id)}
-                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer"
-                                        />
-                                        <div className="flex-1">
-                                            <span className={`text-sm block ${task.done ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
-                                                {task.title}
-                                            </span>
-                                            <span className="text-xs text-tokens-muted">
-                                                {task.stepTitle} - {task.projectName}
-                                            </span>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-                        </Card>
-                    )}
+
 
                 </div>
             </div>
-        </PageContainer>
+        </PageContainer >
     );
 }

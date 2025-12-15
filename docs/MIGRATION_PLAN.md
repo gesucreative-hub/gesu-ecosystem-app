@@ -142,6 +142,16 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.9.0] - Generator Bridge + Disk Discovery + ProjectLog (2025-12-16)
+- **Projects Registry**: Created electron/projects-registry.js to scan disk for existing projects by detecting project.meta.json files.
+- **Disk Discovery**: Added projects:list IPC handler to return projects from projectsRoot with safe path validation.
+- **Centralized ProjectLog**: Appends creation events to projectsRoot/_Index/ProjectLog.jsonl (append-only JSONL format).
+- **Scaffold Enhanced**: Updated scaffold:create to extract projectId from meta, call appendProjectLog, and return projectId/projectName.
+- **Store Import**: Added importFromDisk and refreshFromDisk to projectStore.ts for merging disk projects (duplicate-safe).
+- **Generator Bridge**: Updated handleGenerate to automatically register created projects and set them active.
+- **Preload Bridge**: Exposed window.gesu.projects.list() with full typing in global.d.ts.
+- **First-Class Projects**: Generated projects now appear in Project Hub selector immediately and become active automatically.
+
 ### [0.8.0] - Generator Real Scaffolding (2025-12-16)
 - **Electron Scaffolding Module**: Created electron/scaffolding.js with sanitizeProjectName, assertPathWithin (allowlist + BACKUP_ROOT defense), buildPlan, and applyPlan.
 - **IPC Handlers**: Added scaffold:preview and scaffold:create to electron/main.js using projectsRoot from settings.
@@ -157,7 +167,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Real Engine Status**: Validated electron/tools-check.js provides real file existence checks via IPC 'tools:check' handler.
 - **Infrastructure Complete**: All Real I/O foundation components already implemented and functional.
 
-### [0.6.0] - Post-MVP Hardening (2025-12-16)
+### [0.6.0] - Post-MVP Hardening (2025-12-15)
 - **Project Store**: Created projectStore.ts with Project model (id, name, createdAt, updatedAt, archived), CRUD operations, and schemaVersion.
 - **Workflow Progress Store**: Created workflowProgressStore.ts for per-project persistence of node status and DoD completion.
 - **Project Selector UI**: Added project dropdown to InitiatorPage header with create/switch capabilities.

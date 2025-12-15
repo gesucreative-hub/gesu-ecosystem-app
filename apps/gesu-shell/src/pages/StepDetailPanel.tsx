@@ -1,10 +1,16 @@
-import { Check, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Check, CheckCircle2, Send, Compass } from 'lucide-react';
 import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
 import { Button } from '../components/Button';
+import {
+    isDodItemAlreadySentToday,
+    getRemainingSlots,
+    addTaskToToday,
+    canAddMoreTasksToday,
+} from '../stores/projectHubTasksStore';
 
 interface StepDetailPanelProps {
     selectedNode: WorkflowNode | null;
-    onClose?: () => void;
     onToggleDoDItem: (nodeId: string, dodItemId: string) => void;
     onMarkAsDone: (nodeId: string) => void;
 }
@@ -14,6 +20,68 @@ export function StepDetailPanel({
     onToggleDoDItem,
     onMarkAsDone
 }: StepDetailPanelProps) {
+    // State for Compass send selection
+    const [selectedForCompass, setSelectedForCompass] = useState<Set<string>>(new Set());
+    const [sentItems, setSentItems] = useState<Set<string>>(new Set());
+    const [remainingSlots, setRemainingSlots] = useState(3);
+
+    // Refresh sent status when node changes
+    useEffect(() => {
+        if (selectedNode) {
+            const sent = new Set<string>();
+            selectedNode.dodChecklist.forEach(item => {
+                if (isDodItemAlreadySentToday(selectedNode.id, item.id)) {
+                    sent.add(item.id);
+                }
+            });
+            setSentItems(sent);
+            setSelectedForCompass(new Set());
+            setRemainingSlots(getRemainingSlots());
+        }
+    }, [selectedNode?.id]);
+
+    const handleToggleCompassSelection = useCallback((dodItemId: string) => {
+        setSelectedForCompass(prev => {
+            const next = new Set(prev);
+            if (next.has(dodItemId)) {
+                next.delete(dodItemId);
+            } else {
+                // Limit to remaining slots or 3 max per send
+                const maxAllowed = Math.min(remainingSlots, 3);
+                if (next.size < maxAllowed) {
+                    next.add(dodItemId);
+                }
+            }
+            return next;
+        });
+    }, [remainingSlots]);
+
+    const handleSendToCompass = useCallback(() => {
+        if (!selectedNode || selectedForCompass.size === 0) return;
+
+        selectedForCompass.forEach(dodItemId => {
+            const item = selectedNode.dodChecklist.find(d => d.id === dodItemId);
+            if (item) {
+                addTaskToToday({
+                    stepId: selectedNode.id,
+                    stepTitle: selectedNode.title,
+                    dodItemId: item.id,
+                    dodItemLabel: item.label,
+                    projectName: 'Current Project',
+                });
+            }
+        });
+
+        // Update UI
+        setSentItems(prev => {
+            const next = new Set(prev);
+            selectedForCompass.forEach(id => next.add(id));
+            return next;
+        });
+        setSelectedForCompass(new Set());
+        setRemainingSlots(getRemainingSlots());
+    }, [selectedNode, selectedForCompass]);
+
     // Empty state
     if (!selectedNode) {
         return (
@@ -38,6 +106,8 @@ export function StepDetailPanel({
     const allDoDDone = selectedNode.dodChecklist.every(item => item.done);
     const completedCount = selectedNode.dodChecklist.filter(item => item.done).length;
     const totalCount = selectedNode.dodChecklist.length;
+    const canSend = canAddMoreTasksToday() && selectedForCompass.size > 0;
+    const limitReached = remainingSlots === 0;
 
     return (
         <div className="w-80 xl:w-96 flex-shrink-0 border-l border-tokens-border bg-tokens-panel/30 flex flex-col">
@@ -115,14 +185,14 @@ export function StepDetailPanel({
                         {selectedNode.dodChecklist.map((item) => (
                             <label
                                 key={item.id}
-                                className="flex items-start gap-3 p-2 rounded-lg hover:bg-tokens-panel2 
+                                className="flex items-start gap-3 p-2 rounded-lg hover:bg-tokens-panel2
                                          transition-colors cursor-pointer group"
                             >
                                 <input
                                     type="checkbox"
                                     checked={item.done}
                                     onChange={() => onToggleDoDItem(selectedNode.id, item.id)}
-                                    className="mt-0.5 rounded border-tokens-border bg-tokens-panel2 
+                                    className="mt-0.5 rounded border-tokens-border bg-tokens-panel2
                                              text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40
                                              cursor-pointer"
                                 />
@@ -132,6 +202,79 @@ export function StepDetailPanel({
                             </label>
                         ))}
                     </div>
+                </div>
+
+                {/* Compass - Hari Ini Section */}
+                <div className="border-t border-tokens-border pt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Compass size={16} className="text-tokens-brand-DEFAULT" />
+                        <h3 className="text-xs font-semibold text-tokens-brand-DEFAULT uppercase tracking-wider">
+                            Compass - Hari Ini
+                        </h3>
+                    </div>
+
+                    {limitReached ? (
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
+                            Batas 3 task Project Hub untuk hari ini tercapai. Selesaikan dulu sebelum menambah.
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-xs text-tokens-muted mb-3">
+                                Pilih 1-{remainingSlots} item DoD untuk dikirim sebagai task hari ini.
+                            </p>
+
+                            <div className="space-y-2 mb-4">
+                                {selectedNode.dodChecklist.map((item) => {
+                                    const isSent = sentItems.has(item.id);
+                                    const isSelected = selectedForCompass.has(item.id);
+
+                                    return (
+                                        <label
+                                            key={`compass-${item.id}`}
+                                            className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer
+                                                      ${isSent
+                                                    ? 'bg-emerald-500/10 border-emerald-500/30 cursor-default'
+                                                    : isSelected
+                                                        ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT/50'
+                                                        : 'bg-tokens-panel border-tokens-border hover:border-tokens-brand-DEFAULT/30'}`}
+                                        >
+                                            {isSent ? (
+                                                <Check size={14} className="text-emerald-500" />
+                                            ) : (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => handleToggleCompassSelection(item.id)}
+                                                    disabled={isSent}
+                                                    className="rounded border-tokens-border bg-tokens-panel2
+                                                             text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40"
+                                                />
+                                            )}
+                                            <span className={`text-xs flex-1 ${isSent ? 'text-emerald-600 dark:text-emerald-400' : 'text-tokens-fg'}`}>
+                                                {item.label}
+                                            </span>
+                                            {isSent && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                                                    Terkirim
+                                                </span>
+                                            )}
+                                        </label>
+                                    );
+                                })}
+                            </div>
+
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                fullWidth
+                                onClick={handleSendToCompass}
+                                disabled={!canSend}
+                                icon={<Send size={14} />}
+                            >
+                                Kirim ke Compass ({selectedForCompass.size})
+                            </Button>
+                        </>
+                    )}
                 </div>
 
                 {/* Recommended Tools */}
@@ -170,7 +313,7 @@ export function StepDetailPanel({
 
                 {allDoDDone && selectedNode.status !== 'done' && (
                     <p className="text-xs text-tokens-brand-DEFAULT text-center mt-2">
-                        ✨ Semua checklist sudah selesai!
+                        Semua checklist sudah selesai!
                     </p>
                 )}
             </div>

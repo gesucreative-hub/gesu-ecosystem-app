@@ -9,6 +9,7 @@ import { appendJobLog, getRecentJobs } from './job-logger.js';
 import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.js';
 import { buildPlan, applyPlan, appendProjectLog } from './scaffolding.js';
 import { listProjects } from './projects-registry.js';
+import { appendSnapshot, listSnapshots } from './compass-snapshots.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -305,6 +306,42 @@ ipcMain.handle('projects:list', async () => {
         return projects;
     } catch (err) {
         console.error('[projects:list] Error:', err);
+        return [];
+    }
+});
+
+
+// --- Compass Snapshots Handlers ---
+
+ipcMain.handle('compass:snapshots:append', async (event, snapshot) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const workflowRoot = settings.paths?.workflowRoot;
+
+        if (!workflowRoot || workflowRoot.trim() === '') {
+            return { ok: false, error: 'Workflow root not configured. Please set it in Settings.' };
+        }
+
+        const result = await appendSnapshot(workflowRoot, snapshot);
+        return result;
+    } catch (err) {
+        return { ok: false, error: err.message };
+    }
+});
+
+ipcMain.handle('compass:snapshots:list', async (event, options) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const workflowRoot = settings.paths?.workflowRoot;
+
+        if (!workflowRoot || workflowRoot.trim() === '') {
+            return [];
+        }
+
+        const snapshots = await listSnapshots(workflowRoot, options || {});
+        return snapshots;
+    } catch (err) {
+        console.error('[compass:snapshots:list] Error:', err);
         return [];
     }
 });

@@ -131,6 +131,22 @@ declare global {
                     templateId?: string;
                 }>>;
             };
+            compassSnapshots?: {
+                append: (snapshot: {
+                    energy: number;
+                    focus: number;
+                    sessions: string[];
+                    timestamp?: string;
+                    id?: string;
+                }) => Promise<{ ok: boolean; snapshot?: any; error?: string }>;
+                list: (options?: { limit?: number }) => Promise<Array<{
+                    id: string;
+                    timestamp: string;
+                    energy: number;
+                    focus: number;
+                    sessions: string[];
+                }>>;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;

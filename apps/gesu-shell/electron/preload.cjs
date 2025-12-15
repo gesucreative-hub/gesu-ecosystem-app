@@ -28,6 +28,10 @@ contextBridge.exposeInMainWorld('gesu', {
     projects: {
         list: () => ipcRenderer.invoke('projects:list'),
     },
+    compassSnapshots: {
+        append: (snapshot) => ipcRenderer.invoke('compass:snapshots:append', snapshot),
+        list: (options) => ipcRenderer.invoke('compass:snapshots:list', options),
+    },
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),

@@ -142,7 +142,7 @@ export function Layout() {
                     <NavItem to="/media-suite" icon={<Film strokeWidth={1.5} size={20} />} label="Media Suite" isActive={p.startsWith('/media-suite')} isCollapsed={isCollapsed} />
                     <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
                     <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label="Refocus" isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />
-                    <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label="Initiator" isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
+                    <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label="Project Hub" isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
                 </nav>
 
                 {/* Bottom Controls */}

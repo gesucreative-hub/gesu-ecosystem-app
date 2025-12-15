@@ -7,7 +7,7 @@ import { LauncherPage } from './pages/LauncherPage';
 import { CompassPage } from './pages/CompassPage';
 import { RefocusPage } from './pages/RefocusPage';
 import { MediaSuitePage } from './pages/MediaSuitePage';
-import { InitiatorPage } from './pages/InitiatorPage';
+import { ProjectHubPage } from './pages/InitiatorPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
                 <Route path="compass" element={<CompassPage />} />
                 <Route path="refocus" element={<RefocusPage />} />
                 <Route path="media-suite" element={<MediaSuitePage />} />
-                <Route path="initiator" element={<InitiatorPage />} />
+                <Route path="initiator" element={<ProjectHubPage />} />
                 <Route path="settings" element={<SettingsPage />} />
             </Route>
         </Routes>

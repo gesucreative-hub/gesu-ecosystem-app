@@ -142,6 +142,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.10.0] - Compass File-Backed Snapshots (Backend) (2025-12-16)
+- **Compass Snapshots Module**: Created electron/compass-snapshots.js for append-only JSONL persistence.
+- **Storage Location**: Snapshots saved to workflowRoot/_Index/CompassSnapshots.jsonl (append-only format).
+- **IPC Handlers**: Added compass:snapshots:append and compass:snapshots:list in electron/main.js.
+- **Preload Bridge**: Exposed window.gesu.compassSnapshots.append/list in electron/preload.cjs.
+- **Safety**: Reused assertPathWithin pattern; BACKUP_ROOT defense maintained.
+- **Typing**: Added compassSnapshots API to src/types/global.d.ts with full TypeScript support.
+- **Status**: Backend infrastructure complete; CompassPage UI integration pending.
+
 ### [0.9.1] - Checklist Reconciliation (2025-12-16)
 - **Documentation Only**: Reconciled task.md PHASE 6 and PHASE 7 checkboxes with actual Sprint 9/10 deliverables.
 - **PHASE 6 Complete**: Ticked all items (template structures, folder generation, project.meta.json, Brief.md, ProjectLog).

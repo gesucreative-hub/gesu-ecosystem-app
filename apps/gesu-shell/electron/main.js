@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
 import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.js';
-import { buildPlan, applyPlan } from './scaffolding.js';
+import { buildPlan, applyPlan, appendProjectLog } from './scaffolding.js';
+import { listProjects } from './projects-registry.js';
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -250,12 +251,61 @@ ipcMain.handle('scaffold:create', async (event, { projectName, templateId }) => 
         const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId });
         const result = await applyPlan({ projectsRoot, plan, projectPath });
 
+        if (result.ok) {
+            // Extract project ID from the created project.meta.json
+            const metaItem = plan.find(item => item.relativePath === 'project.meta.json');
+            let projectId = 'unknown';
+
+            if (metaItem && metaItem.content) {
+                try {
+                    const meta = JSON.parse(metaItem.content);
+                    projectId = meta.id;
+                } catch (err) {
+                    console.error('[scaffold:create] Failed to parse project meta:', err);
+                }
+            }
+
+            // Append to ProjectLog
+            await appendProjectLog({
+                projectsRoot,
+                projectId,
+                projectName,
+                projectPath,
+                templateId
+            });
+
+            // Return metadata for renderer to register
+            return {
+                ...result,
+                projectId,
+                projectName
+            };
+        }
+
         return result;
     } catch (err) {
         return {
             ok: false,
             error: err.message
         };
+    }
+});
+
+
+ipcMain.handle('projects:list', async () => {
+    try {
+        const settings = await loadGlobalSettings();
+        const projectsRoot = settings.paths?.projectsRoot;
+
+        if (!projectsRoot || projectsRoot.trim() === '') {
+            return [];
+        }
+
+        const projects = await listProjects(projectsRoot);
+        return projects;
+    } catch (err) {
+        console.error('[projects:list] Error:', err);
+        return [];
     }
 });
 

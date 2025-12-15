@@ -14,6 +14,8 @@ import {
     setActiveProject,
     createProject,
     ensureDefaultProject,
+    importFromDisk,
+    refreshFromDisk,
     Project,
 } from '../stores/projectStore';
 import { scaffoldingService, ScaffoldPreviewResult } from '../services/scaffoldingService';
@@ -138,7 +140,23 @@ function ProjectGeneratorForm() {
         try {
             const result = await scaffoldingService.scaffold(name.trim(), templateId);
             if (result.ok) {
+                // Register the created project and set it active
+                if (result.projectId && result.projectName) {
+                    // Import the created project into the store
+                    const diskProject = {
+                        id: result.projectId,
+                        name: result.projectName,
+                        projectPath: result.projectPath || '',
+                        createdAt: new Date().toISOString()
+                    };
+
+                    // Import and set active
+                    importFromDisk([diskProject]);
+                    setActiveProject(result.projectId);
+                }
+
                 alert(`Project created successfully!\n\nPath: ${result.projectPath}`);
+
                 // Reset form
                 setName('');
                 setPreviewResult(null);

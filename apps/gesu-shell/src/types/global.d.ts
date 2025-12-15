@@ -115,9 +115,21 @@ declare global {
                 create: (input: { projectName: string; templateId: string }) => Promise<{
                     ok: boolean;
                     projectPath?: string;
+                    projectId?: string;
+                    projectName?: string;
                     warnings?: string[];
                     error?: string;
                 }>;
+            };
+            projects?: {
+                list: () => Promise<Array<{
+                    id: string;
+                    name: string;
+                    projectPath: string;
+                    createdAt?: string;
+                    updatedAt?: string;
+                    templateId?: string;
+                }>>;
             };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;

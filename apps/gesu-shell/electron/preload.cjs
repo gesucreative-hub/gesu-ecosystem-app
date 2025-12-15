@@ -25,6 +25,9 @@ contextBridge.exposeInMainWorld('gesu', {
         preview: (input) => ipcRenderer.invoke('scaffold:preview', input),
         create: (input) => ipcRenderer.invoke('scaffold:create', input),
     },
+    projects: {
+        list: () => ipcRenderer.invoke('projects:list'),
+    },
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),

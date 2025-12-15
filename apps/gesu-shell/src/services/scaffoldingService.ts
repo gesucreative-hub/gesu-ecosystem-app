@@ -29,6 +29,8 @@ export interface ScaffoldPreviewResult {
 export interface ScaffoldResult {
     ok: boolean;
     projectPath?: string;
+    projectId?: string;
+    projectName?: string;
     warnings?: string[];
     error?: string;
 }

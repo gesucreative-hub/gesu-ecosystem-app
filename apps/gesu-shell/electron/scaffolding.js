@@ -151,3 +151,52 @@ export async function applyPlan({ projectsRoot, plan, projectPath }) {
 
     return { ok: true, projectPath, warnings: warnings.length > 0 ? warnings : undefined };
 }
+
+/**
+ * Appends a project creation entry to the centralized ProjectLog
+ * @param {Object} params - Log entry parameters
+ * @param {string} params.projectsRoot - Projects root directory
+ * @param {string} params.projectId - Project ID
+ * @param {string} params.projectName - Project name
+ * @param {string} params.projectPath - Full path to project
+ * @param {string} params.templateId - Template ID used
+ */
+export async function appendProjectLog({ projectsRoot, projectId, projectName, projectPath, templateId }) {
+    try {
+        // Validate projectsRoot
+        await assertPathWithin(projectsRoot, projectsRoot);
+
+        // _Index directory path
+        const indexDir = path.join(projectsRoot, '_Index');
+        const logPath = path.join(indexDir, 'ProjectLog.jsonl');
+
+        // Validate log path within projectsRoot
+        await assertPathWithin(projectsRoot, logPath);
+
+        // Create _Index directory if missing
+        try {
+            await fs.mkdir(indexDir, { recursive: true });
+        } catch (err) {
+            console.error('[scaffolding] Failed to create _Index:', err);
+        }
+
+        // Create log entry (JSONL format - one JSON object per line)
+        const logEntry = {
+            timestamp: new Date().toISOString(),
+            projectId,
+            projectName,
+            projectPath,
+            templateId
+        };
+
+        const logLine = JSON.stringify(logEntry) + '\n';
+
+        // Append to log file (create if doesn't exist)
+        await fs.appendFile(logPath, logLine, 'utf-8');
+
+        console.log('[scaffolding] Appended to ProjectLog:', projectId);
+    } catch (err) {
+        // Log error but don't fail the scaffolding operation
+        console.error('[scaffolding] Failed to append ProjectLog:', err);
+    }
+}

@@ -144,3 +144,69 @@ export function ensureDefaultProject(): Project {
 
     return createProject('My First Project');
 }
+
+/**
+ * Import projects from disk and merge into store (avoiding duplicates)
+ * @param diskProjects - Array of projects from disk discovery
+ */
+export function importFromDisk(diskProjects: Array<{
+    id: string;
+    name: string;
+    projectPath: string;
+    createdAt?: string;
+    updatedAt?: string;
+}>): number {
+    const state = loadState();
+    let importCount = 0;
+
+    for (const diskProject of diskProjects) {
+        // Check if already exists by ID or path
+        const existsById = state.projects.some(p => p.id === diskProject.id);
+        const existsByPath = state.projects.some(p =>
+            p.name === diskProject.name &&
+            Math.abs(p.createdAt - new Date(diskProject.createdAt || 0).getTime()) < 60000 // within 1 minute
+        );
+
+        if (existsById || existsByPath) {
+            continue; // Skip duplicates
+        }
+
+        // Import new project
+        const project: Project = {
+            id: diskProject.id,
+            name: diskProject.name,
+            createdAt: diskProject.createdAt ? new Date(diskProject.createdAt).getTime() : Date.now(),
+            updatedAt: diskProject.updatedAt ? new Date(diskProject.updatedAt).getTime() : Date.now(),
+        };
+
+        state.projects.push(project);
+        importCount++;
+    }
+
+    if (importCount > 0) {
+        saveState(state);
+    }
+
+    return importCount;
+}
+
+/**
+ * Refresh projects from disk by calling the Electron bridge
+ * @returns Number of projects imported
+ */
+export async function refreshFromDisk(): Promise<number> {
+    if (!window.gesu?.projects?.list) {
+        console.warn('[projectStore] Disk refresh not available (simulation mode)');
+        return 0;
+    }
+
+    try {
+        const diskProjects = await window.gesu.projects.list();
+        const importCount = importFromDisk(diskProjects);
+        console.log(`[projectStore] Refreshed from disk: ${importCount} new projects imported`);
+        return importCount;
+    } catch (err) {
+        console.error('[projectStore] Failed to refresh from disk:', err);
+        return 0;
+    }
+}

@@ -142,6 +142,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.5.0] - Tech Debt + UI Sanity (2025-12-16)
+- **Unified Engine Status**: Created engineStatusStore.ts with single source of truth, subscription model, refresh capability, and last-checked timestamp.
+- **useEngineStatus Hook**: React hook for consuming unified engine status store.
+- **Compass Snapshot Persistence**: Created compassSnapshotStore.ts with localStorage persistence, schemaVersion, and CRUD operations.
+- **Scaffolding Service Interface**: Created scaffoldingService.ts with clean interface boundary (IScaffoldingService) and mock implementation, ready for real FS swap.
+- **Dashboard Update**: Uses unified engine status with refresh button and last-checked label.
+- **Compass Update**: saveSnapshot now persists to localStorage instead of console.log mock.
+- **UI Sanity**: Verified all modules via code review - no regressions detected.
+
 ### [0.4.0] - Finish Mode Guardrails (2025-12-15)
 - **Finish Mode Store**: Created finishModeStore.ts with session management, action toggling, and localStorage persistence.
 - **StepDetailPanel**: Added Finish Mode section with action selection (max 3), active indicator, and "Mulai Finish Mode" button.

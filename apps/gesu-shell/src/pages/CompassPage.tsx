@@ -19,6 +19,10 @@ import {
     clearSession,
     FinishSession,
 } from '../stores/finishModeStore';
+import {
+    saveSnapshot as persistSnapshot,
+    getTodaySnapshot,
+} from '../stores/compassSnapshotStore';
 
 // --- Types & Interfaces ---
 
@@ -165,14 +169,17 @@ export function CompassPage() {
     };
 
     const saveSnapshot = () => {
-        const snapshot = {
-            timestamp: new Date().toISOString(),
-            energy: { value: energy, label: energyStatus.text },
-            focusAreas,
-            sessions
-        };
-        console.log("Mock Log Saved:", snapshot);
-        alert("Snapshot saved to console (mock)!");
+        try {
+            persistSnapshot({
+                energy,
+                focusAreas,
+                sessions,
+            });
+            alert('Snapshot saved!');
+        } catch (err) {
+            console.error('Failed to save snapshot:', err);
+            alert('Failed to save snapshot.');
+        }
     };
 
     return (

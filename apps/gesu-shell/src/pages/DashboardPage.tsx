@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useGesuSettings } from '../lib/gesuSettings';
+import { useEngineStatus } from '../lib/useEngineStatus';
 import { PageContainer } from '../components/PageContainer';
 import { useEffect, useState } from 'react';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
+import { RefreshCw } from 'lucide-react';
 
 // --- Sub-components ---
 
@@ -30,7 +32,7 @@ const ModuleCard = ({ title, description, to, icon }: { title: string, descripti
     </Link>
 );
 
-const EngineStatusPill = ({ id, status, label }: { id: string, status: string, label: string }) => {
+const EngineStatusPill = ({ status, label }: { status: string, label: string }) => {
     let variant: 'success' | 'warning' | 'error' | 'neutral' = 'neutral';
     let icon = '⚫';
 
@@ -43,6 +45,9 @@ const EngineStatusPill = ({ id, status, label }: { id: string, status: string, l
     } else if (status === 'missing' || status === 'error') {
         variant = 'error';
         icon = '🔴';
+    } else if (status === 'checking') {
+        variant = 'neutral';
+        icon = '⏳';
     }
 
     return (
@@ -55,31 +60,17 @@ const EngineStatusPill = ({ id, status, label }: { id: string, status: string, l
 
 export function DashboardPage() {
     const { settings } = useGesuSettings();
-    const [engineStatus, setEngineStatus] = useState<any>({});
+    const { engines, isRefreshing, lastCheckedLabel, refresh } = useEngineStatus();
     const [recentJobs, setRecentJobs] = useState<any[]>([]);
 
     useEffect(() => {
-        // Load engine status from global settings
-        // Check for actual non-empty paths (not just truthy - null is valid "not set")
-        if (settings?.engines) {
-            const hasPath = (p: string | null | undefined): boolean =>
-                p !== null && p !== undefined && p.trim() !== '';
-
-            setEngineStatus({
-                ytDlp: hasPath(settings.engines.ytDlpPath) ? 'ready_configured' : 'missing',
-                ffmpeg: hasPath(settings.engines.ffmpegPath) ? 'ready_configured' : 'missing',
-                magick: hasPath(settings.engines.imageMagickPath) ? 'ready_configured' : 'missing',
-                office: hasPath(settings.engines.libreOfficePath) ? 'ready_configured' : 'missing'
-            });
-        }
-
         // Load recent jobs (if available)
         if (window.gesu?.mediaSuite?.getRecentJobs) {
             window.gesu.mediaSuite.getRecentJobs().then(jobs => {
                 setRecentJobs(jobs.slice(0, 5));
             }).catch(console.error);
         }
-    }, [settings]);
+    }, []);
 
     const openFolder = async (target: 'workflow' | 'projects') => {
         if (window.gesu?.mediaSuite?.openFolder) {
@@ -101,11 +92,23 @@ export function DashboardPage() {
                     </p>
                 </div>
                 {/* System Status Row */}
-                <div className="flex flex-wrap gap-2">
-                    <EngineStatusPill id="yt-dlp" label="yt-dlp" status={engineStatus.ytDlp} />
-                    <EngineStatusPill id="ffmpeg" label="ffmpeg" status={engineStatus.ffmpeg} />
-                    <EngineStatusPill id="magick" label="magick" status={engineStatus.magick} />
-                    <EngineStatusPill id="office" label="office" status={engineStatus.office} />
+                <div className="flex flex-wrap items-center gap-2">
+                    {engines.map(engine => (
+                        <EngineStatusPill
+                            key={engine.id}
+                            label={engine.name}
+                            status={engine.status}
+                        />
+                    ))}
+                    <button
+                        onClick={refresh}
+                        disabled={isRefreshing}
+                        className="ml-2 p-1.5 rounded-lg bg-tokens-panel2 border border-tokens-border hover:bg-tokens-panel hover:border-tokens-brand-DEFAULT/30 transition-all disabled:opacity-50"
+                        title="Refresh engine status"
+                    >
+                        <RefreshCw size={14} className={`text-tokens-muted ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </button>
+                    <span className="text-[10px] text-tokens-muted">{lastCheckedLabel}</span>
                 </div>
             </div>
 

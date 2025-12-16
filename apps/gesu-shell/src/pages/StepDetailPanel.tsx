@@ -5,10 +5,14 @@ import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
 import { Button } from '../components/Button';
 import {
     isDodItemAlreadySentToday,
-    getRemainingSlots,
     addTaskToToday,
-    canAddMoreTasksToday,
 } from '../stores/projectHubTasksStore';
+import {
+    canAddTask,
+    getRemainingSlots,
+    getActiveTaskCount,
+    getBlockedMessage,
+} from '../utils/taskGuardrail';
 import {
     isActiveForStep,
     startFinishMode,
@@ -119,9 +123,9 @@ export function StepDetailPanel({
     const handleStartFinishMode = useCallback(() => {
         if (!selectedNode || selectedForFinish.size === 0) return;
 
-        // Check WIP limit
-        if (!canAddMoreTasksToday()) {
-            alert('Batas 3 task Project Hub untuk hari ini tercapai. Selesaikan dulu sebelum memulai Finish Mode.');
+        // Check universal task guardrail
+        if (!canAddTask()) {
+            alert(getBlockedMessage());
             return;
         }
 
@@ -183,7 +187,7 @@ export function StepDetailPanel({
     const allDoDDone = selectedNode.dodChecklist.every(item => item.done);
     const completedCount = selectedNode.dodChecklist.filter(item => item.done).length;
     const totalCount = selectedNode.dodChecklist.length;
-    const canSend = canAddMoreTasksToday() && selectedForCompass.size > 0;
+    const canSend = canAddTask() && selectedForCompass.size > 0;
     const limitReached = remainingSlots === 0;
 
     return (
@@ -292,7 +296,7 @@ export function StepDetailPanel({
 
                     {limitReached ? (
                         <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
-                            Batas 3 task Project Hub untuk hari ini tercapai. Selesaikan dulu sebelum menambah.
+                            {getBlockedMessage()} ({getActiveTaskCount()}/3 tasks active)
                         </div>
                     ) : (
                         <>

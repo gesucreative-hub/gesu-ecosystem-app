@@ -142,6 +142,28 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.11.0] - Focus Engine Global (Sprint 13) (2025-12-16)
+- **Global Pomodoro Timer**: Implemented single-instance focus timer with Focus/Short Break/Long Break phases, global state management, and localStorage persistence.
+- **Timer UI**: Added FocusTimerPill (always-visible header button, expands to pill during session) and FocusTimerPanel (full controls, presets, config editor).
+- **Phase Management**: Auto-transitions between phases, cycle tracking, configurable durations (default 25/5/15 Pomodoro).
+- **Notifications**: Windows notifications on phase completion using Notification API.
+- **Sound Hook**: Configurable sound cue on phase transitions (user-supplied audio path, no bundled assets).
+- **Distraction Shield**: Browser close/refresh warning when session active (beforeunload event). In-app navigation shield deferred (requires React Router data router migration).
+- **Universal Task Guardrail**: Enforced max 3 active tasks across all sources (Project Hub + Finish Mode) using centralized taskGuardrail utility.
+- **Integration**: Updated StepDetailPanel to use universal guardrail, replacing per-source limits.
+- **Timer Positioning**: Top-right anchored panel (56px from top, 24px from right) following popover-near-trigger UX pattern.
+- **Files Added**: focusTimerStore.ts, useFocusTimer.ts, taskGuardrail.ts, FocusTimerPill.tsx, FocusTimerPanel.tsx, DistractionGuard.tsx.
+- **Files Modified**: Layout.tsx (integrated timer pill + distraction guard), StepDetailPanel.tsx (universal guardrail).
+- **Browser Compatibility**: Fixed setInterval type from NodeJS.Timeout to number for browser/Electron renderer context.
+
+### [0.10.2] - Settings Persistence Fix (Sprint 12) (2025-12-16)
+- **Settings Refresh**: Fixed Settings page to call refresh() after saving, ensuring workflowRoot and other settings persist correctly across navigation.
+- **Root Cause**: SettingsPage maintained local state that was not re-hydrated after save, causing stale values despite successful disk writes.
+- **Fix**: Added await refresh() call after saveSettings() in SettingsPage.tsx (line 347).
+- **Impact**: Desktop file-backed Compass snapshots now work correctly - Compass shows File-backed badge when workflowRoot is configured.
+- **Files Modified**: apps/gesu-shell/src/pages/SettingsPage.tsx (one-line fix + destructuring update).
+- **Status**: Sprint 12 complete; Settings persistence verified in desktop mode; Compass File-backed badge confirmed working.
+
 ### [0.10.1] - Compass Snapshots UI Integration (2025-12-16)
 - **Renderer Service Layer**: Created src/services/compassSnapshotsService.ts with bridge detection and localStorage fallback.
 - **CompassPage Updates**: Added Recent Snapshots section (limit 10 newest-first), wired Save Snapshot to call append + refresh.

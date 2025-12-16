@@ -155,7 +155,7 @@ const StatusBadge = ({ status, version }: { status: EngineStatus; version?: stri
 
 export function SettingsPage() {
     // Shared Settings Hook
-    const { settings: loadedSettings, saveSettings } = useGesuSettings();
+    const { settings: loadedSettings, saveSettings, refresh } = useGesuSettings();
 
     // Local State (for optimistic UI / editing before save)
     const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
@@ -342,6 +342,9 @@ export function SettingsPage() {
             alert("Settings saved successfully to disk!");
             setIsDirty(false);
             checkAllTools();
+
+            // Force refresh from persistent storage to ensure UI reflects saved values
+            await refresh();
         } catch (err) {
             console.error(err);
             alert("Failed to save settings.");

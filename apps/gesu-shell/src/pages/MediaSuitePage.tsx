@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Tabs } from '../components/Tabs';
 import { ToggleSwitch } from '../components/ToggleSwitch';
-import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw } from 'lucide-react';
+import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw, X, FolderOpen } from 'lucide-react';
 
 
 // --- Types & Interfaces ---
@@ -21,7 +21,8 @@ type JobStatus = 'queued' | 'running' | 'success' | 'error' | 'canceled';
 type JobEngine = 'yt-dlp' | 'ffmpeg' | 'image-magick' | 'libreoffice' | 'combo';
 
 type DownloadPreset = 'music-mp3' | 'video-1080p' | 'video-best';
-type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'audio-wav-48k' | 'audio-aac-256' | 'video-mp4-1080p' | 'video-mp4-720p' | 'video-mp4-540p-lite';
+type ConvertPreset = 'audio-mp3-320' | 'audio-mp3-192' | 'audio-wav-48k' | 'audio-aac-256' | 'video-mp4-1080p' | 'video-mp4-720p' | 'video-mp4-540p-lite' | 'image-png' | 'image-jpg-90' | 'image-webp' | 'image-ico-256';
+type ConvertCategory = 'Video' | 'Audio' | 'Image';
 type NetworkProfile = 'hemat' | 'normal' | 'gaspol';
 type MediaOutputTarget = 'shell' | 'workflow';
 
@@ -54,15 +55,34 @@ const NETWORK_PROFILES: { value: NetworkProfile; label: string }[] = [
 
 
 
-const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: 'Audio' | 'Video' }[] = [
+const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: ConvertCategory }[] = [
     { value: 'audio-mp3-320', label: 'Audio MP3 – 320 kbps', category: 'Audio' },
     { value: 'audio-mp3-192', label: 'Audio MP3 – 192 kbps', category: 'Audio' },
     { value: 'audio-aac-256', label: 'Audio AAC – 256 kbps', category: 'Audio' },
     { value: 'audio-wav-48k', label: 'Audio WAV – 48 kHz', category: 'Audio' },
     { value: 'video-mp4-1080p', label: 'Video MP4 – 1080p (HQ)', category: 'Video' },
     { value: 'video-mp4-720p', label: 'Video MP4 – 720p', category: 'Video' },
-    { value: 'video-mp4-540p-lite', label: 'Video MP4 – 540p (Lite)', category: 'Video' }
+    { value: 'video-mp4-540p-lite', label: 'Video MP4 – 540p (Lite)', category: 'Video' },
+    { value: 'image-png', label: 'Image PNG', category: 'Image' },
+    { value: 'image-jpg-90', label: 'Image JPG (90%)', category: 'Image' },
+    { value: 'image-webp', label: 'Image WebP', category: 'Image' },
+    { value: 'image-ico-256', label: 'Icon ICO (256px)', category: 'Image' }
 ];
+
+// Extension arrays for category detection (from PowerShell reference)
+const EXT_VIDEO = ['.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v', '.wmv', '.flv'];
+const EXT_AUDIO = ['.mp3', '.m4a', '.aac', '.wav', '.flac', '.ogg', '.oga', '.wma'];
+const EXT_IMAGE = ['.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff', '.gif', '.webp', '.heic', '.ico'];
+
+// Detect category from file path
+function detectCategoryFromPath(filePath: string): ConvertCategory {
+    const ext = filePath.toLowerCase().split('.').pop();
+    if (!ext) return 'Video';
+    const dotExt = `.${ext}`;
+    if (EXT_AUDIO.includes(dotExt)) return 'Audio';
+    if (EXT_IMAGE.includes(dotExt)) return 'Image';
+    return 'Video';
+}
 
 // --- Helper Components ---
 
@@ -99,6 +119,10 @@ const PRESET_DISPLAY_NAMES: Record<string, string> = {
     "video-mp4-720p": "Video MP4 · 720p",
     "video-mp4-540p-lite": "Video MP4 · 540p (Lite)",
     "video-advanced": "Video (Advanced)",
+    "image-png": "Image PNG",
+    "image-jpg-90": "Image JPG (90%)",
+    "image-webp": "Image WebP",
+    "image-ico-256": "Icon ICO (256px)",
 };
 
 function getPresetDisplayName(presetId?: string | null): string {
@@ -223,6 +247,42 @@ export function MediaSuitePage() {
         return () => window.removeEventListener('focus', onFocus);
     }, []);
 
+    // Subscribe to real-time IPC events for live progress updates
+    useEffect(() => {
+        if (!window.gesu?.mediaJobs) return;
+
+        // Progress updates - update job progress in real-time
+        const unsubProgress = window.gesu.mediaJobs.onProgress?.((data: { jobId: string; progress: number | null }) => {
+            setJobs(prev => prev.map(job =>
+                job.id === data.jobId ? { ...job, progress: data.progress ?? job.progress } : job
+            ));
+        });
+
+        // Complete events - refresh the full job list
+        const unsubComplete = window.gesu.mediaJobs.onComplete?.(() => {
+            refreshJobs();
+            refreshHistory();
+        });
+
+        // Update events - update specific job
+        const unsubUpdate = window.gesu.mediaJobs.onUpdate?.((updatedJob: any) => {
+            setJobs(prev => prev.map(job =>
+                job.id === updatedJob.id ? {
+                    ...job,
+                    status: updatedJob.status,
+                    progress: updatedJob.progress,
+                    errorMessage: updatedJob.errorMessage,
+                } : job
+            ));
+        });
+
+        return () => {
+            unsubProgress?.();
+            unsubComplete?.();
+            unsubUpdate?.();
+        };
+    }, []);
+
     // Re-check tools when global settings change (e.g. edited in another window or saved)
     useEffect(() => {
         if (globalSettings) {
@@ -235,7 +295,18 @@ export function MediaSuitePage() {
     const [url, setUrl] = useState('');
     const [dlPreset, setDlPreset] = useState<DownloadPreset>('music-mp3');
     const [netProfile, setNetProfile] = useState<NetworkProfile>('normal');
-    const [outputTarget, setOutputTarget] = useState<MediaOutputTarget>('shell');
+    const [outputTarget] = useState<MediaOutputTarget>('shell');
+    const [outputFolder, setOutputFolder] = useState<string>(() => {
+        // Load from localStorage on mount
+        return localStorage.getItem('mediaSuite.outputFolder') || './downloads';
+    });
+
+    // Persist output folder to localStorage
+    useEffect(() => {
+        if (outputFolder) {
+            localStorage.setItem('mediaSuite.outputFolder', outputFolder);
+        }
+    }, [outputFolder]);
 
     // Notification State
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -249,29 +320,33 @@ export function MediaSuitePage() {
     const [convertFilePath, setConvertFilePath] = useState('');
     const [convertPreset, setConvertPreset] = useState<ConvertPreset>('video-mp4-1080p');
     const [convertMode, setConvertMode] = useState<'simple' | 'advanced'>('simple');
+    const [convertCategory, setConvertCategory] = useState<ConvertCategory>('Video');
 
     // Advanced Options State
     const [advRes, setAdvRes] = useState<AdvancedVideoResolution>('1080p');
     const [advQuality, setAdvQuality] = useState<AdvancedVideoQuality>('medium');
     const [advAudio, setAdvAudio] = useState<AdvancedAudioProfile>('aac-192');
 
-    // Job Actions via IPC
+    // Job Actions via IPC - Use NEW mediaJobs API for real execution
     const refreshJobs = async () => {
-        if (!window.gesu?.jobs) return;
+        if (!window.gesu?.mediaJobs) {
+            // Fall back to legacy mock if new API not available
+            return;
+        }
         try {
-            const remoteJobs = await window.gesu.jobs.list();
-            // Map GesuJob (global) to Job (local)
-            const mappedJobs: Job[] = remoteJobs.map((j: any) => ({
+            const data = await window.gesu.mediaJobs.list();
+            // Map to local Job format
+            const mappedJobs: Job[] = data.queue.map((j: any) => ({
                 id: j.id,
-                type: j.type as JobType,
-                label: j.label,
-                engine: (j.payload?.engine || 'combo') as JobEngine,
+                type: j.kind as JobType,
+                label: `${j.engine}: ${j.input.substring(0, 30)}...`,
+                engine: j.engine as JobEngine,
                 createdAt: j.createdAt,
-                updatedAt: j.updatedAt,
+                updatedAt: j.completedAt || j.startedAt || j.createdAt,
                 status: j.status as JobStatus,
-                payload: j.payload || {},
+                payload: j.options || {},
                 errorMessage: j.errorMessage,
-                progress: j.payload?.progress
+                progress: j.progress
             }));
             setJobs(mappedJobs);
         } catch (err) {
@@ -280,6 +355,32 @@ export function MediaSuitePage() {
     };
 
     const refreshHistory = async () => {
+        // Use NEW mediaJobs API which includes history from JSONL
+        if (window.gesu?.mediaJobs) {
+            try {
+                const data = await window.gesu.mediaJobs.list();
+                // Map history to MediaSuiteJob format
+                const mappedHistory: MediaSuiteJob[] = data.history.map((j: any) => ({
+                    id: j.id,
+                    type: j.kind as 'download' | 'convert',
+                    url: j.kind === 'download' ? j.input : undefined,
+                    inputPath: j.kind === 'convert' ? j.input : undefined,
+                    preset: j.options?.preset || 'unknown',
+                    network: j.options?.network || 'normal',
+                    target: j.options?.target || 'shell',
+                    outputPath: j.output, // Full output folder path
+                    status: j.status === 'error' ? 'failed' : j.status as any,
+                    timestamp: j.completedAt || j.createdAt,
+                    errorMessage: j.errorMessage,
+                }));
+                setHistoryJobs(mappedHistory);
+            } catch (err) {
+                console.error('Failed to fetch history from mediaJobs:', err);
+            }
+            return;
+        }
+
+        // Fallback to legacy API
         if (!window.gesu?.mediaSuite) return;
         try {
             const history = await window.gesu.mediaSuite.getRecentJobs();
@@ -290,35 +391,42 @@ export function MediaSuitePage() {
     };
 
     const enqueueJob = async (type: JobType, label: string, engine: JobEngine, payload: Record<string, unknown>) => {
-        if (!window.gesu?.jobs) {
-            // Fallback for browser-only dev (mock)
-            const mockJob: Job = {
-                id: crypto.randomUUID().slice(0, 8),
-                type, label, engine, payload,
-                status: 'queued',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            setJobs(prev => [mockJob, ...prev]);
-            showToast('Job queued (Mock - No Electron)', 'success');
+        // Use NEW mediaJobs API for real execution
+        if (window.gesu?.mediaJobs) {
+            try {
+                // Map to new job format - use the outputFolder from payload
+                const jobPayload = {
+                    kind: type as 'download' | 'convert',
+                    engine: engine === 'image-magick' ? 'imagemagick' : engine === 'libreoffice' ? 'soffice' : engine,
+                    input: type === 'download' ? String(payload.url) : String(payload.inputPath),
+                    output: String(payload.outputFolder || './downloads'),
+                    options: {
+                        ...payload,
+                        toolPath: undefined, // Will use settings
+                    },
+                };
+
+                await window.gesu.mediaJobs.enqueue(jobPayload);
+                refreshJobs();
+                refreshHistory();
+                showToast(`${type === 'download' ? 'Download' : 'Convert'} job queued`, 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to enqueue job', 'error');
+            }
             return;
         }
 
-        try {
-            // We pass 'engine' inside payload for now, as main process skeleton only expects generic payload
-            await window.gesu.jobs.enqueue({
-                type,
-                label,
-                payload: { ...payload, engine }
-            });
-
-            refreshJobs(); // Refresh list immediately
-            refreshHistory(); // Refresh history too
-            showToast('Download job queued', 'success');
-        } catch (err) {
-            console.error(err);
-            showToast('Failed to enqueue job', 'error');
-        }
+        // Fallback for browser-only dev (mock)
+        const mockJob: Job = {
+            id: crypto.randomUUID().slice(0, 8),
+            type, label, engine, payload,
+            status: 'queued',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        setJobs(prev => [mockJob, ...prev]);
+        showToast('Job queued (Mock - No Electron)', 'success');
     };
 
     // User Actions
@@ -327,7 +435,7 @@ export function MediaSuitePage() {
             showToast("Please enter a valid URL", 'error');
             return;
         }
-        const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget };
+        const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget, outputFolder };
         enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
         setUrl('');
     };
@@ -339,7 +447,15 @@ export function MediaSuitePage() {
         }
         try {
             const path = await window.gesu.mediaSuite.pickSourceFile();
-            if (path) setConvertFilePath(path);
+            if (path) {
+                setConvertFilePath(path);
+                // Auto-detect category from file extension
+                const category = detectCategoryFromPath(path);
+                setConvertCategory(category);
+                // Set first preset of detected category
+                const firstPreset = CONVERT_PRESETS.find(p => p.category === category);
+                if (firstPreset) setConvertPreset(firstPreset.value);
+            }
         } catch (e) {
             console.error(e);
             showToast("Failed to pick file", 'error');
@@ -358,12 +474,15 @@ export function MediaSuitePage() {
         let payload: any = {
             kind: 'convert',
             inputPath: convertFilePath,
-            target: outputTarget
+            target: outputTarget,
+            outputFolder
         };
 
         if (convertMode === 'simple') {
             payload.preset = convertPreset;
-            enqueueJob('convert', `Conv: ${simpleName}`, 'ffmpeg', payload);
+            // Use imagemagick for image presets, ffmpeg for audio/video
+            const engine = convertPreset.startsWith('image-') ? 'image-magick' : 'ffmpeg';
+            enqueueJob('convert', `Conv: ${simpleName}`, engine, payload);
         } else {
             payload.preset = 'video-advanced';
             payload.advancedOptions = {
@@ -379,21 +498,78 @@ export function MediaSuitePage() {
         showToast('Convert job queued', 'success');
     };
 
-    const handleOpenFolder = async (target: MediaOutputTarget) => {
-        if (!window.gesu?.mediaSuite?.openFolder) {
-            showToast("Folder open not supported in browser mode", 'error');
+    // Cancel a running or queued job
+    const handleCancelJob = async (jobId: string) => {
+        if (!window.gesu?.mediaJobs?.cancel) {
+            showToast("Cancel not available in browser mode", 'error');
             return;
         }
         try {
-            const result = await window.gesu.mediaSuite.openFolder(target);
-            if (result.success) {
-                // showToast(`Opened ${target === 'shell' ? 'Shell' : 'WF DB'} folder`, 'success');
-            } else {
-                showToast(`Failed to open folder: ${result.error}`, 'error');
+            await window.gesu.mediaJobs.cancel(jobId);
+            refreshJobs();
+            showToast("Job canceled", 'success');
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to cancel job", 'error');
+        }
+    };
+
+    // Browse for output folder
+    const handleBrowseOutputFolder = async () => {
+        if (!window.gesu?.mediaSuite?.pickOutputFolder) {
+            showToast("Folder picker not available in browser mode", 'error');
+            return;
+        }
+        try {
+            const folder = await window.gesu.mediaSuite.pickOutputFolder(outputFolder);
+            if (folder) {
+                setOutputFolder(folder);
             }
         } catch (e) {
             console.error(e);
+            showToast("Failed to pick folder", 'error');
+        }
+    };
+
+    // Open the output folder in file explorer
+    const handleOpenOutputFolder = async () => {
+        if (!outputFolder) {
+            showToast("No output folder set", 'error');
+            return;
+        }
+        if (!window.gesu?.shell?.openPath) {
+            showToast("Open folder not available in browser mode", 'error');
+            return;
+        }
+        try {
+            await window.gesu.shell.openPath(outputFolder);
+        } catch (e) {
+            console.error(e);
             showToast("Failed to open folder", 'error');
+        }
+    };
+
+    // Update yt-dlp
+    const [isUpdatingYtDlp, setIsUpdatingYtDlp] = useState(false);
+    const handleUpdateYtDlp = async () => {
+        if (!window.gesu?.mediaSuite?.updateYtDlp) {
+            showToast("Update not available in browser mode", 'error');
+            return;
+        }
+        setIsUpdatingYtDlp(true);
+        try {
+            const result = await window.gesu.mediaSuite.updateYtDlp();
+            if (result.success) {
+                showToast(result.message || "yt-dlp updated!", 'success');
+                checkTools(); // Refresh version display
+            } else {
+                showToast(result.error || "Update failed", 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to update yt-dlp", 'error');
+        } finally {
+            setIsUpdatingYtDlp(false);
         }
     };
 
@@ -447,6 +623,14 @@ export function MediaSuitePage() {
                     >
                         <RefreshCcw size={12} />
                     </button>
+                    <button
+                        onClick={handleUpdateYtDlp}
+                        disabled={isUpdatingYtDlp}
+                        className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-muted hover:text-emerald-400 hover:bg-tokens-border transition-colors disabled:opacity-50"
+                        title="Update yt-dlp to latest version"
+                    >
+                        {isUpdatingYtDlp ? 'Updating...' : 'Update'}
+                    </button>
                     <Link to="/settings" className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:bg-tokens-border transition-colors">
                         Configure
                     </Link>
@@ -486,20 +670,35 @@ export function MediaSuitePage() {
                                     />
                                 </div>
 
-                                <ToggleSwitch
-                                    label="Save to"
-                                    value={outputTarget}
-                                    onChange={(value) => setOutputTarget(value as 'shell' | 'workflow')}
-                                    options={[
-                                        { id: 'shell', label: 'Gesu Shell' },
-                                        { id: 'workflow', label: 'WorkFlow DB' }
-                                    ]}
-                                    fullWidth
-                                />
-                                <div className="flex justify-end gap-2 mt-1">
-                                    <button onClick={() => handleOpenFolder('shell')} className="text-[10px] text-tokens-brand-DEFAULT hover:underline">Open Shell Folder</button>
-                                    <span className="text-tokens-border">|</span>
-                                    <button onClick={() => handleOpenFolder('workflow')} className="text-[10px] text-pink-500 hover:underline">Open WF DB Folder</button>
+                                {/* Output Folder */}
+                                <div className="space-y-2">
+                                    <label className="text-sm text-tokens-fg font-medium">Output Folder</label>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <Input
+                                                value={outputFolder}
+                                                onChange={(e) => setOutputFolder(e.target.value)}
+                                                placeholder="./downloads"
+                                                fullWidth
+                                                className="font-mono text-sm"
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleBrowseOutputFolder}
+                                            title="Browse for folder"
+                                        >
+                                            <FolderOpen size={16} />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="text-tokens-brand-DEFAULT border-tokens-brand-DEFAULT/30 hover:bg-tokens-brand-DEFAULT/10"
+                                            onClick={handleOpenOutputFolder}
+                                            title="Open folder in Explorer"
+                                        >
+                                            Open
+                                        </Button>
+                                    </div>
                                 </div>
                                 <Button
                                     variant="primary"
@@ -510,7 +709,7 @@ export function MediaSuitePage() {
                                     icon={<Download size={16} />}
                                     iconPosition="circle"
                                 >
-                                    Queue Download (Mock)
+                                    {window.gesu?.mediaJobs ? 'Queue Download' : 'Queue Download (Mock)'}
                                 </Button>
                             </div>
                         </Card>
@@ -523,12 +722,16 @@ export function MediaSuitePage() {
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium text-tokens-muted">Source File</label>
                                     <div className="flex gap-2">
-                                        <Input
-                                            value={convertFilePath}
-                                            readOnly
-                                            placeholder="No file selected..."
-                                            className="flex-1 font-mono opacity-70 cursor-not-allowed"
-                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <Input
+                                                value={convertFilePath ? convertFilePath.split(/[/\\]/).pop() || '' : ''}
+                                                readOnly
+                                                fullWidth
+                                                placeholder="No file selected..."
+                                                className="font-mono opacity-70 cursor-not-allowed"
+                                                title={convertFilePath || 'No file selected'}
+                                            />
+                                        </div>
                                         <Button
                                             variant="outline"
                                             onClick={handleBrowseFile}
@@ -551,12 +754,35 @@ export function MediaSuitePage() {
                                     />
 
                                     {convertMode === 'simple' ? (
-                                        <SelectDropdown
-                                            label="Preset"
-                                            value={convertPreset}
-                                            onChange={(value) => setConvertPreset(value as ConvertPreset)}
-                                            options={CONVERT_PRESETS.map(p => ({ value: p.value, label: `${p.category}: ${p.label}` }))}
-                                        />
+                                        <div className="flex gap-3">
+                                            <div className="w-auto">
+                                                <SelectDropdown
+                                                    label="Category"
+                                                    value={convertCategory}
+                                                    onChange={(value) => {
+                                                        setConvertCategory(value as ConvertCategory);
+                                                        // Set first preset of new category
+                                                        const firstPreset = CONVERT_PRESETS.find(p => p.category === value);
+                                                        if (firstPreset) setConvertPreset(firstPreset.value);
+                                                    }}
+                                                    options={[
+                                                        { value: 'Video', label: 'Video' },
+                                                        { value: 'Audio', label: 'Audio' },
+                                                        { value: 'Image', label: 'Image' }
+                                                    ]}
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <SelectDropdown
+                                                    label="Preset"
+                                                    value={convertPreset}
+                                                    onChange={(value) => setConvertPreset(value as ConvertPreset)}
+                                                    options={CONVERT_PRESETS
+                                                        .filter(p => p.category === convertCategory)
+                                                        .map(p => ({ value: p.value, label: p.label }))}
+                                                />
+                                            </div>
+                                        </div>
                                     ) : null}
                                 </div>
 
@@ -602,16 +828,36 @@ export function MediaSuitePage() {
                                     </div>
                                 )}
 
-                                <ToggleSwitch
-                                    label="Save to"
-                                    value={outputTarget}
-                                    onChange={(value) => setOutputTarget(value as 'shell' | 'workflow')}
-                                    options={[
-                                        { id: 'shell', label: 'Gesu Shell' },
-                                        { id: 'workflow', label: 'WorkFlow DB' }
-                                    ]}
-                                    fullWidth
-                                />
+                                {/* Output Folder */}
+                                <div className="space-y-2">
+                                    <label className="text-sm text-tokens-fg font-medium">Output Folder</label>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <Input
+                                                value={outputFolder}
+                                                onChange={(e) => setOutputFolder(e.target.value)}
+                                                placeholder="./downloads"
+                                                fullWidth
+                                                className="font-mono text-sm"
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleBrowseOutputFolder}
+                                            title="Browse for folder"
+                                        >
+                                            <FolderOpen size={16} />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="text-tokens-brand-DEFAULT border-tokens-brand-DEFAULT/30 hover:bg-tokens-brand-DEFAULT/10"
+                                            onClick={handleOpenOutputFolder}
+                                            title="Open folder in Explorer"
+                                        >
+                                            Open
+                                        </Button>
+                                    </div>
+                                </div>
 
                                 <Button
                                     variant="primary"
@@ -630,7 +876,7 @@ export function MediaSuitePage() {
 
                     {/* History View */}
                     {activeTab === 'history' && (
-                        <Card title="Recent Jobs" className="flex flex-col" headerAction={
+                        <Card title="Recent Jobs" className="flex flex-col min-h-[420px]" headerAction={
                             <div className="flex gap-2 items-center">
                                 <SelectDropdown
                                     value={historyFilter}
@@ -663,42 +909,46 @@ export function MediaSuitePage() {
                                     <tbody className="divide-y divide-tokens-border">
                                         {historyJobs.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className="p-8 text-center text-tokens-muted">
-                                                    No history log found.
+                                                <td colSpan={7} className="p-2">
+                                                    <div className="flex flex-col items-center justify-center min-h-[280px] border-2 border-dashed border-tokens-border/50 rounded-xl bg-tokens-panel2/10">
+                                                        <HistoryIcon size={32} className="text-tokens-muted/30 mb-2" />
+                                                        <span className="text-tokens-muted italic text-sm">No entry yet</span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ) : (
                                             historyJobs
                                                 .filter(job => {
                                                     if (historyFilter === 'all') return true;
-                                                    const preset = job.preset || '';
+                                                    // Use job.type for proper filtering
                                                     if (historyFilter === 'advanced') {
-                                                        return preset === 'video-advanced';
+                                                        return job.preset === 'video-advanced';
                                                     }
                                                     if (historyFilter === 'convert') {
-                                                        return preset.startsWith('audio-') || (preset.startsWith('video-') && preset !== 'video-advanced');
+                                                        // Show convert jobs (excludes advanced)
+                                                        return job.type === 'convert' && job.preset !== 'video-advanced';
                                                     }
                                                     if (historyFilter === 'download') {
-                                                        if (!preset) return true;
-                                                        return !(preset.startsWith('audio-') || preset.startsWith('video-'));
+                                                        return job.type === 'download';
                                                     }
                                                     return true;
                                                 })
                                                 .map((job, idx) => (
                                                     <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-tokens-panel2/50 transition-colors">
                                                         <td className="p-3 text-sm text-tokens-muted whitespace-nowrap">
-                                                            {new Date(job.timestamp).toLocaleString()}
+                                                            {new Date(job.timestamp).toLocaleDateString()}
                                                         </td>
                                                         <td className="p-3">
                                                             {(() => {
-                                                                const preset = job.preset || '';
-                                                                if (preset === 'video-advanced') {
-                                                                    return <Badge variant="brand">ADV</Badge>;
-                                                                } else if (preset.startsWith('audio-') || preset.startsWith('video-')) {
+                                                                // Use actual job type, not preset prefix
+                                                                if (job.type === 'convert') {
+                                                                    const preset = job.preset || '';
+                                                                    if (preset === 'video-advanced') {
+                                                                        return <Badge variant="brand">ADV</Badge>;
+                                                                    }
                                                                     return <Badge variant="neutral">CV</Badge>;
-                                                                } else {
-                                                                    return <Badge variant="brand">DL</Badge>;
                                                                 }
+                                                                return <Badge variant="brand">DL</Badge>;
                                                             })()}
                                                         </td>
                                                         <td className="p-3">
@@ -708,10 +958,36 @@ export function MediaSuitePage() {
                                                         </td>
                                                         <td className="p-3 text-xs text-tokens-fg">{getPresetDisplayName(job.preset)}</td>
                                                         {!(historyFilter === 'convert' || historyFilter === 'advanced') && <td className="p-3 text-xs text-tokens-muted">{job.network}</td>}
-                                                        <td className="p-3 text-xs text-tokens-muted">{job.target}</td>
+                                                        <td className="p-3">
+                                                            {job.outputPath ? (
+                                                                <button
+                                                                    onClick={() => window.gesu?.shell?.openPath?.(job.outputPath!)}
+                                                                    className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:underline cursor-pointer"
+                                                                    title={`Open: ${job.outputPath}`}
+                                                                >
+                                                                    📂 {job.outputPath.split(/[/\\]/).slice(-1)[0]}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-xs text-tokens-muted">{job.target}</span>
+                                                            )}
+                                                        </td>
                                                         {!(historyFilter === 'convert' || historyFilter === 'advanced') && (
-                                                            <td className="p-3 text-xs font-mono text-tokens-muted truncate max-w-[150px]" title={job.url}>
-                                                                {job.url}
+                                                            <td className={`p-3 text-xs font-mono truncate max-w-[200px] ${job.status === 'failed' ? 'text-red-400' : 'text-tokens-muted'}`}>
+                                                                {job.status === 'failed' && job.errorMessage
+                                                                    ? <span title={job.errorMessage}>⚠ {job.errorMessage.slice(0, 40)}...</span>
+                                                                    : job.url ? (
+                                                                        <a
+                                                                            href={job.url}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:underline"
+                                                                            title={job.url}
+                                                                        >
+                                                                            🔗 {new URL(job.url).hostname}
+                                                                        </a>
+                                                                    ) : job.inputPath ? (
+                                                                        <span title={job.inputPath}>{job.inputPath.split(/[/\\]/).pop()}</span>
+                                                                    ) : ''}
                                                             </td>
                                                         )}
                                                     </tr>
@@ -726,7 +1002,7 @@ export function MediaSuitePage() {
 
                 {/* --- RIGHT COLUMN: QUEUE & INFO --- */}
                 <div className="flex flex-col gap-6 w-full min-w-0">
-                    <Card title="Job Queue" className="flex flex-col">
+                    <Card title="Job Queue" className="flex flex-col min-h-[420px]">
                         <div className="flex gap-2 items-center mb-4">
                             <SelectDropdown
                                 value={queueFilter}
@@ -741,25 +1017,39 @@ export function MediaSuitePage() {
 
                         <div className="flex-1 overflow-y-auto scroll-on-hover pr-2 space-y-3">
                             {jobs.length === 0 ? (
-                                <div className="text-center text-tokens-muted py-10 italic border-2 border-dashed border-tokens-border/50 rounded-xl">
-                                    Queue is empty.
+                                <div className="flex flex-col items-center justify-center h-full py-8 px-4 border-2 border-dashed border-tokens-border/50 rounded-xl bg-tokens-panel2/20">
+                                    <Zap size={28} className="text-tokens-muted/30 mb-2" />
+                                    <span className="text-tokens-muted italic text-sm">Queue is empty</span>
                                 </div>
                             ) : (
                                 jobs
                                     .filter(j => queueFilter === 'all' || j.type === queueFilter)
                                     .map(job => (
                                         <div key={job.id} className="bg-tokens-panel2/50 border border-tokens-border rounded-lg p-3 hover:border-tokens-brand-DEFAULT/30 transition-all group">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div className="flex flex-col gap-0.5 max-w-[70%]">
-                                                    <span className="font-medium text-sm text-tokens-fg truncate" title={job.label}>{job.label}</span>
-                                                    <span className="text-[10px] text-tokens-muted font-mono">{job.id} · {job.engine}</span>
-                                                </div>
+                                            {/* Title Row */}
+                                            <div className="flex flex-col gap-0.5 mb-2">
+                                                <span className="font-medium text-sm text-tokens-fg truncate" title={job.label}>{job.label}</span>
+                                                <span className="text-[10px] text-tokens-muted font-mono">{job.id} · {job.engine}</span>
+                                            </div>
+
+                                            {/* Status + Cancel Row (above progress bar) */}
+                                            <div className="flex items-center justify-between mb-2">
                                                 <StatusBadge status={job.status} progress={job.progress} />
+                                                {(job.status === 'running' || job.status === 'queued') && (
+                                                    <button
+                                                        onClick={() => handleCancelJob(job.id)}
+                                                        className="px-2 py-1 rounded text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                                        title="Cancel job"
+                                                    >
+                                                        <X size={12} />
+                                                        Cancel
+                                                    </button>
+                                                )}
                                             </div>
 
                                             {/* Progress Bar */}
                                             {job.status === 'running' && (
-                                                <div className="w-full bg-tokens-border h-1.5 rounded-full overflow-hidden mb-2">
+                                                <div className="w-full bg-tokens-border h-2 rounded-full overflow-hidden mb-2">
                                                     <div
                                                         className="bg-tokens-brand-DEFAULT h-full transition-all duration-500 ease-out relative overflow-hidden"
                                                         style={{ width: `${job.progress || 0}%` }}
@@ -770,26 +1060,27 @@ export function MediaSuitePage() {
                                             )}
 
                                             {/* Details */}
-                                            {job.payload && (
-                                                <div className="text-[10px] text-tokens-muted grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-tokens-border/50">
-                                                    {job.type === 'download' && (
-                                                        <>
-                                                            <span>Preset: <span className="text-tokens-fg">{String(job.payload.preset)}</span></span>
-                                                            <span>Network: <span className="text-tokens-fg">{String(job.payload.network)}</span></span>
-                                                        </>
-                                                    )}
-                                                    {job.type === 'convert' && (
-                                                        <>
-                                                            <span className="col-span-2">
-                                                                {job.payload.preset === 'video-advanced'
-                                                                    ? formatAdvancedOptionsSummaryFromPayload(job.payload)
-                                                                    : `Preset: ${job.payload.preset}`
-                                                                }
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="text-[10px] text-tokens-muted grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-tokens-border/50 min-h-[24px]">
+                                                {job.type === 'download' && job.payload && (
+                                                    <>
+                                                        <span>Preset: <span className="text-tokens-fg">{String(job.payload.preset)}</span></span>
+                                                        <span>Network: <span className="text-tokens-fg">{String(job.payload.network)}</span></span>
+                                                    </>
+                                                )}
+                                                {job.type === 'convert' && job.payload && (
+                                                    <>
+                                                        <span className="col-span-2">
+                                                            {job.payload.preset === 'video-advanced'
+                                                                ? formatAdvancedOptionsSummaryFromPayload(job.payload)
+                                                                : `Preset: ${job.payload.preset}`
+                                                            }
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {!job.payload && (
+                                                    <span className="col-span-2 text-tokens-muted/60">No details</span>
+                                                )}
+                                            </div>
                                         </div>
                                     ))
                             )}

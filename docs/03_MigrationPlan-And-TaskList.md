@@ -633,13 +633,28 @@ useEffect(() => {
     - Type badges in History (DL / CV / ADV)
     - Advanced options summary in Converter and Job Queue
     - Layout/spacing tweaks for Media Suite pages
+- [x] MS-8: Sprint 14 - Smart Category System & Bug Fixes
+    - Fixed history filter bug (use job.type instead of preset prefix)
+    - Fixed convert job completion auto-refresh
+    - Added Category dropdown (Video, Audio, Image) with auto-detection
+    - Implemented file extension detection (EXT_VIDEO/AUDIO/IMAGE)
+    - Auto-select category on file browse, filter presets by category
+    - Added output folder persistence (localStorage)
+- [x] MS-9: Sprint 14 - Image Conversion & UI Polish
+    - Added ImageMagick support with 4 presets (PNG, JPG-90, WebP, ICO-256)
+    - Implemented getImageMagickArgs() function
+    - Enhanced empty state UI with icons and proper sizing
+    - Set minimum card heights to prevent dropdown cutoff
+    - Optimized dropdown layout (Category auto-width, Preset flex-1)
 
 ### Media Suite Next Steps / Backlog
-- Optional: Job Queue filters (All / Download / Convert / Advanced)
+- Optional: FFmpeg progress percentage (requires duration detection)
 - Optional: History pagination or date-based grouping
 - Optional: Quick actions in Job Queue (open folder, re-run job)
+- Optional: Batch conversion support
+- Optional: Custom preset creation UI
 
-**Milestone**: Media Suite fully implemented (Downloader + Converter + Advanced Mode + Polished UI)
+**Milestone**: Media Suite fully implemented (Downloader + Converter + Advanced Mode + Category System + Image Support + Polished UI)
 
 ---
 

@@ -142,6 +142,21 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
+### [0.12.0] - Media Suite Execution Core (Sprint 14) (2025-12-16)
+- **Job Queue + State Machine**: Implemented persistent job queue with JSONL history file at workflowRoot/_Media/JobHistory.jsonl
+- **Executor Pool**: Max 3 concurrent jobs with FIFO queue ordering
+- **Process Spawning**: Real child process spawning for yt-dlp, ffmpeg, imagemagick, soffice
+- **Progress Reporting**: Best-effort progress parsing from stdout (yt-dlp percentage, ffmpeg time)
+- **Cancellation**: Windows-safe process tree termination using taskkill /T /F
+- **IPC Architecture**: media:job:enqueue/list/cancel/cancelAll handlers in main.js
+- **Preload Bridge**: window.gesu.mediaJobs API with event subscriptions for progress/complete/update
+- **Renderer Service**: mediaJobsService.ts with bridge detection and fallback
+- **Renderer Store**: mediaQueueStore.ts with React hook for state management
+- **MediaSuitePage Integration**: Wired existing UI to new real execution backend
+- **Files Added**: process-utils.js, media-jobs.js, mediaJobsService.ts, mediaQueueStore.ts
+- **Files Modified**: main.js (IPC handlers), preload.cjs (mediaJobs API), global.d.ts (types), MediaSuitePage.tsx (wiring)
+- **Status**: Implementation complete; awaiting manual QA verification
+
 ### [0.11.0] - Focus Engine Global (Sprint 13) (2025-12-16)
 - **Global Pomodoro Timer**: Implemented single-instance focus timer with Focus/Short Break/Long Break phases, global state management, and localStorage persistence.
 - **Timer UI**: Added FocusTimerPill (always-visible header button, expands to pill during session) and FocusTimerPanel (full controls, presets, config editor).

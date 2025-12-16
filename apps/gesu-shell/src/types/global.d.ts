@@ -57,6 +57,7 @@ declare global {
         preset: string;
         network?: string;
         target?: MediaOutputTarget;
+        outputPath?: string; // Full output folder path
         status: 'queued' | 'spawned' | 'success' | 'failed';
         timestamp: string;
         args?: string[];
@@ -147,11 +148,26 @@ declare global {
                     sessions: string[];
                 }>>;
             };
+            mediaJobs?: {
+                enqueue: (payload: any) => Promise<string>;
+                list: () => Promise<{ queue: any[]; history: any[] }>;
+                cancel: (jobId: string) => Promise<boolean>;
+                cancelAll: () => Promise<number>;
+                onProgress: (callback: (data: { jobId: string; progress: number | null; logLine: string }) => void) => () => void;
+                onComplete: (callback: (data: { jobId: string; status: string; errorMessage?: string }) => void) => () => void;
+                onUpdate: (callback: (job: any) => void) => () => void;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
-                openFolder: (target: MediaOutputTarget) => Promise<{ success: boolean; error?: string }>;
+                openFolder: (target: MediaOutputTarget) => Promise<void>;
                 pickSourceFile: () => Promise<string | null>;
+                pickOutputFolder: (defaultPath?: string) => Promise<string | null>;
+                updateYtDlp: () => Promise<{ success: boolean; message?: string; error?: string }>;
+            };
+            shell?: {
+                openPath: (path: string) => Promise<{ success: boolean; error?: string }>;
             };
         };
     }
 }
+

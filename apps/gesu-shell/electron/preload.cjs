@@ -32,10 +32,36 @@ contextBridge.exposeInMainWorld('gesu', {
         append: (snapshot) => ipcRenderer.invoke('compass:snapshots:append', snapshot),
         list: (options) => ipcRenderer.invoke('compass:snapshots:list', options),
     },
+    mediaJobs: {
+        enqueue: (payload) => ipcRenderer.invoke('media:job:enqueue', payload),
+        list: () => ipcRenderer.invoke('media:job:list'),
+        cancel: (jobId) => ipcRenderer.invoke('media:job:cancel', jobId),
+        cancelAll: () => ipcRenderer.invoke('media:job:cancelAll'),
+        onProgress: (callback) => {
+            const subscription = (event, data) => callback(data);
+            ipcRenderer.on('media:job:progress', subscription);
+            return () => ipcRenderer.removeListener('media:job:progress', subscription);
+        },
+        onComplete: (callback) => {
+            const subscription = (event, data) => callback(data);
+            ipcRenderer.on('media:job:complete', subscription);
+            return () => ipcRenderer.removeListener('media:job:complete', subscription);
+        },
+        onUpdate: (callback) => {
+            const subscription = (event, data) => callback(data);
+            ipcRenderer.on('media:job:update', subscription);
+            return () => ipcRenderer.removeListener('media:job:update', subscription);
+        },
+    },
     mediaSuite: {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),
         pickSourceFile: () => ipcRenderer.invoke('mediaSuite:pickSourceFile'),
+        pickOutputFolder: (defaultPath) => ipcRenderer.invoke('mediaSuite:pickOutputFolder', defaultPath),
+        updateYtDlp: () => ipcRenderer.invoke('mediaSuite:updateYtDlp'),
+    },
+    shell: {
+        openPath: (path) => ipcRenderer.invoke('shell:openPath', path),
     },
 });
 

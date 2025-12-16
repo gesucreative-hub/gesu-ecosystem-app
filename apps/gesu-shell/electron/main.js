@@ -1,8 +1,9 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import { runGlobalToolsCheck, resolveToolPath } from './tools-check.js';
 import path from 'path';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
@@ -10,6 +11,11 @@ import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.j
 import { buildPlan, applyPlan, appendProjectLog } from './scaffolding.js';
 import { listProjects } from './projects-registry.js';
 import { appendSnapshot, listSnapshots } from './compass-snapshots.js';
+
+// Use createRequire for CommonJS modules
+const require = createRequire(import.meta.url);
+const { initJobManager, enqueueJob, cancelJob, cancelAllJobs, getQueue } = require('./media-jobs.cjs');
+
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
 if (!fs.existsSync(DOWNLOADS_DIR)) {
@@ -111,7 +117,47 @@ ipcMain.handle('tools:check', async (event, payload) => {
 // Now handled by settings-store.js
 registerSettingsHandlers();
 
-// --- Job System (In-Memory Skeleton) ---
+// --- Media Jobs Manager ---
+let mediaJobsInitialized = false;
+
+async function ensureMediaJobsInit() {
+    if (mediaJobsInitialized) return;
+
+    const settings = await loadGlobalSettings();
+    const workflowRoot = settings.workflowRoot || null;
+
+    // Get mainWindow to pass webContents
+    const windows = BrowserWindow.getAllWindows();
+    const mainWindow = windows[0];
+
+    if (mainWindow) {
+        initJobManager(workflowRoot, mainWindow.webContents);
+        mediaJobsInitialized = true;
+    }
+}
+
+ipcMain.handle('media:job:enqueue', async (event, payload) => {
+    await ensureMediaJobsInit();
+    const jobId = enqueueJob(payload);
+    return jobId;
+});
+
+ipcMain.handle('media:job:list', async () => {
+    await ensureMediaJobsInit();
+    return getQueue();
+});
+
+ipcMain.handle('media:job:cancel', async (event, jobId) => {
+    await ensureMediaJobsInit();
+    return cancelJob(jobId);
+});
+
+ipcMain.handle('media:job:cancelAll', async () => {
+    await ensureMediaJobsInit();
+    return cancelAllJobs();
+});
+
+// --- Job System (Legacy In-Memory Skeleton) ---
 let jobs = [];
 
 ipcMain.handle('jobs:list', async () => {
@@ -177,7 +223,6 @@ ipcMain.handle('mediaSuite:openFolder', async (event, target) => {
         return { success: true };
     }
     return { success: false, error: 'Directory does not exist' };
-    return { success: false, error: 'Directory does not exist' };
 });
 
 ipcMain.handle('mediaSuite:pickSourceFile', async () => {
@@ -189,8 +234,51 @@ ipcMain.handle('mediaSuite:pickSourceFile', async () => {
         ]
     });
     if (canceled || filePaths.length === 0) return null;
+    return filePaths[0];
+});
+
+ipcMain.handle('mediaSuite:pickOutputFolder', async (event, defaultPath) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        defaultPath: defaultPath || undefined,
+        properties: ['openDirectory', 'createDirectory']
+    });
     if (canceled || filePaths.length === 0) return null;
     return filePaths[0];
+});
+
+ipcMain.handle('shell:openPath', async (event, targetPath) => {
+    if (!targetPath) return { success: false, error: 'No path provided' };
+    try {
+        await shell.openPath(targetPath);
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+// Update yt-dlp
+ipcMain.handle('mediaSuite:updateYtDlp', async () => {
+    const { spawn } = require('child_process');
+    return new Promise((resolve) => {
+        const child = spawn('yt-dlp', ['-U'], { shell: true });
+        let output = '';
+        let error = '';
+
+        child.stdout.on('data', (data) => { output += data.toString(); });
+        child.stderr.on('data', (data) => { error += data.toString(); });
+
+        child.on('close', (code) => {
+            if (code === 0) {
+                resolve({ success: true, message: output.trim() || 'yt-dlp updated successfully' });
+            } else {
+                resolve({ success: false, error: error.trim() || output.trim() || `Update failed with code ${code}` });
+            }
+        });
+
+        child.on('error', (err) => {
+            resolve({ success: false, error: `Failed to run update: ${err.message}` });
+        });
+    });
 });
 
 // --- Generic Dialog Handlers (Settings v2) ---

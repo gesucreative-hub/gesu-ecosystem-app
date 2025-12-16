@@ -446,7 +446,8 @@ export function SettingsPage() {
                     <p className="text-sm text-tokens-muted -mt-4 mb-6">Configure paths and check the status of external tools used by Gesu.</p>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {engines.map((engine) => (
+                        {/* Filter out libreOffice - document conversion deferred to future release */}
+                        {engines.filter(e => e.id !== 'libreOffice').map((engine) => (
                             <div key={engine.id} className="bg-tokens-panel2/30 border border-tokens-border rounded-xl p-4 flex flex-col gap-3">
                                 <div className="flex justify-between items-start">
                                     <div>

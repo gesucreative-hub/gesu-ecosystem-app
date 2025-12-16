@@ -4,6 +4,7 @@
 export interface MediaJob {
     id: string;
     kind: 'download' | 'convert';
+    // Note: 'soffice' kept in type for data compatibility but document conversion is deferred
     engine: 'yt-dlp' | 'ffmpeg' | 'imagemagick' | 'soffice';
     input: string;
     output: string;
@@ -19,6 +20,7 @@ export interface MediaJob {
 
 export interface MediaJobPayload {
     kind: 'download' | 'convert';
+    // Note: 'soffice' kept in type for data compatibility but document conversion is deferred
     engine: 'yt-dlp' | 'ffmpeg' | 'imagemagick' | 'soffice';
     input: string;
     output: string;
@@ -45,7 +47,16 @@ export async function enqueueJob(payload: MediaJobPayload): Promise<string> {
         throw new Error('Media jobs not available - requires Electron desktop mode');
     }
 
-    const jobId = await window.gesu.mediaJobs!.enqueue(payload);
+    if (!window.gesu) {
+        throw new Error('Gesu API not available');
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        throw new Error('Media jobs API not available');
+    }
+
+    const jobId = await api.enqueue(payload);
     return jobId;
 }
 
@@ -57,7 +68,16 @@ export async function getJobQueue(): Promise<QueueData> {
         return { queue: [], history: [] };
     }
 
-    const data = await window.gesu.mediaJobs!.list();
+    if (!window.gesu) {
+        return { queue: [], history: [] };
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return { queue: [], history: [] };
+    }
+
+    const data = await api.list();
     return data;
 }
 
@@ -69,7 +89,16 @@ export async function cancelJob(jobId: string): Promise<boolean> {
         return false;
     }
 
-    return await window.gesu.mediaJobs!.cancel(jobId);
+    if (!window.gesu) {
+        return false;
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return false;
+    }
+
+    return await api.cancel(jobId);
 }
 
 /**
@@ -80,7 +109,16 @@ export async function cancelAllJobs(): Promise<number> {
         return 0;
     }
 
-    return await window.gesu.mediaJobs!.cancelAll();
+    if (!window.gesu) {
+        return 0;
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return 0;
+    }
+
+    return await api.cancelAll();
 }
 
 /**
@@ -91,7 +129,16 @@ export function onJobProgress(callback: (data: { jobId: string; progress: number
         return () => { }; // No-op unsubscribe
     }
 
-    return window.gesu.mediaJobs!.onProgress(callback);
+    if (!window.gesu) {
+        return () => { };
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return () => { };
+    }
+
+    return api.onProgress(callback);
 }
 
 /**
@@ -102,7 +149,16 @@ export function onJobComplete(callback: (data: { jobId: string; status: string; 
         return () => { }; // No-op unsubscribe
     }
 
-    return window.gesu.mediaJobs!.onComplete(callback);
+    if (!window.gesu) {
+        return () => { };
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return () => { };
+    }
+
+    return api.onComplete(callback);
 }
 
 /**
@@ -113,5 +169,14 @@ export function onJobUpdate(callback: (job: MediaJob) => void): () => void {
         return () => { }; // No-op unsubscribe
     }
 
-    return window.gesu.mediaJobs!.onUpdate(callback);
+    if (!window.gesu) {
+        return () => { };
+    }
+
+    const api = window.gesu.mediaJobs;
+    if (!api) {
+        return () => { };
+    }
+
+    return api.onUpdate(callback);
 }

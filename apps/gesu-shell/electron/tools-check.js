@@ -117,20 +117,18 @@ async function checkTool(name, manualPath, defaultCommand, versionArgs = ['--ver
 }
 
 export async function runGlobalToolsCheck(input = {}) {
-    // Parallel checks
-    const [ffmpeg, ytDlp, imageMagick, libreOffice] = await Promise.all([
+    // Parallel checks - LibreOffice/soffice is deferred (document conversion not in current release)
+    const [ffmpeg, ytDlp, imageMagick] = await Promise.all([
         checkTool('ffmpeg', input.ffmpegPath, 'ffmpeg', ['-version']),
         checkTool('yt-dlp', input.ytDlpPath, 'yt-dlp', ['--version']),
         checkTool('image-magick', input.imageMagickPath, 'magick', ['-version']),
-        checkTool('libreoffice', input.libreOfficePath, 'soffice', ['--version']),
-        // Note: soffice --version can be tricky, sometimes needs --help or returns to stderr. 
-        // We'll trust --version for now as a standard first attempt.
+        // Note: LibreOffice/soffice document conversion is DEFERRED - not checked
     ]);
 
     return {
         ffmpeg,
         ytDlp,
         imageMagick,
-        libreOffice,
+        // libreOffice field omitted - feature deferred
     };
 }

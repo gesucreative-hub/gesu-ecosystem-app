@@ -31,14 +31,34 @@ function initJobManager(workflowRoot, contents) {
             fs.mkdirSync(mediaDir, { recursive: true });
         }
 
-        historyFilePath = path.join(mediaDir, 'JobHistory.jsonl');
+        const newHistoryPath = path.join(mediaDir, 'JobHistory.jsonl');
 
-        // Load history from file
-        loadHistory();
-
-        console.log('[media-jobs] Initialized with history:', historyFilePath);
+        // Reinitialize if path changed
+        if (historyFilePath !== newHistoryPath) {
+            historyFilePath = newHistoryPath;
+            jobs.clear(); // Clear in-memory to reload from new file
+            loadHistory();
+            console.log('[media-jobs] Initialized with history:', historyFilePath);
+        }
     } else {
         console.warn('[media-jobs] No workflowRoot - history will not persist');
+    }
+}
+
+/**
+ * Reinitialize with new workflowRoot (call when settings change)
+ * @param {string} workflowRoot - New workflow root
+ */
+function reinitWithRoot(workflowRoot) {
+    if (workflowRoot) {
+        const mediaDir = path.join(workflowRoot, '_Media');
+        if (!fs.existsSync(mediaDir)) {
+            fs.mkdirSync(mediaDir, { recursive: true });
+        }
+        historyFilePath = path.join(mediaDir, 'JobHistory.jsonl');
+        jobs.clear();
+        loadHistory();
+        console.log('[media-jobs] Reinitialized with history:', historyFilePath);
     }
 }
 
@@ -519,16 +539,9 @@ function buildCommand(job) {
                 ],
             };
 
+        // soffice/LibreOffice document conversion is deferred - not supported in current release
         case 'soffice':
-            return {
-                command: job.options.toolPath || 'soffice',
-                args: [
-                    '--headless',
-                    '--convert-to', job.options.format || 'pdf',
-                    '--outdir', job.output, // Pass directory directly
-                    job.input,
-                ],
-            };
+            throw new Error('Document conversion (soffice) is not supported in this release. Use a dedicated document converter.');
 
         default:
             throw new Error(`Unknown engine: ${job.engine}`);

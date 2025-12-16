@@ -121,16 +121,15 @@ registerSettingsHandlers();
 let mediaJobsInitialized = false;
 
 async function ensureMediaJobsInit() {
-    if (mediaJobsInitialized) return;
-
     const settings = await loadGlobalSettings();
-    const workflowRoot = settings.workflowRoot || null;
+    const workflowRoot = settings.paths?.workflowRoot || null;
 
     // Get mainWindow to pass webContents
     const windows = BrowserWindow.getAllWindows();
     const mainWindow = windows[0];
 
     if (mainWindow) {
+        // Always reinit if workflowRoot available - ensures fresh history load
         initJobManager(workflowRoot, mainWindow.webContents);
         mediaJobsInitialized = true;
     }

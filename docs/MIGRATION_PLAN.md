@@ -289,6 +289,12 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Files**: projectHubTasksStore.ts (+subscribe), useTaskGuardrail.ts (new), LostModePage.tsx (hook integration).
 - **Status**: Universal guardrail now fully functional with reactive cross-page synchronization.
 
+### [DOC] - Product/UX Audit Completed (2025-12-17)
+- **Audit Document**: Created `docs/PRODUCT_UX_AUDIT.md` with holistic finish-first flow evaluation.
+- **Key Findings**: Dashboard noise, Launcher redundancy, Compass slider overload, timer-task disconnect.
+- **Proposed Sprint 18**: Make Compass home, hide Launcher, reorder Compass sections (tasks above sliders).
+- **No code changes** - documentation only.
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

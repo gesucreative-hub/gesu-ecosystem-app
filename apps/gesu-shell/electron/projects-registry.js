@@ -62,7 +62,11 @@ export async function listProjects(projectsRoot) {
                     projectPath: projectDir,
                     createdAt: metadata.createdAt || new Date().toISOString(),
                     updatedAt: metadata.updatedAt || metadata.createdAt || new Date().toISOString(),
-                    templateId: metadata.templateId
+                    templateId: metadata.templateId,
+                    // Sprint 20: Blueprint fields
+                    categoryId: metadata.categoryId,
+                    blueprintId: metadata.blueprintId,
+                    blueprintVersion: metadata.blueprintVersion
                 };
 
                 projects.push(project);

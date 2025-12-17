@@ -7,6 +7,11 @@ export interface Project {
     createdAt: number;
     updatedAt: number;
     archived?: boolean;
+    // Sprint 20: Blueprint integration
+    categoryId?: string;           // e.g. 'archviz', 'general'
+    blueprintId?: string;          // e.g. 'general-default'
+    blueprintVersion?: number;     // e.g. 1
+    projectPath?: string;          // Disk path (for imported projects)
 }
 
 interface ProjectStoreState {
@@ -62,7 +67,15 @@ export function getProjectById(id: string): Project | null {
     return state.projects.find(p => p.id === id) || null;
 }
 
-export function createProject(name: string): Project {
+export function createProject(
+    name: string,
+    options?: {
+        categoryId?: string;
+        blueprintId?: string;
+        blueprintVersion?: number;
+        projectPath?: string;
+    }
+): Project {
     const state = loadState();
     const now = Date.now();
 
@@ -71,6 +84,10 @@ export function createProject(name: string): Project {
         name: name.trim() || 'Untitled Project',
         createdAt: now,
         updatedAt: now,
+        categoryId: options?.categoryId,
+        blueprintId: options?.blueprintId,
+        blueprintVersion: options?.blueprintVersion,
+        projectPath: options?.projectPath,
     };
 
     state.projects.push(project);
@@ -155,6 +172,10 @@ export function importFromDisk(diskProjects: Array<{
     projectPath: string;
     createdAt?: string;
     updatedAt?: string;
+    // Sprint 20: Blueprint fields
+    categoryId?: string;
+    blueprintId?: string;
+    blueprintVersion?: number;
 }>): number {
     const state = loadState();
     let importCount = 0;
@@ -163,12 +184,21 @@ export function importFromDisk(diskProjects: Array<{
         // Check if already exists by ID or path
         const existsById = state.projects.some(p => p.id === diskProject.id);
         const existsByPath = state.projects.some(p =>
-            p.name === diskProject.name &&
-            Math.abs(p.createdAt - new Date(diskProject.createdAt || 0).getTime()) < 60000 // within 1 minute
+            p.projectPath === diskProject.projectPath
         );
 
         if (existsById || existsByPath) {
-            continue; // Skip duplicates
+            // Update existing project with new fields if found by ID
+            if (existsById) {
+                const existingProject = state.projects.find(p => p.id === diskProject.id);
+                if (existingProject) {
+                    existingProject.categoryId = diskProject.categoryId || existingProject.categoryId;
+                    existingProject.blueprintId = diskProject.blueprintId || existingProject.blueprintId;
+                    existingProject.blueprintVersion = diskProject.blueprintVersion || existingProject.blueprintVersion;
+                    existingProject.projectPath = diskProject.projectPath || existingProject.projectPath;
+                }
+            }
+            continue; // Skip import for duplicates
         }
 
         // Import new project
@@ -177,14 +207,18 @@ export function importFromDisk(diskProjects: Array<{
             name: diskProject.name,
             createdAt: diskProject.createdAt ? new Date(diskProject.createdAt).getTime() : Date.now(),
             updatedAt: diskProject.updatedAt ? new Date(diskProject.updatedAt).getTime() : Date.now(),
+            projectPath: diskProject.projectPath,
+            categoryId: diskProject.categoryId,
+            blueprintId: diskProject.blueprintId,
+            blueprintVersion: diskProject.blueprintVersion,
         };
 
         state.projects.push(project);
         importCount++;
     }
 
-    if (importCount > 0) {
-        saveState(state);
+    if (importCount > 0 || diskProjects.length > 0) {
+        saveState(state); // Always save to update existing projects
     }
 
     return importCount;

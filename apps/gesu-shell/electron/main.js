@@ -328,7 +328,7 @@ ipcMain.handle('scaffold:preview', async (event, { projectName, templateId }) =>
     }
 });
 
-ipcMain.handle('scaffold:create', async (event, { projectName, templateId }) => {
+ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categoryId, blueprintId, blueprintVersion }) => {
     try {
         const settings = await loadGlobalSettings();
         const projectsRoot = settings.paths?.projectsRoot;
@@ -337,7 +337,7 @@ ipcMain.handle('scaffold:create', async (event, { projectName, templateId }) => 
             throw new Error('Projects root not configured. Please set it in Settings.');
         }
 
-        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId });
+        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId, categoryId, blueprintId, blueprintVersion });
         const result = await applyPlan({ projectsRoot, plan, projectPath });
 
         if (result.ok) {

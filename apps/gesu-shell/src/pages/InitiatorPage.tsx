@@ -7,7 +7,7 @@ import { Input } from '../components/Input';
 import { SelectDropdown } from '../components/Dropdown';
 import { Tabs } from '../components/Tabs';
 import { WorkflowCanvas } from './WorkflowCanvas';
-import { Zap, FileText, Settings } from 'lucide-react';
+import { Zap, FileText, Settings, RefreshCw } from 'lucide-react';
 import {
     listProjects,
     getActiveProject,
@@ -20,6 +20,11 @@ import {
 } from '../stores/projectStore';
 import { scaffoldingService, ScaffoldPreviewResult } from '../services/scaffoldingService';
 import { StandardsTab } from './StandardsTab';
+import {
+    loadBlueprints,
+    getDefaultBlueprintForCategory,
+} from '../services/workflowBlueprintsService';
+import { DEFAULT_CATEGORY_ID, DEFAULT_BLUEPRINT_ID, BlueprintFileShape } from '../types/workflowBlueprints';
 
 
 // --- Types & Interfaces ---
@@ -96,10 +101,46 @@ function ProjectGeneratorForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Blueprint categories loaded from Standards
+    const [blueprintData, setBlueprintData] = useState<BlueprintFileShape | null>(null);
+
+    // Load blueprint categories on mount
+    useEffect(() => {
+        loadBlueprints().then(data => {
+            setBlueprintData(data);
+            console.log('[Generator] Loaded blueprints:', data.categories.length, 'categories');
+        }).catch(err => {
+            console.error('[Generator] Failed to load blueprints:', err);
+        });
+    }, []);
+
     // Derived State
     const projectCode = useMemo(() => generateProjectCode(type, name), [type, name]);
     const selectedTemplate = TEMPLATES.find(t => t.id === templateId) || TEMPLATES[0];
     const isSimulationMode = scaffoldingService.isSimulationMode();
+
+    // Map template to blueprint category (fallback to default if not found)
+    const categoryIdForTemplate = useMemo(() => {
+        if (!blueprintData) return DEFAULT_CATEGORY_ID;
+        // Map template IDs to category IDs (best effort matching)
+        const templateCategoryMap: Record<string, string> = {
+            'archviz': 'archviz',
+            'wedding': 'event',
+            'general': 'general',
+            'admin': 'admin',
+            'empty': 'general'
+        };
+        const mappedCategoryId = templateCategoryMap[templateId] || 'general';
+        // Check if this category exists in blueprint data
+        const exists = blueprintData.categories.some(c => c.id === mappedCategoryId);
+        return exists ? mappedCategoryId : DEFAULT_CATEGORY_ID;
+    }, [blueprintData, templateId]);
+
+    // Get default blueprint for the selected category
+    const selectedBlueprint = useMemo(() => {
+        if (!blueprintData) return null;
+        return getDefaultBlueprintForCategory(blueprintData, categoryIdForTemplate);
+    }, [blueprintData, categoryIdForTemplate]);
 
     // Handlers
     const handleOptionToggle = (key: keyof ProjectOptions) => {
@@ -139,16 +180,25 @@ function ProjectGeneratorForm() {
         setError(null);
 
         try {
-            const result = await scaffoldingService.scaffold(name.trim(), templateId);
+            // Sprint 20: Pass blueprint fields to scaffold service
+            const result = await scaffoldingService.scaffold(name.trim(), templateId, {
+                categoryId: categoryIdForTemplate,
+                blueprintId: selectedBlueprint?.id || DEFAULT_BLUEPRINT_ID,
+                blueprintVersion: selectedBlueprint?.version || 1,
+            });
             if (result.ok) {
                 // Register the created project and set it active
                 if (result.projectId && result.projectName) {
-                    // Import the created project into the store
+                    // Import the created project into the store with blueprint fields
                     const diskProject = {
                         id: result.projectId,
                         name: result.projectName,
                         projectPath: result.projectPath || '',
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        // Sprint 20: Include blueprint assignment
+                        categoryId: categoryIdForTemplate,
+                        blueprintId: selectedBlueprint?.id || DEFAULT_BLUEPRINT_ID,
+                        blueprintVersion: selectedBlueprint?.version || 1,
                     };
 
                     // Import and set active
@@ -203,11 +253,30 @@ function ProjectGeneratorForm() {
 
                             <div className="md:col-span-2">
                                 <SelectDropdown
-                                    label="Category / Discipline"
-                                    value={category}
-                                    onChange={(value) => setCategory(value)}
-                                    options={CATEGORIES}
+                                    label="Category / Discipline (Blueprint)"
+                                    value={categoryIdForTemplate}
+                                    onChange={(value) => {
+                                        // Find template that maps to this category
+                                        const templateCategoryMap: Record<string, string> = {
+                                            'archviz': 'archviz',
+                                            'wedding': 'event',
+                                            'general': 'general',
+                                            'admin': 'admin',
+                                            'empty': 'general'
+                                        };
+                                        const matchingTemplate = Object.entries(templateCategoryMap).find(([_, catId]) => catId === value)?.[0];
+                                        if (matchingTemplate) setTemplateId(matchingTemplate);
+                                    }}
+                                    options={blueprintData?.categories.map(cat => ({
+                                        value: cat.id,
+                                        label: `${cat.name} (${blueprintData?.blueprints.find((b: { id: string }) => b.id === cat.defaultBlueprintId)?.nodes.length || 0} steps)`
+                                    })) || [{ value: DEFAULT_CATEGORY_ID, label: 'General Creative' }]}
                                 />
+                                {selectedBlueprint && (
+                                    <div className="text-xs text-tokens-muted mt-1">
+                                        Blueprint: {selectedBlueprint.name} v{selectedBlueprint.version}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -403,6 +472,23 @@ export function ProjectHubPage() {
         setRefreshKey(k => k + 1);
     }, [newProjectName]);
 
+    // Sprint 20: Refresh projects from disk
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const handleRefreshFromDisk = useCallback(async () => {
+        setIsRefreshing(true);
+        try {
+            const importCount = await refreshFromDisk();
+            setProjects(listProjects());
+            if (importCount > 0) {
+                console.log(`[ProjectHub] Imported ${importCount} projects from disk`);
+            }
+        } catch (err) {
+            console.error('[ProjectHub] Failed to refresh from disk:', err);
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, []);
+
     const tabs = [
         { id: 'workflow', label: 'Workflow', icon: <FileText size={16} /> },
         { id: 'standards', label: 'Standards', icon: <Settings size={16} /> },
@@ -453,6 +539,15 @@ export function ProjectHubPage() {
                                 className="min-w-[180px]"
                             />
                         )}
+                        {/* Sprint 20: Refresh from Disk button */}
+                        <button
+                            onClick={handleRefreshFromDisk}
+                            disabled={isRefreshing}
+                            className="p-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg transition-colors disabled:opacity-50"
+                            title="Refresh projects from disk"
+                        >
+                            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                        </button>
                     </div>
                     <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
                         Back

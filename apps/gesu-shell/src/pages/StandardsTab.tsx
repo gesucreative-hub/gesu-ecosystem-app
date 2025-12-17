@@ -24,6 +24,10 @@ export function StandardsTab() {
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>(DEFAULT_CATEGORY_ID);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
+    // Sprint 20: Category creation state
+    const [showNewCategory, setShowNewCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+
     // Load blueprints on mount
     useEffect(() => {
         loadBlueprints().then(loadedData => {
@@ -39,6 +43,55 @@ export function StandardsTab() {
     const selectedCategory = data?.categories.find(c => c.id === selectedCategoryId);
     const selectedBlueprint = data?.blueprints.find(b => b.id === selectedCategory?.defaultBlueprintId);
     const selectedNode = selectedBlueprint?.nodes.find(n => n.id === selectedNodeId);
+
+    // Sprint 20: Create new category with default blueprint
+    const handleCreateCategory = useCallback(() => {
+        if (!data || !newCategoryName.trim()) return;
+
+        const categoryId = newCategoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const blueprintId = `${categoryId}-default`;
+
+        // Check if category already exists
+        if (data.categories.some(c => c.id === categoryId)) {
+            alert('A category with this name already exists');
+            return;
+        }
+
+        // Create new category with its default blueprint (clone from existing default)
+        const defaultBlueprint = data.blueprints.find(b => b.categoryId === DEFAULT_CATEGORY_ID);
+        const newNodes = defaultBlueprint?.nodes.map(node => ({
+            ...node,
+            id: `${categoryId}-${node.id}`, // Unique IDs for new category
+        })) || [];
+
+        const newCategory = {
+            id: categoryId,
+            name: newCategoryName.trim(),
+            defaultBlueprintId: blueprintId
+        };
+
+        const newBlueprint = {
+            id: blueprintId,
+            name: `${newCategoryName.trim()} Default`,
+            categoryId: categoryId,
+            version: 1,
+            nodes: newNodes
+        };
+
+        setData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                categories: [...prev.categories, newCategory],
+                blueprints: [...prev.blueprints, newBlueprint]
+            };
+        });
+
+        setSelectedCategoryId(categoryId);
+        setShowNewCategory(false);
+        setNewCategoryName('');
+        setIsDirty(true);
+    }, [data, newCategoryName]);
 
     // Handle save
     const handleSave = useCallback(async () => {
@@ -147,8 +200,16 @@ export function StandardsTab() {
 
             {/* Left Column: Categories */}
             <div className="space-y-4">
-                <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">
-                    Categories
+                <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider">
+                        Categories
+                    </div>
+                    <button
+                        onClick={() => setShowNewCategory(true)}
+                        className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover flex items-center gap-1"
+                    >
+                        <Plus size={12} /> Add
+                    </button>
                 </div>
                 {data.categories.map(cat => (
                     <button
@@ -169,10 +230,37 @@ export function StandardsTab() {
                     </button>
                 ))}
 
-                {/* v1: No category creation */}
-                <div className="text-xs text-tokens-muted/50 text-center pt-2">
-                    v1: Single category
-                </div>
+                {/* Create Category Mini-Form */}
+                {showNewCategory && (
+                    <div className="p-3 bg-tokens-panel2 border border-tokens-border rounded-lg space-y-2">
+                        <input
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="Category name..."
+                            className="w-full bg-tokens-panel border border-tokens-border rounded px-2 py-1.5 text-sm text-tokens-fg placeholder:text-tokens-muted/50 focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/50"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleCreateCategory();
+                                if (e.key === 'Escape') {
+                                    setShowNewCategory(false);
+                                    setNewCategoryName('');
+                                }
+                            }}
+                        />
+                        <div className="flex gap-2">
+                            <Button size="sm" variant="primary" onClick={handleCreateCategory} className="flex-1">
+                                Create
+                            </Button>
+                            <Button size="sm" variant="secondary" onClick={() => {
+                                setShowNewCategory(false);
+                                setNewCategoryName('');
+                            }}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Middle Column: Blueprint Nodes */}

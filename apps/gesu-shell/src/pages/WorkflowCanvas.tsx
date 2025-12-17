@@ -12,9 +12,11 @@ import {
     mergeNodesWithProgress,
     toggleDoDItem as persistToggleDoDItem,
     markNodeDone as persistMarkNodeDone,
-    getActiveProgress,
 } from '../stores/workflowProgressStore';
-import { getActiveProjectId } from '../stores/projectStore';
+import { getActiveProject } from '../stores/projectStore';
+import { loadBlueprints, getBlueprintById } from '../services/workflowBlueprintsService';
+import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
+import { DEFAULT_BLUEPRINT_ID } from '../types/workflowBlueprints';
 
 // --- Node Component ---
 interface WorkflowNodeCardProps {
@@ -118,20 +120,64 @@ export function WorkflowCanvas() {
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
+    // Blueprint loading state
+    const [baseNodes, setBaseNodes] = useState<WorkflowNode[]>(WORKFLOW_NODES);
+    const [blueprintError, setBlueprintError] = useState<string | null>(null);
+    const [isLoadingBlueprint, setIsLoadingBlueprint] = useState(false);
+
     // Local state for nodes (merged with persisted progress)
     const [nodes, setNodes] = useState<WorkflowNode[]>(() => mergeNodesWithProgress(WORKFLOW_NODES));
 
-    // Reload nodes when project changes
+    // Load blueprint for active project on mount and when project changes
     useEffect(() => {
-        const projectId = getActiveProjectId();
-        // Re-merge on mount and when project might change
-        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-    }, []);
+        const loadBlueprintForProject = async () => {
+            const project = getActiveProject();
+            if (!project) {
+                console.log('[WorkflowCanvas] No active project, using static nodes');
+                setBaseNodes(WORKFLOW_NODES);
+                setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+                return;
+            }
 
-    // Refresh helper for external triggers
+            const blueprintId = project.blueprintId || DEFAULT_BLUEPRINT_ID;
+            console.log('[WorkflowCanvas] Loading blueprint for project:', project.name, 'blueprintId:', blueprintId);
+
+            setIsLoadingBlueprint(true);
+            setBlueprintError(null);
+
+            try {
+                const blueprintData = await loadBlueprints();
+                const blueprint = getBlueprintById(blueprintData, blueprintId);
+
+                if (blueprint) {
+                    const blueprintNodes = blueprintToWorkflowNodes(blueprint);
+                    console.log('[WorkflowCanvas] Loaded blueprint nodes:', blueprintNodes.length);
+                    setBaseNodes(blueprintNodes);
+                    setNodes(mergeNodesWithProgress(blueprintNodes));
+                    setBlueprintError(null);
+                } else {
+                    console.warn('[WorkflowCanvas] Blueprint not found:', blueprintId, ', falling back to static');
+                    setBaseNodes(WORKFLOW_NODES);
+                    setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+                    setBlueprintError(`Blueprint "${blueprintId}" not found. Using default workflow.`);
+                }
+            } catch (err) {
+                console.error('[WorkflowCanvas] Failed to load blueprint:', err);
+                setBaseNodes(WORKFLOW_NODES);
+                setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+                setBlueprintError('Failed to load blueprint. Using default workflow.');
+            } finally {
+                setIsLoadingBlueprint(false);
+            }
+        };
+
+        loadBlueprintForProject();
+    }, []); // Re-run when component mounts; external project switch triggers parent remount
+
+    // Refresh helper for external triggers (uses current baseNodes)
     const refreshNodes = useCallback(() => {
-        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-    }, []);
+        setNodes(mergeNodesWithProgress(baseNodes));
+    }, [baseNodes]);
 
     // Find selected node
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
@@ -139,15 +185,14 @@ export function WorkflowCanvas() {
     // Handler to toggle DoD item (persists to store)
     const handleToggleDoDItem = useCallback((nodeId: string, dodItemId: string) => {
         persistToggleDoDItem(nodeId, dodItemId);
-        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-    }, []);
+        setNodes(mergeNodesWithProgress(baseNodes));
+    }, [baseNodes]);
 
-    // Handler to mark node as done
     // Handler to mark node as done (persists to store)
     const handleMarkAsDone = useCallback((nodeId: string) => {
         persistMarkNodeDone(nodeId);
-        setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-    }, []);
+        setNodes(mergeNodesWithProgress(baseNodes));
+    }, [baseNodes]);
 
     // --- Calculate Node Positions ---
     const nodePositions = useMemo(() => {
@@ -156,7 +201,7 @@ export function WorkflowCanvas() {
 
         WORKFLOW_PHASES.forEach((phase, phaseIndex) => {
             const phaseX = phaseIndex * (nodeWidth + nodeGapX * 2) + swimlanePadding;
-            const nodesInPhase = WORKFLOW_NODES.filter(n => n.phase === phase.id);
+            const nodesInPhase = baseNodes.filter(n => n.phase === phase.id);
 
             nodesInPhase.forEach(node => {
                 const nodeY = swimlaneHeaderHeight + swimlanePadding + node.row * (nodeHeight + nodeGapY);
@@ -165,7 +210,7 @@ export function WorkflowCanvas() {
         });
 
         return positions;
-    }, []);
+    }, [baseNodes]);
 
     // --- Calculate Canvas Size ---
     const canvasSize = useMemo(() => {
@@ -174,8 +219,8 @@ export function WorkflowCanvas() {
         const width = WORKFLOW_PHASES.length * (nodeWidth + nodeGapX * 2) + swimlanePadding * 2;
 
         // Find max row count across all phases
-        const maxRows = Math.max(...WORKFLOW_PHASES.map(phase =>
-            WORKFLOW_NODES.filter(n => n.phase === phase.id).length
+        const maxRows = Math.max(1, ...WORKFLOW_PHASES.map(phase =>
+            baseNodes.filter(n => n.phase === phase.id).length
         ));
 
         const height = swimlaneHeaderHeight + swimlanePadding * 2 + maxRows * (nodeHeight + nodeGapY);

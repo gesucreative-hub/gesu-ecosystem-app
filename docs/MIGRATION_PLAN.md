@@ -304,6 +304,19 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Files**: App.tsx (routing), Layout.tsx (nav removal + unused import cleanup), CompassPage.tsx (section reorder).
 - **QA**: All P0 acceptance criteria verified - no regressions in timer, distraction shield, canvas panning, or Media Suite.
 
+### [0.10.0] - Sprint 20: Standards-Workflow-Generator Integration (2025-12-17)
+- **Project Model Extended**: Added categoryId, blueprintId, blueprintVersion, projectPath to Project interface.
+- **Generator Blueprint Assignment**: Generator now loads blueprint categories on mount, maps template to category, assigns default blueprint to new projects.
+- **Category Creation UI**: Added "+ Add" button to Standards tab for creating new categories with default blueprints.
+- **Dynamic Category Dropdown**: Generator category dropdown now populated from blueprint store, shows step count.
+- **Scaffolding Extended**: buildPlan/scaffold:create IPC now accept and write blueprint fields to project.meta.json.
+- **Workflow Blueprint Rendering**: WorkflowCanvas dynamically loads blueprint based on active project's blueprintId (graceful fallback to static WORKFLOW_NODES).
+- **Disk Import Enhanced**: projects-registry.js now parses categoryId/blueprintId/blueprintVersion from project.meta.json.
+- **Refresh from Disk Button**: Added RefreshCw button in Project Hub header to scan projectsRoot and import projects.
+- **Services Extended**: scaffoldingService now accepts blueprintOptions; workflowBlueprintRenderer service converts BlueprintNode[] to WorkflowNode[].
+- **Files**: projectStore.ts, InitiatorPage.tsx, WorkflowCanvas.tsx, StandardsTab.tsx, scaffolding.js, main.js, projects-registry.js, scaffoldingService.ts, workflowBlueprintRenderer.ts.
+- **QA Status**: Verified by user - category creation, blueprint assignment, and workflow rendering all working.
+
 
 ### [0.9.1] - Sprint 19: Finish-First Compass + Task-Timer Coupling + Density (2025-12-17)
 - **Task-Timer Coupling**: Extended focusTimerStore with TaskContext (taskId, taskTitle, projectName, stepTitle) and startWithTask() function.

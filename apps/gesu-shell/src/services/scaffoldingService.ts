@@ -39,7 +39,11 @@ export interface ScaffoldResult {
 export interface IScaffoldingService {
     isSimulationMode(): boolean;
     preview(projectName: string, templateId: string): Promise<ScaffoldPreviewResult>;
-    scaffold(projectName: string, templateId: string): Promise<ScaffoldResult>;
+    scaffold(projectName: string, templateId: string, blueprintOptions?: {
+        categoryId?: string;
+        blueprintId?: string;
+        blueprintVersion?: number;
+    }): Promise<ScaffoldResult>;
 }
 
 // --- Real Implementation (Electron Bridge) ---
@@ -52,12 +56,24 @@ async function realPreview(projectName: string, templateId: string): Promise<Sca
     return await window.gesu.scaffold.preview({ projectName, templateId });
 }
 
-async function realScaffold(projectName: string, templateId: string): Promise<ScaffoldResult> {
+async function realScaffold(
+    projectName: string,
+    templateId: string,
+    blueprintOptions?: {
+        categoryId?: string;
+        blueprintId?: string;
+        blueprintVersion?: number;
+    }
+): Promise<ScaffoldResult> {
     if (!window.gesu?.scaffold?.create) {
         throw new Error('Scaffold bridge not available');
     }
 
-    return await window.gesu.scaffold.create({ projectName, templateId });
+    return await window.gesu.scaffold.create({
+        projectName,
+        templateId,
+        ...blueprintOptions
+    });
 }
 
 // --- Simulation Mode ---
@@ -97,9 +113,9 @@ export const scaffoldingService: IScaffoldingService = {
             return await simulationPreview(projectName, templateId);
         }
     },
-    scaffold: async (projectName, templateId) => {
+    scaffold: async (projectName, templateId, blueprintOptions) => {
         if (window.gesu?.scaffold?.create) {
-            return await realScaffold(projectName, templateId);
+            return await realScaffold(projectName, templateId, blueprintOptions);
         } else {
             return await simulationScaffold();
         }

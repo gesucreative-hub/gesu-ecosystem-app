@@ -46,7 +46,7 @@ export async function assertPathWithin(baseDir, targetPath) {
  * Builds a scaffolding plan for a new project.
  * Returns an array of operations to execute.
  */
-export function buildPlan({ projectsRoot, projectName, templateId }) {
+export function buildPlan({ projectsRoot, projectName, templateId, categoryId, blueprintId, blueprintVersion }) {
     const sanitizedName = sanitizeProjectName(projectName);
     if (!sanitizedName) {
         throw new Error('Invalid project name');
@@ -60,17 +60,24 @@ export function buildPlan({ projectsRoot, projectName, templateId }) {
     // 1. Project root directory
     plan.push({ kind: 'dir', relativePath: '.' });
 
-    // 2. Project metadata file
+    // 2. Project metadata file (including Sprint 20 blueprint fields)
+    const metaData = {
+        id: projectId,
+        name: projectName,
+        createdAt: new Date().toISOString(),
+        templateId,
+        projectPath
+    };
+
+    // Sprint 20: Add blueprint fields if provided
+    if (categoryId) metaData.categoryId = categoryId;
+    if (blueprintId) metaData.blueprintId = blueprintId;
+    if (blueprintVersion) metaData.blueprintVersion = blueprintVersion;
+
     plan.push({
         kind: 'file',
         relativePath: 'project.meta.json',
-        content: JSON.stringify({
-            id: projectId,
-            name: projectName,
-            createdAt: new Date().toISOString(),
-            templateId,
-            projectPath
-        }, null, 2)
+        content: JSON.stringify(metaData, null, 2)
     });
 
     // 3. Brief.md starter content

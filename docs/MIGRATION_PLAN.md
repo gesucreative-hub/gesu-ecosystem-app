@@ -271,6 +271,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Files**: RefocusPage.tsx (modified), LostModePage.tsx (new), App.tsx (routing), SettingsPage.tsx (cleanup).
 - **Acceptance**: Refocus flow < 60 seconds, Lost Mode 3 prompts, no regressions verified.
 
+### [0.8.1] - Sprint 13: Focus Guardrails (Distraction Shield + Universal Max-3 Tasks) (2025-12-17)
+- **In-App Distraction Shield**: Intercepts navigation attempts during active focus sessions with modal.
+- **Modal Actions**: Pause timer & continue, End session & continue, Continue (keep running) + ESC support.
+- **Universal Task Guardrail**: taskGuardrail.ts enforces max 3 active tasks across all sources.
+- **Guardrail Integration**: LostModePage and StepDetailPanel use canAddTask() and getBlockedMessage().
+- **Known Issue**: Cross-page localStorage sync may cause inconsistent slot counts (page reload shows correct count).
+- **Files**: DistractionGuard.tsx (enhanced), DistractionModal.tsx (new), LostModePage.tsx (guardrail),MIGRATION_PLAN.md (entry).
+- **QA**: Distraction Shield PASS, Universal Guardrail PARTIAL (works but has sync timing issue).
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

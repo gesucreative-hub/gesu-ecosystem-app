@@ -6,11 +6,8 @@ import { Button } from '../components/Button';
 import { Textarea } from '../components/Textarea';
 import { Badge } from '../components/Badge';
 import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
-import {
-    addTaskToToday,
-    canAddMoreTasksToday,
-    getRemainingSlots
-} from '../stores/projectHubTasksStore';
+import { addTaskToToday } from '../stores/projectHubTasksStore';
+import { canAddTask, getRemainingSlots, getBlockedMessage } from '../utils/taskGuardrail';
 
 const PROMPTS = [
     {
@@ -40,7 +37,7 @@ export function LostModePage() {
     const [taskCreated, setTaskCreated] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const canCreateTask = canAddMoreTasksToday();
+    const canCreateTask = canAddTask();
     const remainingSlots = getRemainingSlots();
     const isFormComplete = answers.next_action.trim().length > 0;
 
@@ -58,7 +55,7 @@ export function LostModePage() {
         }
 
         if (!canCreateTask) {
-            setErrorMessage(`You've reached the daily limit (3 active tasks). Complete existing tasks first.`);
+            setErrorMessage(getBlockedMessage());
             return;
         }
 

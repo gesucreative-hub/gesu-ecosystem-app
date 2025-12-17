@@ -246,8 +246,22 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Dashboard Update**: Uses unified engine status with refresh button and last-checked label.
 - **Compass Update**: saveSnapshot now persists to localStorage instead of console.log mock.
 - **UI Sanity**: Verified all modules via code review - no regressions detected.
+### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
+- **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
+- **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).
+- **Safe Throttling**: Optional sleep intervals (min/max) and rate limiting (e.g. "2M").
+- **Privacy Guarantee**: Cookie paths redacted in logs, only file paths stored in localStorage.
+- **UI**: YouTube Authentication card in MediaSuite Downloader with dropdowns, toggle, and inputs.
+- **Executor**: Dynamic ytDlpSettings injection in buildCommand, log redaction for sensitive args.
 
-### [0.4.0] - Finish Mode Guardrails (2025-12-15)
+### [0.6.2] - Sprint 14.2: Cancel All + History Verification (2025-12-17)
+- **Cancel All UI**: Added `handleCancelAllJobs` handler in MediaSuitePage (lines 516-532).
+- **Cancel All Button**: Added button in Job Queue header that appears only when jobs are running/queued.
+- **History Persistence**: Fixed in Sprint 14.1 via `settings.paths.workflowRoot` path correction.
+- **soffice De-scoped**: Document conversion remains deferred; soffice hidden via UI filter.
+- **Verification Pending**: User must manually verify Cancel All with running jobs and history persistence across restart.
+
+
 - **Finish Mode Store**: Created finishModeStore.ts with session management, action toggling, and localStorage persistence.
 - **StepDetailPanel**: Added Finish Mode section with action selection (max 3), active indicator, and "Mulai Finish Mode" button.
 - **CompassPage**: Added Finish Mode card at top when session active - shows current step, action checklist, start/end/clear buttons, guidance text.

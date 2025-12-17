@@ -190,6 +190,16 @@ function executeJob(job) {
     try {
         const { command, args } = buildCommand(job);
 
+        // Redact sensitive args from logs (cookie paths/browsers)
+        const safeArgs = args.map((arg, i) => {
+            const prevArg = args[i - 1];
+            if (prevArg === '--cookies' || prevArg === '--cookies-from-browser') {
+                return '<redacted>';
+            }
+            return arg;
+        });
+        console.log(`[media-jobs] Executing: ${command} ${safeArgs.join(' ')}`);
+
         // Spawn process
         const child = spawn(command, args, {
             stdio: ['ignore', 'pipe', 'pipe'], // stdin ignored, capture stdout/stderr
@@ -479,10 +489,40 @@ function buildCommand(job) {
         case 'yt-dlp':
             // Get preset-specific args - match PowerShell implementation exactly
             const dlArgs = getYtDlpArgs(job.options.preset);
-            // PowerShell arg order: [preset-args] -o template URL (URL at END)
+
+            // Build cookie args from ytDlpSettings
+            const cookieArgs = [];
+            const ytDlpSettings = job.options.ytDlpSettings || {};
+
+            if (ytDlpSettings.cookiesMode === 'browser' && ytDlpSettings.cookiesBrowser) {
+                cookieArgs.push('--cookies-from-browser', ytDlpSettings.cookiesBrowser);
+            } else if (ytDlpSettings.cookiesMode === 'file' && ytDlpSettings.cookiesFilePath) {
+                cookieArgs.push('--cookies', ytDlpSettings.cookiesFilePath);
+            }
+
+            // Build throttling args from ytDlpSettings
+            const throttlingArgs = [];
+            if (ytDlpSettings.throttling?.enabled) {
+                const t = ytDlpSettings.throttling;
+                // sleep-interval must be set for max-sleep-interval to work
+                if (t.sleepInterval > 0) {
+                    throttlingArgs.push('--sleep-interval', t.sleepInterval.toString());
+                    // max-sleep-interval only valid when sleep-interval is set
+                    if (t.maxSleepInterval > 0 && t.maxSleepInterval > t.sleepInterval) {
+                        throttlingArgs.push('--max-sleep-interval', t.maxSleepInterval.toString());
+                    }
+                }
+                if (t.limitRate) {
+                    throttlingArgs.push('--limit-rate', t.limitRate);
+                }
+            }
+
+            // PowerShell arg order: [cookies] [throttling] [preset-args] [user-args] -o template URL
             return {
                 command: job.options.toolPath || 'yt-dlp',
                 args: [
+                    ...cookieArgs,
+                    ...throttlingArgs,
                     ...dlArgs,
                     ...(job.options.args || []),
                     '-o', path.join(job.output, '%(title)s.%(ext)s'),

@@ -308,6 +308,34 @@ export function MediaSuitePage() {
         }
     }, [outputFolder]);
 
+    // YouTube yt-dlp Settings State
+    const [ytDlpSettings, setYtDlpSettings] = useState(() => {
+        const stored = localStorage.getItem('mediaSuite.ytDlpSettings');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch {
+                // Fallback to defaults if parse error
+            }
+        }
+        return {
+            cookiesMode: 'none',
+            cookiesBrowser: 'chrome',
+            cookiesFilePath: '',
+            throttling: {
+                enabled: false,
+                sleepInterval: 0,
+                maxSleepInterval: 5,
+                limitRate: ''
+            }
+        };
+    });
+
+    // Persist ytDlpSettings to localStorage
+    useEffect(() => {
+        localStorage.setItem('mediaSuite.ytDlpSettings', JSON.stringify(ytDlpSettings));
+    }, [ytDlpSettings]);
+
     // Notification State
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -435,7 +463,7 @@ export function MediaSuitePage() {
             showToast("Please enter a valid URL", 'error');
             return;
         }
-        const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget, outputFolder };
+        const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget, outputFolder, ytDlpSettings };
         enqueueJob('download', `DL: ${url.slice(0, 30)}...`, 'yt-dlp', payload);
         setUrl('');
     };
@@ -511,6 +539,23 @@ export function MediaSuitePage() {
         } catch (e) {
             console.error(e);
             showToast("Failed to cancel job", 'error');
+        }
+    };
+
+    // Cancel all running and queued jobs
+    const handleCancelAllJobs = async () => {
+        if (!window.gesu?.mediaJobs?.cancelAll) {
+            showToast("Cancel All not available in browser mode", 'error');
+            return;
+        }
+        try {
+            const count = await window.gesu.mediaJobs.cancelAll();
+            refreshJobs();
+            refreshHistory();
+            showToast(`Canceled ${count} job(s)`, 'success');
+        } catch (e) {
+            console.error(e);
+            showToast("Failed to cancel all jobs", 'error');
         }
     };
 
@@ -700,6 +745,127 @@ export function MediaSuitePage() {
                                         </Button>
                                     </div>
                                 </div>
+
+                                {/*Authentication */}
+                                <div className="space-y-3 pt-4 border-t border-tokens-border">
+                                    <label className="text-sm text-tokens-fg font-medium">Authentication</label>
+                                    <SelectDropdown
+                                        label="Cookies Mode"
+                                        value={ytDlpSettings.cookiesMode}
+                                        onChange={(value) => setYtDlpSettings((prev: any) => ({ ...prev, cookiesMode: value as any }))}
+                                        options={[
+                                            { value: 'none', label: 'None' },
+                                            { value: 'browser', label: 'Cookies from Browser' },
+                                            { value: 'file', label: 'Cookies File' }
+                                        ]}
+                                    />
+                                    {ytDlpSettings.cookiesMode === 'browser' && (
+                                        <SelectDropdown
+                                            label="Browser"
+                                            value={ytDlpSettings.cookiesBrowser}
+                                            onChange={(value) => setYtDlpSettings((prev: any) => ({ ...prev, cookiesBrowser: value as any }))}
+                                            options={[
+                                                { value: 'chrome', label: 'Chrome' },
+                                                { value: 'edge', label: 'Edge' }
+                                            ]}
+                                        />
+                                    )}
+                                    {ytDlpSettings.cookiesMode === 'file' && (
+                                        <div className="space-y-2">
+                                            <label className="text-sm text-tokens-muted">Cookies File</label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={ytDlpSettings.cookiesFilePath}
+                                                    readOnly
+                                                    placeholder="Select cookies.txt file"
+                                                    className="flex-1 font-mono text-xs"
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={async () => {
+                                                        if (!window.gesu?.dialog?.pickFile) {
+                                                            showToast('File picker not supported in browser mode', 'error');
+                                                            return;
+                                                        }
+                                                        try {
+                                                            const file = await window.gesu.dialog.pickFile({
+                                                                filters: [{ name: 'Text Files', extensions: ['txt'] }]
+                                                            });
+                                                            if (file) {
+                                                                setYtDlpSettings((prev: any) => ({ ...prev, cookiesFilePath: file }));
+                                                            }
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                            showToast('Failed to pick file', 'error');
+                                                        }
+                                                    }}
+                                                >
+                                                    Browse
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Throttling Toggle */}
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <input
+                                            type="checkbox"
+                                            id="throttling-toggle"
+                                            checked={ytDlpSettings.throttling.enabled}
+                                            onChange={(e) => setYtDlpSettings((prev: any) => ({
+                                                ...prev,
+                                                throttling: { ...prev.throttling, enabled: e.target.checked }
+                                            }))}
+                                            className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-2 focus:ring-tokens-brand-DEFAULT"
+                                        />
+                                        <label htmlFor="throttling-toggle" className="text-sm text-tokens-fg cursor-pointer">Enable Safe Throttling</label>
+                                    </div>
+
+                                    {/* Throttling Fields */}
+                                    {ytDlpSettings.throttling.enabled && (
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <Input
+                                                label="Sleep Min (s)"
+                                                type="number"
+                                                min="0"
+                                                value={ytDlpSettings.throttling.sleepInterval.toString()}
+                                                onChange={(e) => setYtDlpSettings((prev: any) => ({
+                                                    ...prev,
+                                                    throttling: {
+                                                        ...prev.throttling,
+                                                        sleepInterval: parseInt(e.target.value) || 0
+                                                    }
+                                                }))}
+                                            />
+                                            <Input
+                                                label="Sleep Max (s)"
+                                                type="number"
+                                                min="0"
+                                                value={ytDlpSettings.throttling.maxSleepInterval.toString()}
+                                                onChange={(e) => setYtDlpSettings((prev: any) => ({
+                                                    ...prev,
+                                                    throttling: {
+                                                        ...prev.throttling,
+                                                        maxSleepInterval: parseInt(e.target.value) || 0
+                                                    }
+                                                }))}
+                                            />
+                                            <Input
+                                                label="Limit Rate"
+                                                placeholder="e.g. 2M"
+                                                value={ytDlpSettings.throttling.limitRate}
+                                                onChange={(e) => setYtDlpSettings((prev: any) => ({
+                                                    ...prev,
+                                                    throttling: {
+                                                        ...prev.throttling,
+                                                        limitRate: e.target.value
+                                                    }
+                                                }))}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
                                 <Button
                                     variant="primary"
                                     size="lg"
@@ -1013,6 +1179,16 @@ export function MediaSuitePage() {
                                     { value: 'convert', label: 'Converts' }
                                 ]}
                             />
+                            {jobs.some(j => j.status === 'running' || j.status === 'queued') && (
+                                <button
+                                    onClick={handleCancelAllJobs}
+                                    className="ml-auto px-2 py-1 rounded text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
+                                    title="Cancel all running and queued jobs"
+                                >
+                                    <X size={12} />
+                                    Cancel All
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex-1 overflow-y-auto scroll-on-hover pr-2 space-y-3">

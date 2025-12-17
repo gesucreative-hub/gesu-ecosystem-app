@@ -392,3 +392,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
   - **Browser QA**: Verified "Stop Timer" dialog appears above all elements (PASS). Verified Focus Details UI layout (PASS).
   - **Desktop QA**: Verified file-backed features remain stable (PASS).
 
+### [0.11.0] - Sprint 21: Workflow Overlay Panel + Progress Indicator (2025-12-17)
+- **Progress Indicator**: Added `workflowProgress.ts` utility to calculate DoD-based completion percentage. Progress bar displays at top-left of Workflow canvas showing live progress (e.g., "51% (28/55)").
+- **Overlay Side Panel**: Converted StepDetailPanel from fixed column to on-demand overlay. Panel appears on node click with blur/dim backdrop (`backdrop-blur-sm`). Click backdrop or press ESC to close.
+- **ESC Key Handler**: Added keyboard handler to close overlay panel with Escape key.
+- **Scroll Lock**: Prevents background scroll while overlay is open.
+- **Horizontal Lanes (Dropped)**: Attempted horizontal phase lanes layout but reverted due to visual regression - broke card positioning and display. Keeping original vertical swimlanes.
+- **Files**: `WorkflowCanvas.tsx`, `workflowProgress.ts` (NEW).
+- **QA Status**:
+  - **Browser QA**: Verified progress indicator shows correct DoD count (PASS). Verified overlay panel with blur (PASS). Verified ESC closes panel (PASS). Verified no regressions in panning/selection (PASS).
+  - **Desktop QA**: Verified file-backed persistence stable (PASS).
+

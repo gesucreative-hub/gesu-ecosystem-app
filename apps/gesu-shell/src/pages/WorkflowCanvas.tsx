@@ -16,6 +16,7 @@ import {
 import { getActiveProject } from '../stores/projectStore';
 import { loadBlueprints, getBlueprintById } from '../services/workflowBlueprintsService';
 import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
+import { calculateOverallProgress } from '../utils/workflowProgress';
 
 // --- Node Component ---
 interface WorkflowNodeCardProps {
@@ -91,10 +92,7 @@ interface ConnectorProps {
 }
 
 function Connector({ fromX, fromY, toX, toY }: ConnectorProps) {
-    // Calculate control points for a smooth curve
     const midX = (fromX + toX) / 2;
-
-    // Create a bezier curve path
     const path = `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`;
 
     return (
@@ -137,10 +135,8 @@ export function WorkflowCanvas() {
                 return;
             }
 
-            // Sprint 20.1: Check if project has blueprint assigned
             const hasOwnBlueprint = !!project.blueprintId;
 
-            // If project has no blueprint, show blank canvas with warning
             if (!hasOwnBlueprint) {
                 console.log('[WorkflowCanvas] Project has no blueprint, showing blank canvas:', project.name);
                 setBaseNodes([]);
@@ -149,37 +145,31 @@ export function WorkflowCanvas() {
                 return;
             }
 
-            const blueprintId = project.blueprintId!;
-            console.log('[WorkflowCanvas] Loading blueprint for project:', project.name, 'blueprintId:', blueprintId);
-
-            setBlueprintError(null);
-
             try {
-                const blueprintData = await loadBlueprints();
-                const blueprint = getBlueprintById(blueprintData, blueprintId);
+                const blueprints = await loadBlueprints();
+                const blueprint = getBlueprintById(project.blueprintId!, blueprints);
 
                 if (blueprint) {
-                    const blueprintNodes = blueprintToWorkflowNodes(blueprint);
-                    console.log('[WorkflowCanvas] Loaded blueprint nodes:', blueprintNodes.length);
-                    setBaseNodes(blueprintNodes);
-                    setNodes(mergeNodesWithProgress(blueprintNodes));
+                    console.log('[WorkflowCanvas] Loaded blueprint:', blueprint.name, 'with', blueprint.nodes.length, 'nodes');
+                    const workflowNodes = blueprintToWorkflowNodes(blueprint.nodes);
+                    setBaseNodes(workflowNodes);
+                    setNodes(mergeNodesWithProgress(workflowNodes));
                     setBlueprintError(null);
                 } else {
-                    console.warn('[WorkflowCanvas] Blueprint not found:', blueprintId, ', showing blank canvas');
-                    setBaseNodes([]);
-                    setNodes([]);
-                    setBlueprintError(`Blueprint "${blueprintId}" not found. Check Standards tab.`);
+                    console.warn('[WorkflowCanvas] Blueprint not found:', project.blueprintId);
+                    setBaseNodes(WORKFLOW_NODES);
+                    setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+                    setBlueprintError(`Blueprint "${project.blueprintId}" not found. Using default workflow.`);
                 }
-            } catch (err) {
-                console.error('[WorkflowCanvas] Failed to load blueprint:', err);
+            } catch (error) {
+                console.error('[WorkflowCanvas] Failed to load blueprint:', error);
                 setBaseNodes(WORKFLOW_NODES);
                 setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-                setBlueprintError('Failed to load blueprint. Using default workflow.');
             }
         };
 
         loadBlueprintForProject();
-    }, []); // Re-run when component mounts; external project switch triggers parent remount
+    }, []);
 
     // Find selected node
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
@@ -193,6 +183,11 @@ export function WorkflowCanvas() {
     // Handler to mark node as done (persists to store)
     const handleMarkAsDone = useCallback((nodeId: string) => {
         persistMarkNodeDone(nodeId);
+        setNodes(mergeNodesWithProgress(baseNodes));
+    }, [baseNodes]);
+
+    // Re-merge nodes when baseNodes change
+    useEffect(() => {
         setNodes(mergeNodesWithProgress(baseNodes));
     }, [baseNodes]);
 
@@ -220,7 +215,6 @@ export function WorkflowCanvas() {
 
         const width = WORKFLOW_PHASES.length * (nodeWidth + nodeGapX * 2) + swimlanePadding * 2;
 
-        // Find max row count across all phases
         const maxRows = Math.max(1, ...WORKFLOW_PHASES.map(phase =>
             baseNodes.filter(n => n.phase === phase.id).length
         ));
@@ -228,11 +222,10 @@ export function WorkflowCanvas() {
         const height = swimlaneHeaderHeight + swimlanePadding * 2 + maxRows * (nodeHeight + nodeGapY);
 
         return { width, height };
-    }, []);
+    }, [baseNodes]);
 
     // --- Panning Handlers ---
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
-        // Only pan if clicking on background (check if target is the pannable layer)
         const target = e.target as HTMLElement;
         if (target.dataset.pannableBackground === 'true') {
             setIsPanning(true);
@@ -243,8 +236,6 @@ export function WorkflowCanvas() {
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         if (!isPanning) return;
-        // Sprint 20.1: Limit pan to stay within the 10000px background (centered at -5000)
-        // Allow ±4000px to keep the edge hidden
         const PAN_LIMIT = 4000;
         const newX = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, e.clientX - panStart.x));
         const newY = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, e.clientY - panStart.y));
@@ -273,7 +264,6 @@ export function WorkflowCanvas() {
 
             if (!fromPos || !toPos) return null;
 
-            // Connect from right side of "from" node to left side of "to" node
             const fromX = fromPos.x + nodeWidth;
             const fromY = fromPos.y + nodeHeight / 2;
             const toX = toPos.x;
@@ -283,19 +273,40 @@ export function WorkflowCanvas() {
         }).filter(Boolean) as { id: string; fromX: number; fromY: number; toX: number; toY: number }[];
     }, [nodePositions]);
 
-    // Sprint 20.1: Check if canvas should be empty (no blueprint)
     const isEmptyCanvas = nodes.length === 0;
+
+    // Sprint 21: Calculate overall progress
+    const progress = useMemo(() => calculateOverallProgress(nodes), [nodes]);
+
+    // Sprint 21: ESC key to close overlay panel
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && selectedNodeId) {
+                setSelectedNodeId(null);
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, [selectedNodeId]);
+
+    // Sprint 21: Prevent background scroll when overlay is open
+    useEffect(() => {
+        if (selectedNodeId) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [selectedNodeId]);
 
     return (
         <div className="flex gap-6 h-[600px]">
-            {/* Canvas Column - Sprint 20.1: Theme-aware background like Obsidian */}
+            {/* Canvas Column */}
             <div
                 className="flex-1 relative rounded-xl border border-tokens-border overflow-hidden"
-                style={{
-                    backgroundColor: 'var(--color-tokens-panel2)'
-                }}
+                style={{ backgroundColor: 'var(--color-tokens-panel2)' }}
             >
-                {/* Sprint 20.1: Centered "No blueprint yet" message */}
+                {/* No blueprint message */}
                 {isEmptyCanvas && blueprintError && (
                     <div className="absolute inset-0 flex items-center justify-center z-20">
                         <div
@@ -314,7 +325,30 @@ export function WorkflowCanvas() {
                     </div>
                 )}
 
-                {/* Reset View Button - only show when there are nodes */}
+                {/* Sprint 21: Overall Progress Indicator */}
+                {!isEmptyCanvas && (
+                    <div className="absolute top-3 left-3 z-20 px-4 py-2 bg-tokens-panel/90 backdrop-blur-sm border border-tokens-border rounded-lg shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="text-xs font-semibold text-tokens-fg whitespace-nowrap">
+                                Overall Progress
+                            </div>
+                            <div className="w-32 h-1.5 bg-tokens-panel2 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-primary-700 dark:bg-secondary-300 transition-all duration-300 ease-out"
+                                    style={{ width: `${progress.percent}%` }}
+                                />
+                            </div>
+                            <div className="text-xs text-tokens-muted whitespace-nowrap">
+                                {progress.percent}%
+                                {progress.totalDoD > 0 && (
+                                    <span className="ml-1">({progress.completedDoD}/{progress.totalDoD})</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reset View Button */}
                 {!isEmptyCanvas && (
                     <button
                         onClick={handleReset}
@@ -337,14 +371,14 @@ export function WorkflowCanvas() {
                     onPointerUp={handlePointerUp}
                     onPointerLeave={handlePointerUp}
                 >
-                    {/* Background layer for pan detection - always receives pointer events */}
+                    {/* Background layer for pan detection */}
                     <div
                         data-pannable-background="true"
                         className="absolute inset-0"
                         style={{ width: '200%', height: '200%', left: '-50%', top: '-50%' }}
                     />
 
-                    {/* Infinite dotted background - Sprint 20.1: Separate layer for background only */}
+                    {/* Infinite dotted background */}
                     <div
                         className="absolute pointer-events-none dark:opacity-100 opacity-50"
                         style={{
@@ -400,7 +434,7 @@ export function WorkflowCanvas() {
                             ))}
                         </svg>
 
-                        {/* Phase Headers - Sprint 20.1: Show for projects with blueprints */}
+                        {/* Phase Headers */}
                         {!isEmptyCanvas && WORKFLOW_PHASES.map((phase, index) => {
                             const { nodeWidth, nodeGapX, swimlanePadding, swimlaneHeaderHeight } = CANVAS_CONFIG;
                             const phaseX = index * (nodeWidth + nodeGapX * 2) + swimlanePadding;
@@ -427,7 +461,7 @@ export function WorkflowCanvas() {
                             );
                         })}
 
-                        {/* Nodes - Use local state */}
+                        {/* Nodes */}
                         {nodes.map(node => {
                             const pos = nodePositions[node.id];
                             if (!pos) return null;
@@ -452,12 +486,25 @@ export function WorkflowCanvas() {
                 </div>
             </div>
 
-            {/* Step Detail Panel Column */}
-            <StepDetailPanel
-                selectedNode={selectedNode}
-                onToggleDoDItem={handleToggleDoDItem}
-                onMarkAsDone={handleMarkAsDone}
-            />
+            {/* Sprint 21: Overlay Side Panel - appears when node selected */}
+            {selectedNode && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                    {/* Blur/dim backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity"
+                        onClick={() => setSelectedNodeId(null)}
+                    />
+
+                    {/* Panel overlay - right side */}
+                    <div className="relative w-full max-w-md h-full bg-tokens-bg border-l border-tokens-border shadow-2xl overflow-y-auto">
+                        <StepDetailPanel
+                            selectedNode={selectedNode}
+                            onToggleDoDItem={handleToggleDoDItem}
+                            onMarkAsDone={handleMarkAsDone}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

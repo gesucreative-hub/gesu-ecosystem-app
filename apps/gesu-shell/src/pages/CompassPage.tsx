@@ -344,6 +344,45 @@ export function CompassPage() {
                 {/* LEFT COLUMN (2/3 width) */}
                 <div className="flex-1 flex flex-col gap-6">
 
+                    {/* Project Hub Tasks (Today) - MOVED TO TOP FOR FINISH-FIRST */}
+                    {projectHubTasks.length > 0 && (
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Briefcase size={16} className="text-tokens-brand-DEFAULT" />
+                                <span>Project Hub Tasks (Today)</span>
+                            </div>
+                        }>
+                            <div className="flex flex-col gap-2">
+                                {projectHubTasks.map(task => (
+                                    <label
+                                        key={task.id}
+                                        className={`
+                                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                                            ${task.done
+                                                ? 'bg-emerald-500/10 border-emerald-500/30'
+                                                : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
+                                        `}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={task.done}
+                                            onChange={() => handleToggleProjectHubTask(task.id)}
+                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                            <span className={`text-sm block ${task.done ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
+                                                {task.title}
+                                            </span>
+                                            <span className="text-xs text-tokens-muted">
+                                                {task.stepTitle} - {task.projectName}
+                                            </span>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        </Card>
+                    )}
+
                     {/* Energy Card */}
                     <Card title={
                         <div className="flex items-center gap-2">
@@ -396,45 +435,6 @@ export function CompassPage() {
                             ))}
                         </div>
                     </Card>
-
-                    {/* Project Hub Tasks (Today) */}
-                    {projectHubTasks.length > 0 && (
-                        <Card title={
-                            <div className="flex items-center gap-2">
-                                <Briefcase size={16} className="text-tokens-brand-DEFAULT" />
-                                <span>Project Hub Tasks (Today)</span>
-                            </div>
-                        }>
-                            <div className="flex flex-col gap-2">
-                                {projectHubTasks.map(task => (
-                                    <label
-                                        key={task.id}
-                                        className={`
-                                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
-                                            ${task.done
-                                                ? 'bg-emerald-500/10 border-emerald-500/30'
-                                                : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
-                                        `}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={task.done}
-                                            onChange={() => handleToggleProjectHubTask(task.id)}
-                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer"
-                                        />
-                                        <div className="flex-1">
-                                            <span className={`text-sm block ${task.done ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
-                                                {task.title}
-                                            </span>
-                                            <span className="text-xs text-tokens-muted">
-                                                {task.stepTitle} - {task.projectName}
-                                            </span>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-                        </Card>
-                    )}
                 </div>
 
                 {/* RIGHT COLUMN (1/3 width) */}

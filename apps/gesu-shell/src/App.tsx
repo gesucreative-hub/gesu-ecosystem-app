@@ -15,7 +15,8 @@ function App() {
     return (
         <Routes>
             <Route path="/" element={<Layout />}>
-                <Route index element={<DashboardPage />} />
+                <Route index element={<CompassPage />} />
+                <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="launcher" element={<LauncherPage />} />
                 <Route path="compass" element={<CompassPage />} />
                 <Route path="refocus" element={<RefocusPage />} />

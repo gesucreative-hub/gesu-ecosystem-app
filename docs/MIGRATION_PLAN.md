@@ -295,6 +295,16 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Proposed Sprint 18**: Make Compass home, hide Launcher, reorder Compass sections (tasks above sliders).
 - **No code changes** - documentation only.
 
+### [0.9.0] - Sprint 18: Smoothness - Navigation Alignment (2025-12-17)
+- **Compass as Home**: Changed index route from Dashboard to Compass for finish-first landing.
+- **Dashboard Route**: Moved Dashboard to /dashboard route (still accessible for deep links).
+- **Launcher Removed**: Removed Launcher NavItem from sidebar navigation (route still exists).
+- **Compass Reordered**: Moved "Project Hub Tasks (Today)" to top of Compass left column (above Energy/Focus sliders).
+- **Section Order**: Tasks -> Energy -> Focus Areas -> Sessions -> Snapshots for finish-first priority.
+- **Files**: App.tsx (routing), Layout.tsx (nav removal + unused import cleanup), CompassPage.tsx (section reorder).
+- **QA**: All P0 acceptance criteria verified - no regressions in timer, distraction shield, canvas panning, or Media Suite.
+
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

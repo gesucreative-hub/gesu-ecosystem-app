@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Home, Rocket, Film, Compass, Target, Zap, Settings, Moon, Sun, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Settings, Moon, Sun, ChevronRight, ChevronLeft } from 'lucide-react';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
 import { FocusTimerPill } from './focus/FocusTimerPill';
 import { DistractionGuard } from './focus/DistractionGuard';
@@ -136,14 +136,13 @@ export function Layout() {
                         {/* CORE Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-1 animate-in fade-in">Core</div>}
                         <NavItem to="/" icon={<Home strokeWidth={1.5} size={20} />} label="Dashboard" isActive={p === '/'} isCollapsed={isCollapsed} />
-                        <NavItem to="/launcher" icon={<Rocket strokeWidth={1.5} size={20} />} label="Launcher" isActive={p === '/launcher'} isCollapsed={isCollapsed} />
+                        <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
 
                         {/* MODULES Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">Modules</div>}
                         {isCollapsed && <div className="h-4"></div>}
 
                         <NavItem to="/media-suite" icon={<Film strokeWidth={1.5} size={20} />} label="Media Suite" isActive={p.startsWith('/media-suite')} isCollapsed={isCollapsed} />
-                        <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
                         <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label="Refocus" isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />
                         <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label="Project Hub" isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
                     </nav>

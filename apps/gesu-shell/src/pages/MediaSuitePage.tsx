@@ -425,7 +425,7 @@ export function MediaSuitePage() {
                 // Map to new job format - use the outputFolder from payload
                 const jobPayload = {
                     kind: type as 'download' | 'convert',
-                    engine: engine === 'image-magick' ? 'imagemagick' : engine === 'libreoffice' ? 'soffice' : engine,
+                    engine: engine === 'image-magick' ? 'imagemagick' : engine,  // Note: libreoffice/soffice de-scoped
                     input: type === 'download' ? String(payload.url) : String(payload.inputPath),
                     output: String(payload.outputFolder || './downloads'),
                     options: {

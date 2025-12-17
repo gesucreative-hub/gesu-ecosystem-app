@@ -9,6 +9,7 @@ import { RefocusPage } from './pages/RefocusPage';
 import { MediaSuitePage } from './pages/MediaSuitePage';
 import { ProjectHubPage } from './pages/InitiatorPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LostModePage } from './pages/LostModePage';
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="launcher" element={<LauncherPage />} />
                 <Route path="compass" element={<CompassPage />} />
                 <Route path="refocus" element={<RefocusPage />} />
+                <Route path="refocus/lost" element={<LostModePage />} />
                 <Route path="media-suite" element={<MediaSuitePage />} />
                 <Route path="initiator" element={<ProjectHubPage />} />
                 <Route path="settings" element={<SettingsPage />} />

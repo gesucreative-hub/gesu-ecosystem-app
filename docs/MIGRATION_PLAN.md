@@ -258,6 +258,18 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Step Editor**: Edit title, description, DoD items (max 7), tools per step. No structural editing.
 - **v1 Constraints**: 1 category (General Creative), auto-assign default blueprint on project create.
 - **Files**: 9 files created/modified with zero regressions to existing modules.
+- **Verification**: Browser QA PASSED - all acceptance criteria verified, file persistence tested.
+
+### [0.8.0] - Sprint 16: Refocus MVP (Rescue Loop) (2025-12-17)
+- **State Selection**: 4-state picker (Overwhelm/Restless/Avoiding/Foggy) replacing overwhelm slider.
+- **Suggested Actions**: 1-3 hardcoded tiny actions per state (finish-first UX).
+- **15-min Rescue Focus**: Start button wired to focusTimerStore.start({ focusMinutes: 15 }).
+- **Lost Mode**: New page at /refocus/lost with exactly 3 ultra-short journaling prompts.
+- **Convert to Task**: Uses projectHubTasksStore.addTaskToToday() with guardrail enforcement (max 3/day).
+- **Timer Integration**: Rescue focus survives navigation and uses existing global timer system.
+- **soffice Cleanup**: Removed LibreOffice/soffice references from Settings UI and MediaSuitePage (cosmetic only).
+- **Files**: RefocusPage.tsx (modified), LostModePage.tsx (new), App.tsx (routing), SettingsPage.tsx (cleanup).
+- **Acceptance**: Refocus flow < 60 seconds, Lost Mode 3 prompts, no regressions verified.
 
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.

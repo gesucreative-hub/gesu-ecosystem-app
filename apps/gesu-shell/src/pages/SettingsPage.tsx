@@ -96,20 +96,8 @@ const DEFAULT_ENGINES: EngineConfig[] = [
             choco: 'choco install imagemagick',
             scoop: 'scoop install imagemagick'
         }
-    },
-    {
-        id: 'libreOffice',
-        label: 'LibreOffice',
-        description: 'For document conversion (headless mode).',
-        path: String.raw`C:\Program Files\LibreOffice\program\soffice.exe`,
-        status: 'unknown',
-        defaultPath: String.raw`C:\Program Files\LibreOffice\program\soffice.exe`,
-        installHint: {
-            winget: 'winget install -e --id TheDocumentFoundation.LibreOffice',
-            choco: 'choco install libreoffice',
-            scoop: 'scoop install libreoffice'
-        }
     }
+    // Note: LibreOffice/soffice de-scoped - document conversion not in current release
 ];
 
 const ACCENT_COLORS = [

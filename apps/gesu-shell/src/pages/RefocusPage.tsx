@@ -3,64 +3,81 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Textarea } from '../components/Textarea';
+import { Badge } from '../components/Badge';
+import { start as startTimer } from '../stores/focusTimerStore';
+import { Brain, Wind, Shield, Cloud, PlayCircle, FileText } from 'lucide-react';
 
-// --- Types & Interfaces ---
+// --- Types ---
 
-interface Prompt {
-    id: string;
-    question: string;
+type RefocusState = 'overwhelm' | 'restless' | 'avoiding' | 'foggy';
+
+interface StateOption {
+    id: RefocusState;
+    label: string;
+    icon: typeof Brain;
+    color: string;
+    bg: string;
+    border: string;
+    description: string;
+    actions: string[];
 }
 
-const PROMPTS: Prompt[] = [
-    { id: 'working_on', question: "What are you trying to work on right now?" },
-    { id: 'pulling_away', question: "What is pulling your attention away?" },
-    { id: 'next_step', question: "What is the smallest next step that feels doable?" }
+const STATE_OPTIONS: StateOption[] = [
+    {
+        id: 'overwhelm',
+        label: 'Overwhelmed',
+        icon: Brain,
+        color: 'text-red-500',
+        bg: 'bg-red-500',
+        border: 'border-red-500/30',
+        description: 'Too many things, brain overloaded',
+        actions: ['Close extra tabs', 'Write 1 priority', '5 deep breaths']
+    },
+    {
+        id: 'restless',
+        label: 'Restless',
+        icon: Wind,
+        color: 'text-amber-500',
+        bg: 'bg-amber-500',
+        border: 'border-amber-500/30',
+        description: 'Can\'t sit still, need to move',
+        actions: ['Stand + stretch', '2-min walk', 'Phone to drawer']
+    },
+    {
+        id: 'avoiding',
+        label: 'Avoiding',
+        icon: Shield,
+        color: 'text-purple-500',
+        bg: 'bg-purple-500',
+        border: 'border-purple-500/30',
+        description: 'Know what to do, but not doing it',
+        actions: ['Name the fear', '2-min timer on task', 'Split into 3 pieces']
+    },
+    {
+        id: 'foggy',
+        label: 'Foggy',
+        icon: Cloud,
+        color: 'text-blue-500',
+        bg: 'bg-blue-500',
+        border: 'border-blue-500/30',
+        description: 'Brain fog, can\'t think clearly',
+        actions: ['Drink water', 'Look out window', 'Write brain dump']
+    }
 ];
-
-// --- Helper Functions ---
-
-const getStatus = (level: number) => {
-    if (level <= 3) return { label: "Calm", color: "text-emerald-500", bg: "bg-emerald-500", border: "border-emerald-500/30" };
-    if (level <= 6) return { label: "Distracted", color: "text-amber-500", bg: "bg-amber-500", border: "border-amber-500/30" };
-    return { label: "Overwhelmed", color: "text-red-500", bg: "bg-red-500", border: "border-red-500/30" };
-};
 
 export function RefocusPage() {
     const navigate = useNavigate();
+    const [selectedState, setSelectedState] = useState<RefocusState | null>(null);
 
-    // State
-    const [level, setLevel] = useState<number>(5);
-    const [answers, setAnswers] = useState<Record<string, string>>({
-        working_on: '',
-        pulling_away: '',
-        next_step: ''
-    });
+    const currentState = STATE_OPTIONS.find(s => s.id === selectedState);
 
-    const status = getStatus(level);
-
-    // Handlers
-    const handleAnswerChange = (id: string, value: string) => {
-        setAnswers(prev => ({ ...prev, [id]: value }));
+    const handleStartRescueFocus = () => {
+        startTimer({ focusMinutes: 15 });
+        navigate('/compass');
     };
 
-    const logAction = (actionName: string) => {
-        const snapshot = {
-            timestamp: new Date().toISOString(),
-            state: {
-                overwhelmLevel: level,
-                statusLabel: status.label
-            },
-            answers,
-            action: actionName
-        };
-
-        console.log("Refocus Action Logged:", snapshot);
-        alert(`Action "${actionName}" logged to console (mock).`);
-
-        if (actionName === 'Back to Compass') {
-            navigate('/compass');
-        }
+    const handleLostMode = () => {
+        navigate('/refocus/lost');
     };
 
     return (
@@ -69,7 +86,7 @@ export function RefocusPage() {
             <div className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Refocus</h1>
-                    <p className="text-tokens-muted text-sm mt-1">Regain clarity when things get chaotic.</p>
+                    <p className="text-tokens-muted text-sm mt-1">Quick rescue loop to get back on track.</p>
                 </div>
                 <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
                     ← Back
@@ -78,112 +95,126 @@ export function RefocusPage() {
 
             <div className="flex flex-col lg:flex-row gap-6">
 
-                {/* LEFT COLUMN (2/3 width) - Input & Reflection */}
+                {/* LEFT COLUMN - State Selection */}
                 <div className="flex-1 flex flex-col gap-6">
 
-                    {/* Current State Card */}
+                    {/* State Selection Card */}
                     <Card title={
                         <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-6 rounded-full transition-colors duration-500 ${status.bg}`}></span>
-                            Current State
-                        </div>
-                    } className={`transition-colors duration-500 ${status.border} border-opacity-50`}>
-                        <div className="px-1 pb-2">
-                            <div className="flex justify-between items-end mb-4">
-                                <span className={`text-2xl font-bold transition-colors duration-500 ${status.color}`}>
-                                    {status.label}
-                                </span>
-                                <span className="text-5xl font-black text-tokens-panel2 select-none">
-                                    {level}
-                                </span>
-                            </div>
-
-                            <div className="relative pt-1">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="10"
-                                    value={level}
-                                    onChange={(e) => setLevel(parseInt(e.target.value))}
-                                    className={`w-full h-4 bg-tokens-panel2 rounded-lg appearance-none cursor-pointer hover:opacity-90 transition-opacity border border-tokens-border`}
-                                    style={{ accentColor: status.bg.replace('bg-', '') }} // Fallback/Hint for accent color
-                                />
-                                {/* Custom colored track simulation via CSS accent-color is browser dependent, using reliable Tailwind colors for text/borders instead */}
-                            </div>
-
-                            <div className="flex justify-between mt-3 text-xs text-tokens-muted font-medium">
-                                <span>Zen</span>
-                                <span>Chaos</span>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* Journaling Card */}
-                    <Card title={
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-blue-500 rounded-full"></span>
-                            What's going on?
+                            <span className="w-1.5 h-6 bg-tokens-brand-DEFAULT rounded-full"></span>
+                            How are you feeling right now?
                         </div>
                     }>
-                        <div className="flex flex-col gap-6">
-                            {PROMPTS.map((prompt) => (
-                                <div key={prompt.id} className="flex flex-col gap-2">
-                                    <Textarea
-                                        id={prompt.id}
-                                        label={prompt.question}
-                                        value={answers[prompt.id]}
-                                        onChange={(e) => handleAnswerChange(prompt.id, e.target.value)}
-                                        rows={3}
-                                        placeholder="Type your thoughts here..."
-                                        className="resize-none"
-                                    />
-                                </div>
-                            ))}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {STATE_OPTIONS.map((state) => {
+                                const Icon = state.icon;
+                                const isSelected = selectedState === state.id;
+                                return (
+                                    <button
+                                        key={state.id}
+                                        onClick={() => setSelectedState(state.id)}
+                                        className={`p-4 rounded-lg border-2 text-left transition-all ${isSelected
+                                                ? `${state.border} ${state.bg} bg-opacity-10`
+                                                : 'border-tokens-border hover:border-tokens-brand-DEFAULT/30 bg-tokens-panel2'
+                                            }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <Icon size={20} className={isSelected ? state.color : 'text-tokens-muted'} />
+                                            <div className="flex-1">
+                                                <div className={`font-semibold text-sm ${isSelected ? state.color : 'text-tokens-fg'}`}>
+                                                    {state.label}
+                                                </div>
+                                                <div className="text-xs text-tokens-muted mt-1">
+                                                    {state.description}
+                                                </div>
+                                            </div>
+                                            {isSelected && (
+                                                <div className={`w-2 h-2 rounded-full ${state.bg}`}></div>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </Card>
+
+                    {/* Suggested Actions Card */}
+                    {currentState && (
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <span className={`w-1.5 h-6 rounded-full ${currentState.bg}`}></span>
+                                Tiny Actions (2 minutes or less)
+                            </div>
+                        } className={`border-2 ${currentState.border} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                            <div className="flex flex-col gap-2">
+                                {currentState.actions.map((action, index) => (
+                                    <div key={index} className="flex items-center gap-3 p-3 bg-tokens-panel2 rounded-lg">
+                                        <Badge variant="neutral" className="shrink-0">
+                                            {index + 1}
+                                        </Badge>
+                                        <span className="text-sm text-tokens-fg">{action}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-tokens-muted mt-4">
+                                Pick one action, do it now, then start your rescue focus session.
+                            </p>
+                        </Card>
+                    )}
+
                 </div>
 
-                {/* RIGHT COLUMN (1/3 width) - Actions */}
-                <div className="lg:w-80 xl:w-96 flex flex-col gap-6">
+                {/* RIGHT COLUMN - Actions */}
+                <div className="lg:w-80 xl:w-96 flex flex-col gap-4">
 
-                    {/* Actions Card */}
+                    {/* Rescue Focus CTA */}
                     <Card title={
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                            Refocus Actions
+                            <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            Rescue Focus (15 min)
                         </div>
-                    } className="h-full flex flex-col sticky top-24">
-                        <p className="text-sm text-tokens-muted mb-8 leading-relaxed">
-                            Choose an action based on your current energy and overwhelm level.
-                            Small steps are better than no steps.
+                    } className="sticky top-24">
+                        <p className="text-sm text-tokens-muted mb-6 leading-relaxed">
+                            Start a short 15-minute focus session to regain momentum.
+                            Pick one tiny action above and commit to it.
                         </p>
 
-                        <div className="flex flex-col gap-4">
-                            <button
-                                onClick={() => logAction('Quick Reset')}
-                                className="w-full py-4 px-4 bg-tokens-panel2 hover:bg-tokens-border border border-tokens-border hover:border-emerald-500/50 rounded-xl text-left group transition-all"
-                            >
-                                <div className="font-semibold text-tokens-fg group-hover:text-emerald-500 transition-colors">⚡ Quick 10-15m Reset</div>
-                                <div className="text-xs text-tokens-muted mt-1">Short break, breathe, hydrating.</div>
-                            </button>
+                        <Button
+                            variant="primary"
+                            onClick={handleStartRescueFocus}
+                            disabled={!selectedState}
+                            icon={<PlayCircle size={18} />}
+                            fullWidth
+                            className="justify-center mb-4"
+                        >
+                            Start 15-min Rescue Focus
+                        </Button>
 
-                            <button
-                                onClick={() => logAction('Lost Mode')}
-                                className="w-full py-4 px-4 bg-tokens-panel2 hover:bg-tokens-border border border-tokens-border hover:border-purple-500/50 rounded-xl text-left group transition-all"
-                            >
-                                <div className="font-semibold text-tokens-fg group-hover:text-purple-500 transition-colors">📝 Lost Mode Journaling</div>
-                                <div className="text-xs text-tokens-muted mt-1">Deep dive into what's wrong.</div>
-                            </button>
+                        {!selectedState && (
+                            <p className="text-xs text-tokens-muted text-center">
+                                Select your current state to continue
+                            </p>
+                        )}
 
-                            <div className="h-px bg-tokens-border my-2"></div>
+                        <div className="h-px bg-tokens-border my-6"></div>
 
+                        {/* Lost Mode CTA */}
+                        <div className="space-y-3">
+                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider">
+                                Feeling stuck?
+                            </div>
                             <Button
-                                variant="primary"
-                                onClick={() => logAction('Back to Compass')}
-                                className="w-full justify-center"
+                                variant="secondary"
+                                onClick={handleLostMode}
+                                icon={<FileText size={16} />}
+                                fullWidth
+                                className="justify-center"
                             >
-                                Back to Compass
+                                Try Lost Mode
                             </Button>
+                            <p className="text-xs text-tokens-muted">
+                                3 quick prompts to help you identify the smallest next step.
+                            </p>
                         </div>
                     </Card>
 

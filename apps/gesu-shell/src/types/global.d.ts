@@ -157,6 +157,10 @@ declare global {
                 onComplete: (callback: (data: { jobId: string; status: string; errorMessage?: string }) => void) => () => void;
                 onUpdate: (callback: (job: any) => void) => () => void;
             };
+            workflowBlueprints?: {
+                get: () => Promise<any>;
+                save: (data: any) => Promise<{ ok: boolean; error?: string }>;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<void>;

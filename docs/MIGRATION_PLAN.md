@@ -246,6 +246,19 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Dashboard Update**: Uses unified engine status with refresh button and last-checked label.
 - **Compass Update**: saveSnapshot now persists to localStorage instead of console.log mock.
 - **UI Sanity**: Verified all modules via code review - no regressions detected.
+
+### [0.7.0] - Sprint 15: Standards Tab v1 (Workflow Blueprints) (2025-12-17)
+- **Data Model**: BlueprintFileShape with categories, blueprints, nodes structure (schemaVersion: 1).
+- **Electron Persistence**: workflow-blueprints.js with get/save to _Index/WorkflowBlueprints.json.
+- **IPC Handlers**: workflow:blueprints:get, workflow:blueprints:save in main.js.
+- **Bridge**: workflowBlueprints.get/save exposed in preload.cjs.
+- **Service**: workflowBlueprintsService.ts with Electron detection and localStorage fallback.
+- **Default Seeding**: Blueprints seeded from existing 16 WORKFLOW_NODES with stable IDs.
+- **Standards Tab**: 3-column layout (categories, blueprint nodes, step editor) in Project Hub.
+- **Step Editor**: Edit title, description, DoD items (max 7), tools per step. No structural editing.
+- **v1 Constraints**: 1 category (General Creative), auto-assign default blueprint on project create.
+- **Files**: 9 files created/modified with zero regressions to existing modules.
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

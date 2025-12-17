@@ -11,6 +11,7 @@ import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.j
 import { buildPlan, applyPlan, appendProjectLog } from './scaffolding.js';
 import { listProjects } from './projects-registry.js';
 import { appendSnapshot, listSnapshots } from './compass-snapshots.js';
+import { getBlueprints, saveBlueprints } from './workflow-blueprints.js';
 
 // Use createRequire for CommonJS modules
 const require = createRequire(import.meta.url);
@@ -430,6 +431,43 @@ ipcMain.handle('compass:snapshots:list', async (event, options) => {
     } catch (err) {
         console.error('[compass:snapshots:list] Error:', err);
         return [];
+    }
+});
+
+
+// --- Workflow Blueprints Handlers ---
+
+ipcMain.handle('workflow:blueprints:get', async () => {
+    try {
+        const settings = await loadGlobalSettings();
+        const workflowRoot = settings.paths?.workflowRoot;
+
+        // Return null if not configured - renderer will use defaults/localStorage
+        if (!workflowRoot || workflowRoot.trim() === '') {
+            return null;
+        }
+
+        const blueprints = await getBlueprints(workflowRoot);
+        return blueprints;
+    } catch (err) {
+        console.error('[workflow:blueprints:get] Error:', err);
+        return null;
+    }
+});
+
+ipcMain.handle('workflow:blueprints:save', async (event, data) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const workflowRoot = settings.paths?.workflowRoot;
+
+        if (!workflowRoot || workflowRoot.trim() === '') {
+            return { ok: false, error: 'Workflow root not configured. Please set it in Settings.' };
+        }
+
+        const result = await saveBlueprints(workflowRoot, data);
+        return result;
+    } catch (err) {
+        return { ok: false, error: err.message };
     }
 });
 

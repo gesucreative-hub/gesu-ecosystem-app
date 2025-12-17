@@ -7,7 +7,7 @@ import { Input } from '../components/Input';
 import { SelectDropdown } from '../components/Dropdown';
 import { Tabs } from '../components/Tabs';
 import { WorkflowCanvas } from './WorkflowCanvas';
-import { Zap, FileText } from 'lucide-react';
+import { Zap, FileText, Settings } from 'lucide-react';
 import {
     listProjects,
     getActiveProject,
@@ -19,6 +19,7 @@ import {
     Project,
 } from '../stores/projectStore';
 import { scaffoldingService, ScaffoldPreviewResult } from '../services/scaffoldingService';
+import { StandardsTab } from './StandardsTab';
 
 
 // --- Types & Interfaces ---
@@ -361,7 +362,7 @@ function ProjectGeneratorForm() {
 export function ProjectHubPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const tabFromUrl = searchParams.get('tab') || 'workflow';
-    const activeTab = tabFromUrl === 'generator' ? 'generator' : 'workflow';
+    const activeTab = ['workflow', 'standards', 'generator'].includes(tabFromUrl) ? tabFromUrl : 'workflow';
 
     // Project state
     const [activeProject, setActiveProjectState] = useState<Project | null>(null);
@@ -404,6 +405,7 @@ export function ProjectHubPage() {
 
     const tabs = [
         { id: 'workflow', label: 'Workflow', icon: <FileText size={16} /> },
+        { id: 'standards', label: 'Standards', icon: <Settings size={16} /> },
         { id: 'generator', label: 'Generator', icon: <Zap size={16} /> }
     ];
 
@@ -468,6 +470,8 @@ export function ProjectHubPage() {
             {/* Tab Content */}
             <div className="mt-6">
                 {activeTab === 'workflow' && <WorkflowCanvas />}
+
+                {activeTab === 'standards' && <StandardsTab />}
 
                 {activeTab === 'generator' && <ProjectGeneratorForm />}
             </div>

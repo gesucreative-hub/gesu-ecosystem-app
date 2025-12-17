@@ -32,6 +32,10 @@ contextBridge.exposeInMainWorld('gesu', {
         append: (snapshot) => ipcRenderer.invoke('compass:snapshots:append', snapshot),
         list: (options) => ipcRenderer.invoke('compass:snapshots:list', options),
     },
+    workflowBlueprints: {
+        get: () => ipcRenderer.invoke('workflow:blueprints:get'),
+        save: (data) => ipcRenderer.invoke('workflow:blueprints:save', data),
+    },
     mediaJobs: {
         enqueue: (payload) => ipcRenderer.invoke('media:job:enqueue', payload),
         list: () => ipcRenderer.invoke('media:job:list'),

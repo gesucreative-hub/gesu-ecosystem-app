@@ -78,7 +78,7 @@ async function realScaffold(
 
 // --- Simulation Mode ---
 
-async function simulationPreview(projectName: string, templateId: string): Promise<ScaffoldPreviewResult> {
+async function simulationPreview(projectName: string, _templateId: string): Promise<ScaffoldPreviewResult> {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     return {

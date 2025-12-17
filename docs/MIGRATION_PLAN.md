@@ -403,3 +403,27 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
   - **Browser QA**: Verified progress indicator shows correct DoD count (PASS). Verified overlay panel with blur (PASS). Verified ESC closes panel (PASS). Verified no regressions in panning/selection (PASS).
   - **Desktop QA**: Verified file-backed persistence stable (PASS).
 
+### [0.11.1] - Sprint 21.1: Workflow Horizontal View + Toggle (2025-12-17)
+- **View Toggle**: Added toggle button to switch between Swimlane (vertical columns) and Horizontal (phase rows) views. Default remains swimlane to preserve existing behavior. Toggle button shows view-specific icons (`LayoutGrid` for swimlane, `List` for horizontal).
+- **Horizontal View - Left Sidebar**: Implemented left sidebar (~200px) containing two sections: "PHASES" (lists all 5 phases with node counts) and "STATUS PROJECT" (displays progress percentage, progress bar, and DoD completion count).
+- **Horizontal View - Main Canvas**: Implemented horizontal phase rows layout where each phase is rendered as a horizontal row with cards flowing left-to-right. Cards display title, description, and status badges. Native horizontal scrollbar appears for long phase rows.
+- **Shared Overlay Panel**: Overlay panel (from Sprint 21) works identically in both Swimlane and Horizontal views. Click any card in either view to open overlay with blur/dim backdrop. ESC key or backdrop click closes the overlay.
+- **Progress Consistency**: Both views show the same progress data - Horizontal view shows it in sidebar, Swimlane shows it at top-left. Live DoD-based calculation ensures accuracy.
+- **No Regressions**: Swimlane view preserved all original functionality (panning, connectors, phase headers, absolute positioning). Toggle seamlessly switches between views without state loss.
+- **Files**: `WorkflowCanvas.tsx` (major refactor - conditional rendering based on `viewMode` state).
+- **QA Status**:
+  - **Browser QA**: Verified via user manual testing with screenshots. Horizontal view matches reference UX design (PASS). Toggle functional (PASS). Overlay works in both views (PASS).  Progress accurate (PASS). No regressions to Compass/Media Suite (PASS).
+  - **Evidence**: User-provided screenshots show horizontal layout with sidebar, phase rows, and functioning overlay panel. See `sprint21_1_browser_qa_report.md` for full QA documentation.
+
+### [0.11.2] - Sprint 21.2: Horizontal Workflow Refinements (2025-12-18)
+- **Arrow Enhancements**: Updated horizontal arrows between cards to use slight quadratic bezier curve (`Q 20 16`) instead of straight lines for visual appeal. Removed cross-lane arrows connecting phases per user request. Arrow markers properly sized (5x5) with direct connection to nodes.
+- **Canvas Panning**: Implemented middle-click drag panning using mouse event handlers (`onMouseDown`, `onMouseMove`, `onMouseUp`, `onMouseLeave`). Cursor changes to `grabbing` during pan. Scroll behavior dynamically switches between 'smooth' and 'auto'. Works alongside touchpad/wheel scrolling.
+- **Status Indicators**: Added colored status dots with labels to each card header (Done: green solid, WiP: amber with pulse animation, Todo: gray). Positioned at top-right of cards. Added Legend section in left sidebar showing all 3 status types with visual examples for quick reference.
+- **Striped Dividers**: Implemented horizontal repeating-linear-gradient striped lines between phase rows using phase color at 20% opacity. Subtle thickness (h-1) provides non-intrusive visual separation.
+- **Reopen/Undo Feature**: Added "Buka Kembali" button (secondary with RotateCcw icon) in StepDetailPanel footer for Done nodes. Allows reverting status from Done back to In Progress using `setNodeStatus('in-progress')`. Footer dynamically shows either "Tandai Selesai" (for Todo/WiP) or "Buka Kembali" (for Done) based on node status.
+- **Toggle Removed**: Removed view toggle per user preference - horizontal view now the only mode. Eliminated swimlane view code, unused imports (`RotateCcw`, `WORKFLOW_EDGES`, `CANVAS_CONFIG`), pan-related state, nodePositions calculation, and WorkflowNodeCard component.
+- **Files**: `WorkflowCanvas.tsx` (major simplification - removed toggle/swimlane code, added panning handlers and status indicators), `StepDetailPanel.tsx` (added `onReopenNode` prop and conditional footer).
+- **QA Status**:
+  - **Browser QA**: Verified via user manual testing. Arrows curved correctly (PASS). Cross-lane arrows removed (PASS). Middle-click panning functional (PASS). Status indicators clear with legend (PASS). Striped dividers subtle (PASS). Reopen button functional for Done nodes (PASS).
+  - **Evidence**: User provided annotated screenshots showing desired arrow styles and confirmed all refinements working as expected.
+

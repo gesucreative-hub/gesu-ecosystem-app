@@ -17,18 +17,21 @@ import {
     isActiveForStep,
     startFinishMode,
 } from '../stores/finishModeStore';
+import { RotateCcw } from 'lucide-react';
 import { getActiveProject } from '../stores/projectStore';
 
 interface StepDetailPanelProps {
     selectedNode: WorkflowNode | null;
     onToggleDoDItem: (nodeId: string, dodItemId: string) => void;
     onMarkAsDone: (nodeId: string) => void;
+    onReopenNode?: (nodeId: string) => void;
 }
 
 export function StepDetailPanel({
     selectedNode,
     onToggleDoDItem,
-    onMarkAsDone
+    onMarkAsDone,
+    onReopenNode
 }: StepDetailPanelProps) {
     // State for Compass send selection
     const [selectedForCompass, setSelectedForCompass] = useState<Set<string>>(new Set());
@@ -450,22 +453,39 @@ export function StepDetailPanel({
             </div>
 
             {/* Footer - Fixed */}
-            <div className="p-6 border-t border-tokens-border flex-shrink-0">
-                <Button
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    onClick={() => onMarkAsDone(selectedNode.id)}
-                    disabled={selectedNode.status === 'done'}
-                    icon={selectedNode.status === 'done' ? <Check size={16} /> : undefined}
-                >
-                    {selectedNode.status === 'done' ? 'Sudah Selesai' : 'Tandai Selesai'}
-                </Button>
-
-                {allDoDDone && selectedNode.status !== 'done' && (
-                    <p className="text-xs text-tokens-brand-DEFAULT text-center mt-2">
-                        Semua checklist sudah selesai!
-                    </p>
+            <div className="p-6 border-t border-tokens-border flex-shrink-0 space-y-2">
+                {selectedNode.status === 'done' ? (
+                    <>
+                        <Button
+                            variant="secondary"
+                            size="lg"
+                            fullWidth
+                            onClick={() => onReopenNode?.(selectedNode.id)}
+                            icon={<RotateCcw size={16} />}
+                        >
+                            Buka Kembali
+                        </Button>
+                        <p className="text-xs text-tokens-muted text-center">
+                            Step ini sudah selesai. Klik untuk membatalkan.
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            onClick={() => onMarkAsDone(selectedNode.id)}
+                            icon={allDoDDone ? <Check size={16} /> : undefined}
+                        >
+                            Tandai Selesai
+                        </Button>
+                        {allDoDDone && (
+                            <p className="text-xs text-tokens-brand-DEFAULT text-center">
+                                Semua checklist sudah selesai!
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
         </div>

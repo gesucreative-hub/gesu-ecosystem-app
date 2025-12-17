@@ -57,9 +57,15 @@ export function FocusTimerPill() {
                                 )}
                                 <span className="font-mono font-bold">{timeDisplay}</span>
                             </span>
-                            <span className="opacity-70 group-hover/timer:opacity-100 transition-opacity">
-                                {phaseLabels[state.phase]}
-                            </span>
+                            {state.taskContext ? (
+                                <span className="opacity-90 group-hover/timer:opacity-100 transition-opacity max-w-[320px] truncate" title={state.taskContext.taskTitle}>
+                                    {state.taskContext.taskTitle}
+                                </span>
+                            ) : (
+                                <span className="opacity-70 group-hover/timer:opacity-100 transition-opacity">
+                                    {phaseLabels[state.phase]}
+                                </span>
+                            )}
                         </button>
 
                         {/* Quick pause/resume */}

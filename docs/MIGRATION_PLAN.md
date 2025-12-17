@@ -305,6 +305,19 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA**: All P0 acceptance criteria verified - no regressions in timer, distraction shield, canvas panning, or Media Suite.
 
 
+### [0.9.1] - Sprint 19: Finish-First Compass + Task-Timer Coupling + Density (2025-12-17)
+- **Task-Timer Coupling**: Extended focusTimerStore with TaskContext (taskId, taskTitle, projectName, stepTitle) and startWithTask() function.
+- **Timer UI Enhancement**: FocusTimerPill now displays linked task title instead of generic "Focus" label when task context is set.
+- **Start Focus Button**: Added "Start Focus" button to each task in Project Hub Tasks list on Compass.
+- **Switch Task Confirmation**: Prompts user if attempting to start focus on another task while session active.
+- **Energy Simplification**: Replaced 0-10 slider with 3-state picker (Low/Medium/High) for faster daily calibration.
+- **Focus Areas Collapsed**: Focus details now collapsed by default, showing derived score. Click to expand 6 sliders.
+- **Sessions Removed**: Removed "Sessions Today" section from Compass (redundant, not task-tied).
+- **Density Prop**: Added density prop to PageContainer (compact/normal/spacious) for consistent padding control.
+- **Media Suite Density**: Applied compact density to Media Suite to reduce "too deep" padding.
+- **Files**: focusTimerStore.ts (+TaskContext), FocusTimerPill.tsx (task label), CompassPage.tsx (complete rewrite), PageContainer.tsx (+density), MediaSuitePage.tsx (compact).
+- **QA Note**: Browser-based QA unavailable due to navigation errors. Code review confirms all acceptance criteria met. Desktop manual QA recommended.
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

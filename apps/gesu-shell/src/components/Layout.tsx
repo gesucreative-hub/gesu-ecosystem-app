@@ -135,8 +135,8 @@ export function Layout() {
 
                         {/* CORE Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-1 animate-in fade-in">Core</div>}
-                        <NavItem to="/" icon={<Home strokeWidth={1.5} size={20} />} label="Dashboard" isActive={p === '/'} isCollapsed={isCollapsed} />
-                        <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
+                        <NavItem to="/dashboard" icon={<Home strokeWidth={1.5} size={20} />} label="Dashboard" isActive={p === '/dashboard'} isCollapsed={isCollapsed} />
+                        <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label="Compass" isActive={p === '/' || p.startsWith('/compass')} isCollapsed={isCollapsed} />
 
                         {/* MODULES Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">Modules</div>}

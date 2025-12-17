@@ -10,6 +10,13 @@ export interface TimerConfig {
     longBreakEvery: number; // every N focus sessions
 }
 
+export interface TaskContext {
+    taskId: string;
+    taskTitle: string;
+    projectName?: string;
+    stepTitle?: string;
+}
+
 export interface FocusTimerState {
     phase: TimerPhase;
     remainingSeconds: number;
@@ -19,6 +26,7 @@ export interface FocusTimerState {
     cycleCount: number; // completed focus sessions
     config: TimerConfig;
     sessionActive: boolean; // for distraction shield
+    taskContext: TaskContext | null; // NEW: linked task
 }
 
 const DEFAULT_CONFIG: TimerConfig = {
@@ -46,6 +54,7 @@ let state: FocusTimerState = {
     cycleCount: 0,
     config: DEFAULT_CONFIG,
     sessionActive: false,
+    taskContext: null, // NEW
 };
 
 let tickInterval: number | null = null;
@@ -171,6 +180,30 @@ export function start(config?: Partial<TimerConfig>): void {
     state.isPaused = false;
     state.cycleCount = 0;
     state.sessionActive = true;
+    state.taskContext = null; // Clear task context for manual start
+
+    saveState();
+    startTicking();
+    notifySubscribers();
+
+    // Request notification permission on first start
+    requestNotificationPermission();
+}
+
+export function startWithTask(taskContext: TaskContext, config?: Partial<TimerConfig>): void {
+    // Merge config if provided
+    if (config) {
+        state.config = { ...state.config, ...config };
+    }
+
+    state.phase = 'focus';
+    state.remainingSeconds = state.config.focusMinutes * 60;
+    state.totalSeconds = state.remainingSeconds;
+    state.isRunning = true;
+    state.isPaused = false;
+    state.cycleCount = 0;
+    state.sessionActive = true;
+    state.taskContext = taskContext; // SET TASK CONTEXT
 
     saveState();
     startTicking();
@@ -212,6 +245,7 @@ export function stop(): void {
     state.isRunning = false;
     state.isPaused = false;
     state.sessionActive = false;
+    state.taskContext = null; // Clear task context on stop
 
     stopTicking();
     saveState();

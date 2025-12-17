@@ -619,7 +619,7 @@ export function MediaSuitePage() {
     };
 
     return (
-        <PageContainer>
+        <PageContainer density="compact">
 
 
             {/* Toast Notification */}

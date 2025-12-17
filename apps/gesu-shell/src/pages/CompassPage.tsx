@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Briefcase, Target, Play, Square, Trash2, Database, TestTube } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, TestTube, ChevronDown, ChevronUp } from 'lucide-react';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -26,6 +26,7 @@ import {
     getStorageMode,
     CompassSnapshotListItem,
 } from '../services/compassSnapshotsService';
+import { startWithTask, isSessionActive as isTimerActive } from '../stores/focusTimerStore';
 
 // --- Types & Interfaces ---
 
@@ -33,44 +34,7 @@ interface FocusAreas {
     [key: string]: number;
 }
 
-interface Session {
-    id: string;
-    label: string;
-    completed: boolean;
-}
-
-// --- Helper Components ---
-
-const SliderControl = ({
-    label,
-    value,
-    onChange,
-    colorClass = "accent-tokens-brand-DEFAULT",
-    badgeVariant = "brand"
-}: {
-    label: React.ReactNode;
-    value: number;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    colorClass?: string;
-    badgeVariant?: 'neutral' | 'brand' | 'success' | 'warning' | 'error';
-}) => (
-    <div className="flex flex-col gap-2">
-        <div className="flex justify-between items-center">
-            <span className="text-tokens-muted font-medium text-sm">{label}</span>
-            <Badge variant={badgeVariant}>
-                {value}/10
-            </Badge>
-        </div>
-        <input
-            type="range"
-            min="0"
-            max="10"
-            value={value}
-            onChange={onChange}
-            className={`w-full h-2 bg-tokens-panel2 rounded-lg appearance-none cursor-pointer ${colorClass} hover:brightness-110 transition-all border border-tokens-border focus:outline-none focus:ring-2 focus:ring-tokens-ring`}
-        />
-    </div>
-);
+type EnergyLevel = 'low' | 'medium' | 'high';
 
 // --- Main Component ---
 
@@ -79,8 +43,8 @@ export function CompassPage() {
     const { settings } = useGesuSettings();
     const workflowRoot = settings?.paths?.workflowRoot;
 
-    // State
-    const [energy, setEnergy] = useState<number>(5);
+    // State - Energy as 3-state picker
+    const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('medium');
 
     const [focusAreas, setFocusAreas] = useState<FocusAreas>({
         'Money': 5,
@@ -91,12 +55,8 @@ export function CompassPage() {
         'Self Care': 5
     });
 
-    const [sessions, setSessions] = useState<Session[]>([
-        { id: '1', label: 'Deep Work Block', completed: false },
-        { id: '2', label: 'Admin & Email', completed: false },
-        { id: '3', label: 'Learning Session', completed: false },
-        { id: '4', label: 'Physical Activity', completed: false }
-    ]);
+    // Focus details collapsed by default
+    const [isFocusExpanded, setIsFocusExpanded] = useState(false);
 
     // Recent Snapshots State
     const [recentSnapshots, setRecentSnapshots] = useState<CompassSnapshotListItem[]>([]);
@@ -135,6 +95,26 @@ export function CompassPage() {
     const handleToggleProjectHubTask = useCallback((taskId: string) => {
         toggleTaskDone(taskId);
         setProjectHubTasks(getTodayTasks());
+    }, []);
+
+    // Handler for starting focus timer with task context
+    const handleStartFocusOnTask = useCallback((task: ProjectHubTask) => {
+        // Check if a session is already active
+        if (isTimerActive()) {
+            const confirmed = confirm(
+                'A focus session is already running. Switch to this task?\n\n' +
+                'Click OK to switch tasks, or Cancel to keep current focus.'
+            );
+            if (!confirmed) return;
+        }
+
+        // Start timer with task context
+        startWithTask({
+            taskId: task.id,
+            taskTitle: task.title,
+            projectName: task.projectName,
+            stepTitle: task.stepTitle,
+        });
     }, []);
 
     // --- Finish Mode State ---
@@ -176,38 +156,25 @@ export function CompassPage() {
         }
     }, []);
 
-    // Derived State
-    const getEnergyLabel = (val: number) => {
-        if (val <= 3) return { text: "Low Energy", color: "text-red-500" };
-        if (val <= 7) return { text: "Medium Energy", color: "text-amber-500" };
-        return { text: "High Energy", color: "text-emerald-500" };
-    };
-
-    const energyStatus = getEnergyLabel(energy);
-
-    // Handlers
+    // Handle focus change for focus areas
     const handleFocusChange = (area: string, val: string) => {
         setFocusAreas(prev => ({ ...prev, [area]: parseInt(val) }));
     };
 
-    const toggleSession = (id: string) => {
-        setSessions(prev => prev.map(s =>
-            s.id === id ? { ...s, completed: !s.completed } : s
-        ));
-    };
-
     const saveSnapshot = async () => {
         try {
+            // Map energy level to numeric value
+            const energyMap: Record<EnergyLevel, number> = { low: 3, medium: 6, high: 9 };
+            const energy = energyMap[energyLevel];
+
             // Calculate focus from focusAreas average (meaningful representation)
             const focusValues = Object.values(focusAreas);
             const focus = Math.round(
                 focusValues.reduce((sum, val) => sum + val, 0) / focusValues.length
             );
 
-            // Get completed sessions only
-            const completedSessions = sessions
-                .filter(s => s.completed)
-                .map(s => s.label);
+            // No more sessions - removed in Sprint 19
+            const completedSessions: string[] = [];
 
             const result = await appendSnapshot(workflowRoot, {
                 energy,
@@ -228,6 +195,11 @@ export function CompassPage() {
         }
     };
 
+    // Calculate derived focus score for summary
+    const derivedFocusScore = Math.round(
+        Object.values(focusAreas).reduce((sum, val) => sum + val, 0) / Object.keys(focusAreas).length
+    );
+
     return (
         <PageContainer>
             {/* Header */}
@@ -236,7 +208,7 @@ export function CompassPage() {
                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Compass</h1>
                     <p className="text-tokens-muted text-sm mt-1">Daily calibration & focus integrity.</p>
                 </div>
-                <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
+                <Link to="/dashboard" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
                     ← Back
                 </Link>
             </div>
@@ -354,10 +326,10 @@ export function CompassPage() {
                         }>
                             <div className="flex flex-col gap-2">
                                 {projectHubTasks.map(task => (
-                                    <label
+                                    <div
                                         key={task.id}
                                         className={`
-                                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                                            flex items-start gap-3 p-3 rounded-lg border transition-all
                                             ${task.done
                                                 ? 'bg-emerald-500/10 border-emerald-500/30'
                                                 : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
@@ -377,132 +349,103 @@ export function CompassPage() {
                                                 {task.stepTitle} - {task.projectName}
                                             </span>
                                         </div>
-                                    </label>
+                                        {!task.done && (
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                onClick={() => handleStartFocusOnTask(task)}
+                                                className="shrink-0"
+                                            >
+                                                Start Focus
+                                            </Button>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         </Card>
                     )}
 
-                    {/* Energy Card */}
+                    {/* Energy Card - 3-STATE PICKER */}
                     <Card title={
                         <div className="flex items-center gap-2">
                             <span className="w-1.5 h-6 bg-cyan-500 rounded-full"></span>
                             Today's Energy
                         </div>
                     }>
-                        <div className="px-1 pb-2">
-                            <div className="flex justify-between items-end mb-4">
-                                <span className={`text-2xl font-bold ${energyStatus.color}`}>
-                                    {energyStatus.text}
-                                </span>
-                                <span className="text-5xl font-black text-tokens-panel2 select-none">
-                                    {energy}
-                                </span>
-                            </div>
-
-                            <input
-                                type="range"
-                                min="0"
-                                max="10"
-                                value={energy}
-                                onChange={(e) => setEnergy(parseInt(e.target.value))}
-                                className="w-full h-4 bg-tokens-panel2 rounded-lg appearance-none cursor-pointer accent-cyan-500 hover:accent-cyan-400 border border-tokens-border focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-                            />
-                            <div className="flex justify-between mt-2 text-xs text-tokens-muted font-medium">
-                                <span>Exhausted</span>
-                                <span>Optimized</span>
-                            </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setEnergyLevel('low')}
+                                className={`flex-1 py-3 px-4 rounded-lg border transition-all text-sm font-medium
+                                    ${energyLevel === 'low'
+                                        ? 'bg-red-500/20 border-red-500 text-red-600 dark:text-red-400'
+                                        : 'bg-tokens-panel border-tokens-border text-tokens-muted hover:bg-tokens-panel2'}`}
+                            >
+                                Low Energy
+                            </button>
+                            <button
+                                onClick={() => setEnergyLevel('medium')}
+                                className={`flex-1 py-3 px-4 rounded-lg border transition-all text-sm font-medium
+                                    ${energyLevel === 'medium'
+                                        ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400'
+                                        : 'bg-tokens-panel border-tokens-border text-tokens-muted hover:bg-tokens-panel2'}`}
+                            >
+                                Medium
+                            </button>
+                            <button
+                                onClick={() => setEnergyLevel('high')}
+                                className={`flex-1 py-3 px-4 rounded-lg border transition-all text-sm font-medium
+                                    ${energyLevel === 'high'
+                                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                        : 'bg-tokens-panel border-tokens-border text-tokens-muted hover:bg-tokens-panel2'}`}
+                            >
+                                High Energy
+                            </button>
                         </div>
                     </Card>
 
-                    {/* Focus Areas Card */}
+                    {/* Focus Areas Card - COLLAPSED BY DEFAULT */}
                     <Card title={
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
-                            Focus Areas
+                        <div className="flex items-center justify-between w-full cursor-pointer" onClick={() => setIsFocusExpanded(!isFocusExpanded)}>
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
+                                Focus Details
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="brand">Score: {derivedFocusScore}/10</Badge>
+                                {isFocusExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </div>
                         </div>
                     }>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-8">
-                            {Object.entries(focusAreas).map(([area, value]) => (
-                                <SliderControl
-                                    key={area}
-                                    label={area}
-                                    value={value}
-                                    onChange={(e) => handleFocusChange(area, e.target.value)}
-                                    colorClass="accent-purple-500"
-                                    badgeVariant="brand" // Using brand styles for now, can be customized
-                                />
-                            ))}
-                        </div>
+                        {isFocusExpanded && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 pt-2">
+                                {Object.entries(focusAreas).map(([area, value]) => (
+                                    <div key={area} className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-tokens-muted font-medium text-sm">{area}</span>
+                                            <Badge variant="brand">{value}/10</Badge>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="10"
+                                            value={value}
+                                            onChange={(e) => handleFocusChange(area, e.target.value)}
+                                            className="w-full h-2 bg-tokens-panel2 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:brightness-110 transition-all border border-tokens-border focus:outline-none focus:ring-2 focus:ring-tokens-ring"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {!isFocusExpanded && (
+                            <p className="text-xs text-tokens-muted italic">
+                                Click to expand focus area details
+                            </p>
+                        )}
                     </Card>
                 </div>
 
                 {/* RIGHT COLUMN (1/3 width) */}
                 <div className="lg:w-80 xl:w-96 flex flex-col gap-6">
-
-                    {/* Sessions Card */}
-                    <Card title={
-                        <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
-                            Sessions Today
-                        </div>
-                    } className="h-full flex flex-col">
-                        <div className="flex flex-col gap-2 mb-6 flex-1">
-                            {sessions.map(session => (
-                                <label
-                                    key={session.id}
-                                    className={`
-                    flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all
-                    ${session.completed
-                                            ? 'bg-emerald-500/10 border-emerald-500/30'
-                                            : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}
-                  `}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={session.completed}
-                                        onChange={() => toggleSession(session.id)}
-                                        className="w-5 h-5 rounded border-tokens-border text-emerald-500 focus:ring-emerald-500/20 bg-tokens-bg cursor-pointer"
-                                    />
-                                    <span className={`text-sm ${session.completed ? 'text-emerald-600/80 dark:text-emerald-400/80 line-through' : 'text-tokens-fg'}`}>
-                                        {session.label}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-
-                        <div className="mt-auto border-t border-tokens-border pt-6">
-                            <div className="flex items-center gap-2 mb-2">
-                                {getStorageMode(workflowRoot) === 'file-backed' ? (
-                                    <Badge variant="success" className="text-xs">
-                                        <Database size={12} className="mr-1" />
-                                        File-backed
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="warning" className="text-xs">
-                                        <TestTube size={12} className="mr-1" />
-                                        Simulation
-                                    </Badge>
-                                )}
-                                {!workflowRoot && (
-                                    <span className="text-xs text-tokens-muted">
-                                        <Link to="/settings" className="text-tokens-brand-DEFAULT hover:underline">
-                                            Set Workflow Root in Settings
-                                        </Link>
-                                    </span>
-                                )}
-                            </div>
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                fullWidth
-                                onClick={saveSnapshot}
-                                className="shadow-lg shadow-tokens-brand-DEFAULT/20"
-                            >
-                                Save Snapshot
-                            </Button>
-                        </div>
-                    </Card>
 
                     {/* Recent Snapshots Card */}
                     <Card
@@ -572,12 +515,42 @@ export function CompassPage() {
                                 })}
                             </div>
                         )}
+
+                        <div className="mt-4 border-t border-tokens-border pt-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                {getStorageMode(workflowRoot) === 'file-backed' ? (
+                                    <Badge variant="success" className="text-xs">
+                                        <Database size={12} className="mr-1" />
+                                        File-backed
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="warning" className="text-xs">
+                                        <TestTube size={12} className="mr-1" />
+                                        Simulation
+                                    </Badge>
+                                )}
+                                {!workflowRoot && (
+                                    <span className="text-xs text-tokens-muted">
+                                        <Link to="/settings" className="text-tokens-brand-DEFAULT hover:underline">
+                                            Set Workflow Root in Settings
+                                        </Link>
+                                    </span>
+                                )}
+                            </div>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                onClick={saveSnapshot}
+                                className="shadow-lg shadow-tokens-brand-DEFAULT/20"
+                            >
+                                Save Snapshot
+                            </Button>
+                        </div>
                     </Card>
-
-
 
                 </div>
             </div>
-        </PageContainer >
+        </PageContainer>
     );
 }

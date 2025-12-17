@@ -129,7 +129,7 @@ export function LostModePage() {
                     <Card
                         title={
                             <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                                <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                                 Create Next Action
                             </div>
                         }

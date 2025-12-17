@@ -4,12 +4,39 @@ import path from 'node:path';
 /**
  * Projects Registry Module
  * Scans disk for existing projects by detecting project.meta.json files
+ * Sprint 20.1: Also supports folder-based detection for legacy projects
  */
 
 const BACKUP_ROOT = String.raw`D:\03. Resources\_Gesu's\Backup\WorkFlowDatabase-ps-stack-v1`;
 
 /**
+ * Parse project info from folder name
+ * Expected format: YYMMDD_CategoryXXX_ProjectName-Description
+ * Example: 251119_ArchViz001_Visualisasi-3D-Natura
+ * @param {string} folderName - The folder name to parse
+ * @returns {{ name: string, categoryPrefix: string | null }}
+ */
+function parseProjectFolderName(folderName) {
+    const parts = folderName.split('_');
+
+    if (parts.length >= 3) {
+        // Format: YYMMDD_CategoryXXX_Name-Name
+        // Take everything after second underscore as project name
+        const projectName = parts.slice(2).join(' ').replace(/-/g, ' ');
+        const categoryPrefix = parts[1] || null;
+        return { name: projectName, categoryPrefix };
+    } else if (parts.length === 2) {
+        // Format: Something_Name
+        return { name: parts[1].replace(/-/g, ' '), categoryPrefix: null };
+    }
+
+    // Fallback: use folder name as-is
+    return { name: folderName.replace(/-/g, ' '), categoryPrefix: null };
+}
+
+/**
  * Lists all projects found under projectsRoot by scanning for project.meta.json
+ * Falls back to folder-based detection for legacy projects
  * @param {string} projectsRoot - Root directory to scan
  * @returns {Promise<Array>} Array of project metadata objects
  */
@@ -41,8 +68,13 @@ export async function listProjects(projectsRoot) {
         for (const entry of entries) {
             if (!entry.isDirectory()) continue;
 
-            // Skip hidden directories and _Index
-            if (entry.name.startsWith('.') || entry.name === '_Index') continue;
+            // Skip hidden directories, _Index, _Archive, _Templates
+            if (entry.name.startsWith('.') ||
+                entry.name.startsWith('_') ||
+                entry.name === 'Archive' ||
+                entry.name === 'Templates') {
+                continue;
+            }
 
             const projectDir = path.join(resolvedRoot, entry.name);
             const metaPath = path.join(projectDir, 'project.meta.json');
@@ -71,8 +103,28 @@ export async function listProjects(projectsRoot) {
 
                 projects.push(project);
             } catch (err) {
-                // Skip invalid projects (missing or corrupt meta file)
-                console.log(`[projects-registry] Skipping ${entry.name}: ${err.message}`);
+                // Sprint 20.1: Fallback to folder-based detection for legacy projects
+                if (err.code === 'ENOENT') {
+                    const { name: parsedName, categoryPrefix } = parseProjectFolderName(entry.name);
+
+                    const project = {
+                        id: `legacy-${entry.name}`,
+                        name: parsedName,
+                        projectPath: projectDir,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        templateId: null,
+                        categoryId: categoryPrefix ? categoryPrefix.replace(/\d+$/, '').toLowerCase() : null,
+                        blueprintId: null, // Legacy projects have no blueprint
+                        blueprintVersion: null
+                    };
+
+                    console.log(`[projects-registry] Legacy project detected: ${entry.name} -> "${parsedName}"`);
+                    projects.push(project);
+                } else {
+                    // Other error (corrupt JSON, etc)
+                    console.log(`[projects-registry] Skipping ${entry.name}: ${err.message}`);
+                }
                 continue;
             }
         }

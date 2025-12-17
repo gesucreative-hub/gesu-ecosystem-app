@@ -266,7 +266,7 @@ export function StandardsTab() {
             {/* Middle Column: Blueprint Nodes */}
             <Card title={
                 <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-tokens-brand-DEFAULT rounded-full"></span>
+                    <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                     {selectedBlueprint?.name || 'Blueprint'}
                 </div>
             } className="h-fit">
@@ -309,7 +309,7 @@ export function StandardsTab() {
                     <>
                         <Card title={
                             <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                                <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                                 Edit Step
                             </div>
                         }>

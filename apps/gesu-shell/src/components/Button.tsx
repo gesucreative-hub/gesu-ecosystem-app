@@ -22,7 +22,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * - Hover: Dark circle + light brand bg
  * - Active: Dark circle + brand bg + white text
  * 
- * Theme-aware: Indigo for light mode, Green for dark mode
+ * Theme-aware: Uses brand colors from tokens (indigo light, brand dark)
  */
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     className = '',
@@ -71,9 +71,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
      *   - Active: Indigo bg, dark circle, white text
      * 
      * Dark Mode:
-     *   - Default: Light green bg, border, green circle, dark text  
-     *   - Hover: Mid green bg, dark circle
-     *   - Active: Dark bg, green border, green text
+     *   - Default: Panel bg, border, brand circle, light text  
+     *   - Hover: Panel2 bg, dark circle
+     *   - Active: Brand bg, contrast text
      * 
      * WITHOUT ICON:
      * Light Mode:
@@ -82,37 +82,37 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
      *   - Active: Indigo bg, white text
      * 
      * Dark Mode:
-     *   - Default: Transparent, green border, green text
-     *   - Hover: Light green bg, green text
-     *   - Active: Green bg, dark text
+     *   - Default: Transparent, brand border, brand text
+     *   - Hover: Light brand bg, brand text
+     *   - Active: Brand bg, contrast text
      */
     const getVariantStyles = () => {
         if (variant === 'primary') {
             if (icon && iconPosition === 'circle') {
-                // Primary WITH circle icon
+                // Primary WITH circle icon - theme-aware brand colors
                 return `
-                    bg-white dark:bg-[#c5e1a5]/20
-                    border-2 border-gray-200 dark:border-[#7cb342]/30
-                    text-gray-700 dark:text-[#7cb342]
+                    bg-white dark:bg-tokens-panel
+                    border-2 border-gray-200 dark:border-tokens-border
+                    text-gray-700 dark:text-tokens-fg
                     
-                    hover:bg-[#4141b9]/10 dark:hover:bg-[#7cb342]/30
-                    hover:border-[#4141b9]/20 dark:hover:border-[#7cb342]/40
+                    hover:bg-primary-700/10 dark:hover:bg-secondary-300/10
+                    hover:border-primary-700/20 dark:hover:border-secondary-300/40
                     
-                    active:bg-[#4141b9] dark:active:bg-[#1a1a1a]
-                    active:border-[#4141b9] dark:active:border-[#7cb342]
-                    active:text-white dark:active:text-[#7cb342]
+                    active:bg-primary-700 dark:active:bg-secondary-300
+                    active:border-primary-700 dark:active:border-secondary-300
+                    active:text-white dark:active:text-secondary-950
                 `;
             } else {
                 // Primary WITHOUT icon (or icon in left/right position)
                 return `
                     bg-white dark:bg-transparent
-                    border-2 border-[#4141b9] dark:border-[#7cb342]
-                    text-[#4141b9] dark:text-[#7cb342]
+                    border-2 border-primary-700 dark:border-secondary-300
+                    text-primary-700 dark:text-secondary-300
                     
-                    hover:bg-[#4141b9]/10 dark:hover:bg-[#7cb342]/20
+                    hover:bg-primary-700/10 dark:hover:bg-secondary-300/20
                     
-                    active:bg-[#4141b9] dark:active:bg-[#7cb342]
-                    active:text-white dark:active:text-[#1a1a1a]
+                    active:bg-primary-700 dark:active:bg-secondary-300
+                    active:text-white dark:active:text-secondary-950
                 `;
             }
         }
@@ -123,8 +123,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 border-2 border-tokens-border
                 text-tokens-fg
                 
-                hover:bg-tokens-panel hover:border-tokens-brand-DEFAULT/30
-                active:bg-tokens-brand-DEFAULT/20
+                hover:bg-tokens-panel hover:border-primary-700/30 dark:hover:border-secondary-300/30
+                active:bg-primary-700/20 dark:active:bg-secondary-300/20
             `;
         }
 
@@ -134,8 +134,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 border-2 border-tokens-border
                 text-tokens-fg
                 
-                hover:bg-tokens-panel2 hover:border-tokens-brand-DEFAULT/50
-                active:bg-tokens-brand-DEFAULT/10
+                hover:bg-tokens-panel2 hover:border-primary-700/50 dark:hover:border-secondary-300/50
+                active:bg-primary-700/10 dark:active:bg-secondary-300/10
             `;
         }
 
@@ -145,7 +145,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 text-tokens-muted
                 
                 hover:text-tokens-fg hover:bg-tokens-panel2
-                active:bg-tokens-panel
+                active:bg-primary-700/10 dark:active:bg-secondary-300/10
             `;
         }
 
@@ -166,14 +166,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
             transition-all duration-200
             ${getCircleSize()}
             
-            bg-[#4141b9] dark:bg-[#7cb342]
-            text-white dark:text-[#1a1a1a]
+            bg-primary-700 dark:bg-secondary-300
+            text-white dark:text-secondary-950
             
-            group-hover/btn:bg-[#2a2a2a] dark:group-hover/btn:bg-[#2a2a2a]
+            group-hover/btn:bg-gray-700 dark:group-hover/btn:bg-gray-700
             group-hover/btn:text-white dark:group-hover/btn:text-white
             
-            group-active/btn:bg-[#2a2a2a] dark:group-active/btn:bg-[#7cb342]
-            group-active/btn:text-white dark:group-active/btn:text-[#1a1a1a]
+            group-active/btn:bg-gray-700 dark:group-active/btn:bg-secondary-300
+            group-active/btn:text-white dark:group-active/btn:text-secondary-950
         `;
     };
 

@@ -12,8 +12,6 @@ import {
     listProjects,
     getActiveProject,
     setActiveProject,
-    createProject,
-    ensureDefaultProject,
     importFromDisk,
     refreshFromDisk,
     Project,
@@ -228,7 +226,7 @@ function ProjectGeneratorForm() {
             <div className="flex-1">
                 <Card title={
                     <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-tokens-brand-DEFAULT rounded-full"></span>
+                        <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                         Project Setup
                     </div>
                 }>
@@ -385,7 +383,7 @@ function ProjectGeneratorForm() {
             <div className="lg:w-80 xl:w-96">
                 <Card title={
                     <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-tokens-brand-muted/50 rounded-full"></span>
+                        <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                         Preview
                     </div>
                 } className="h-fit">
@@ -404,20 +402,59 @@ function ProjectGeneratorForm() {
 
                         <div>
                             <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">Structure Preview</div>
-                            <div className="text-sm text-tokens-fg bg-tokens-panel2/50 rounded p-3 border border-tokens-border flex flex-col gap-1 font-mono">
-                                <div>📁 00_Admin</div>
-                                {options.includeNotion && <div>&nbsp;&nbsp;📄 Brief.md</div>}
-                                <div>📁 01_Work</div>
-                                {options.includeMedia && <div>📁 02_Assets</div>}
-                                {options.includeMedia && <div>📁 03_Render</div>}
-                                <div>📁 99_Delivery</div>
-                                <div>📄 project.meta.json</div>
+                            <div className="text-sm text-tokens-fg bg-tokens-panel2/50 rounded p-3 border border-tokens-border flex flex-col gap-0.5 font-mono max-h-64 overflow-y-auto">
+                                {previewResult?.plan ? (
+                                    // Sprint 20.1: Dynamic file tree from previewResult.plan
+                                    (() => {
+                                        // Build tree structure
+                                        const folders = new Set<string>();
+                                        const files: string[] = [];
+
+                                        previewResult.plan.forEach((item: { kind: string; relativePath: string }) => {
+                                            if (item.kind === 'directory') {
+                                                folders.add(item.relativePath);
+                                            } else if (item.kind === 'file') {
+                                                files.push(item.relativePath);
+                                            }
+                                        });
+
+                                        return (
+                                            <>
+                                                {Array.from(folders).sort().map(folder => (
+                                                    <div key={folder} className="text-tokens-fg">📁 {folder}</div>
+                                                ))}
+                                                {files.sort().map(file => {
+                                                    const depth = (file.match(/\//g) || []).length;
+                                                    const indent = '  '.repeat(depth);
+                                                    return (
+                                                        <div key={file} className="text-tokens-muted">
+                                                            {indent}📄 {file.split('/').pop()}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </>
+                                        );
+                                    })()
+                                ) : (
+                                    // Fallback: show static preview based on options
+                                    <>
+                                        <div>📁 00_Admin</div>
+                                        {options.includeNotion && <div>&nbsp;&nbsp;📄 Brief.md</div>}
+                                        <div>📁 01_Work</div>
+                                        {options.includeMedia && <div>📁 02_Assets</div>}
+                                        {options.includeMedia && <div>📁 03_Render</div>}
+                                        <div>📁 99_Delivery</div>
+                                        <div>📄 project.meta.json</div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400 leading-relaxed">
-                            <strong>Note:</strong> Actual folder creation will be handled by the Electron backend in a future update. This is currently a UI mockup.
-                        </div>
+                        {previewResult && (
+                            <div className="text-xs text-tokens-muted text-center">
+                                {previewResult.plan?.length || 0} items to create
+                            </div>
+                        )}
 
                     </div>
                 </Card>
@@ -436,57 +473,58 @@ export function ProjectHubPage() {
     // Project state
     const [activeProject, setActiveProjectState] = useState<Project | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
-    const [showNewProjectInput, setShowNewProjectInput] = useState(false);
-    const [newProjectName, setNewProjectName] = useState('');
-    const [refreshKey, setRefreshKey] = useState(0);
+    const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+    const [projectKey, setProjectKey] = useState(0); // For auto-swap workflow
 
-    // Load projects on mount
+    // Sprint 20.1: Blueprint filter state
+    const [blueprintFilter, setBlueprintFilter] = useState<string>('all'); // 'all' or categoryId
+
+    // Sprint 20.1: Auto-load disk projects on mount
     useEffect(() => {
-        const active = ensureDefaultProject();
-        setActiveProjectState(active);
-        setProjects(listProjects());
+        const loadDiskProjects = async () => {
+            setIsLoadingProjects(true);
+            try {
+                // First refresh from disk to get latest
+                await refreshFromDisk();
+                // Then get all projects
+                const allProjects = listProjects();
+                // Filter: only show projects that exist (have path) and are not done
+                // Sprint 20.1: Only show disk projects (those with projectPath)
+                const diskProjects = allProjects.filter(p => p.projectPath);
+                setProjects(diskProjects);
+
+                // Set active project
+                const current = getActiveProject();
+                if (current) {
+                    setActiveProjectState(current);
+                } else if (allProjects.length > 0) {
+                    // Auto-select first project
+                    setActiveProject(allProjects[0].id);
+                    setActiveProjectState(allProjects[0]);
+                }
+            } catch (err) {
+                console.error('[ProjectHub] Failed to load projects:', err);
+                // Fallback to localStorage projects
+                setProjects(listProjects());
+                const current = getActiveProject();
+                setActiveProjectState(current);
+            } finally {
+                setIsLoadingProjects(false);
+            }
+        };
+        loadDiskProjects();
     }, []);
 
     const handleTabChange = (tabId: string) => {
         setSearchParams({ tab: tabId });
     };
 
+    // Sprint 20.1: Auto-swap - update projectKey to force WorkflowCanvas remount
     const handleProjectChange = useCallback((projectId: string) => {
-        if (projectId === '__new__') {
-            setShowNewProjectInput(true);
-            return;
-        }
         setActiveProject(projectId);
         const active = getActiveProject();
         setActiveProjectState(active);
-        setRefreshKey(k => k + 1); // Force canvas refresh
-    }, []);
-
-    const handleCreateProject = useCallback(() => {
-        if (!newProjectName.trim()) return;
-        const project = createProject(newProjectName.trim());
-        setActiveProjectState(project);
-        setProjects(listProjects());
-        setNewProjectName('');
-        setShowNewProjectInput(false);
-        setRefreshKey(k => k + 1);
-    }, [newProjectName]);
-
-    // Sprint 20: Refresh projects from disk
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const handleRefreshFromDisk = useCallback(async () => {
-        setIsRefreshing(true);
-        try {
-            const importCount = await refreshFromDisk();
-            setProjects(listProjects());
-            if (importCount > 0) {
-                console.log(`[ProjectHub] Imported ${importCount} projects from disk`);
-            }
-        } catch (err) {
-            console.error('[ProjectHub] Failed to refresh from disk:', err);
-        } finally {
-            setIsRefreshing(false);
-        }
+        setProjectKey(k => k + 1); // Force workflow refresh via key change
     }, []);
 
     const tabs = [
@@ -495,10 +533,67 @@ export function ProjectHubPage() {
         { id: 'generator', label: 'Generator', icon: <Zap size={16} /> }
     ];
 
-    const projectOptions = [
-        ...projects.map(p => ({ value: p.id, label: p.name })),
-        { value: '__new__', label: '+ New Project' },
-    ];
+    // Sprint 20.1: Blueprint filter options - build from unique categoryIds
+    const blueprintFilterOptions = useMemo(() => {
+        const categories = new Set<string>();
+        projects.forEach(p => {
+            if (p.categoryId) categories.add(p.categoryId.toLowerCase());
+        });
+
+        const options: { value: string; label: string }[] = [
+            { value: 'all', label: 'All Projects' },
+            { value: 'none', label: 'No Blueprint' },
+        ];
+
+        // Add category options - capitalize first letter
+        Array.from(categories).sort().forEach(cat => {
+            options.push({
+                value: cat,
+                label: cat.charAt(0).toUpperCase() + cat.slice(1)
+            });
+        });
+
+        return options;
+    }, [projects]);
+
+    // Sprint 20.1: Filter projects by blueprint category
+    const filteredProjects = useMemo(() => {
+        if (blueprintFilter === 'all') return projects;
+        if (blueprintFilter === 'none') return projects.filter(p => !p.blueprintId);
+        return projects.filter(p => p.categoryId?.toLowerCase() === blueprintFilter);
+    }, [projects, blueprintFilter]);
+
+    // Sprint 20.1: Show only project name (parse from folder name or use name field)
+    const projectOptions = filteredProjects.map(p => {
+        // Extract display name: prefer stored name, or parse from folder name
+        // Format: YYMMDD_Category001_ProjectName → show "ProjectName"
+        let displayName = p.name;
+        if (p.projectPath) {
+            const folderName = p.projectPath.split(/[/\\]/).pop() || '';
+            const parts = folderName.split('_');
+            if (parts.length >= 3) {
+                // Take everything after the second underscore as the project name
+                displayName = parts.slice(2).join(' ').replace(/-/g, ' ');
+            }
+        }
+        return { value: p.id, label: displayName };
+    });
+
+    // Sprint 20.1: Manual refresh handler
+    const handleRefreshProjects = useCallback(async () => {
+        setIsLoadingProjects(true);
+        try {
+            const count = await refreshFromDisk();
+            const allProjects = listProjects();
+            const diskProjects = allProjects.filter(p => p.projectPath);
+            setProjects(diskProjects);
+            console.log(`[ProjectHub] Refreshed ${count} projects from disk`);
+        } catch (err) {
+            console.error('[ProjectHub] Failed to refresh:', err);
+        } finally {
+            setIsLoadingProjects(false);
+        }
+    }, []);
 
     return (
         <PageContainer>
@@ -509,44 +604,37 @@ export function ProjectHubPage() {
                     <p className="text-tokens-muted text-sm mt-1">Manage projects from start to finish.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Project Selector */}
+                    {/* Sprint 20.1: Blueprint Filter + Project Selector */}
                     <div className="flex items-center gap-2">
-                        {showNewProjectInput ? (
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    value={newProjectName}
-                                    onChange={(e) => setNewProjectName(e.target.value)}
-                                    placeholder="Project name"
-                                    className="w-40"
-                                    autoFocus
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleCreateProject();
-                                        if (e.key === 'Escape') setShowNewProjectInput(false);
-                                    }}
-                                />
-                                <Button size="sm" variant="primary" onClick={handleCreateProject}>
-                                    Create
-                                </Button>
-                                <Button size="sm" variant="secondary" onClick={() => setShowNewProjectInput(false)}>
-                                    Cancel
-                                </Button>
-                            </div>
+                        {/* Blueprint Filter Dropdown */}
+                        <SelectDropdown
+                            value={blueprintFilter}
+                            options={blueprintFilterOptions}
+                            onChange={setBlueprintFilter}
+                            className="min-w-[140px]"
+                        />
+
+                        {/* Project Dropdown - filtered by blueprint */}
+                        {isLoadingProjects ? (
+                            <div className="text-sm text-tokens-muted px-4">Loading...</div>
                         ) : (
                             <SelectDropdown
                                 value={activeProject?.id || ''}
-                                options={projectOptions}
+                                options={projectOptions.length > 0 ? projectOptions : [{ value: '', label: 'No projects...' }]}
                                 onChange={handleProjectChange}
-                                className="min-w-[180px]"
+                                className="min-w-[200px]"
+                                disabled={projectOptions.length === 0}
                             />
                         )}
-                        {/* Sprint 20: Refresh from Disk button */}
+
+                        {/* Refresh button */}
                         <button
-                            onClick={handleRefreshFromDisk}
-                            disabled={isRefreshing}
+                            onClick={handleRefreshProjects}
+                            disabled={isLoadingProjects}
                             className="p-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg transition-colors disabled:opacity-50"
                             title="Refresh projects from disk"
                         >
-                            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+                            <RefreshCw size={16} className={isLoadingProjects ? 'animate-spin' : ''} />
                         </button>
                     </div>
                     <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
@@ -564,7 +652,8 @@ export function ProjectHubPage() {
 
             {/* Tab Content */}
             <div className="mt-6">
-                {activeTab === 'workflow' && <WorkflowCanvas />}
+                {/* Sprint 20.1: key={projectKey} forces remount on project switch for auto-swap */}
+                {activeTab === 'workflow' && <WorkflowCanvas key={`workflow-${projectKey}`} />}
 
                 {activeTab === 'standards' && <StandardsTab />}
 

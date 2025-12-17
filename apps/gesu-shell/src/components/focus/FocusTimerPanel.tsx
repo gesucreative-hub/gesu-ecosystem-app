@@ -4,6 +4,7 @@
 import { X, Play, Pause, SkipForward, StopCircle, Settings } from 'lucide-react';
 import { useFocusTimer } from '../../hooks/useFocusTimer';
 import { Button } from '../Button';
+import { ConfirmDialog } from '../ConfirmDialog';
 import { useState } from 'react';
 
 interface FocusTimerPanelProps {
@@ -20,6 +21,15 @@ export function FocusTimerPanel({ isOpen, onClose }: FocusTimerPanelProps) {
         shortBreakMinutes: state.config.shortBreakMinutes,
         longBreakMinutes: state.config.longBreakMinutes,
     });
+
+    // Confirm dialog state
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'confirm' | 'warning' | 'danger';
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
     if (!isOpen) return null;
 
@@ -179,10 +189,17 @@ export function FocusTimerPanel({ isOpen, onClose }: FocusTimerPanelProps) {
                                     <Button
                                         variant="ghost"
                                         onClick={() => {
-                                            if (confirm('End focus session?')) {
-                                                stop();
-                                                onClose();
-                                            }
+                                            setConfirmDialog({
+                                                isOpen: true,
+                                                title: 'End focus session?',
+                                                message: 'Your progress will be saved but the timer will stop.',
+                                                type: 'warning',
+                                                onConfirm: () => {
+                                                    stop();
+                                                    onClose();
+                                                    setConfirmDialog({ ...confirmDialog, isOpen: false });
+                                                },
+                                            });
                                         }}
                                         icon={<StopCircle size={16} />}
                                         title="End session"
@@ -274,6 +291,16 @@ export function FocusTimerPanel({ isOpen, onClose }: FocusTimerPanelProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                type={confirmDialog.type}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+            />
         </>
     );
 }

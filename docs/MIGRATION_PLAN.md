@@ -317,6 +317,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Files**: projectStore.ts, InitiatorPage.tsx, WorkflowCanvas.tsx, StandardsTab.tsx, scaffolding.js, main.js, projects-registry.js, scaffoldingService.ts, workflowBlueprintRenderer.ts.
 - **QA Status**: Verified by user - category creation, blueprint assignment, and workflow rendering all working.
 
+### [0.10.1] - Sprint 20.1: Project Indexing & Auto-Swap (2025-12-17)
+- **Auto-Load Disk Projects**: Project Hub now auto-loads projects from projectsRoot on mount (no manual refresh needed).
+- **Simplified Dropdown**: Shows only project name (parsed from YYMMDD_CatXXX_Name folder format). Removed "+ New Project" option.
+- **Auto-Swap Workflow**: Switching project in dropdown automatically refreshes Workflow tab via key prop.
+- **Blueprint Warning Banner**: Amber banner displayed in Workflow when project has no blueprintId.
+- **Legacy Project Detection**: Folders without project.meta.json now detected, name parsed from folder naming convention.
+- **Functional Preview**: Generator preview now shows real file tree from previewResult.plan instead of static mock.
+- **Files**: InitiatorPage.tsx, WorkflowCanvas.tsx, projects-registry.js.
+- **QA Status**: Implementation complete, pending user verification.
 
 ### [0.9.1] - Sprint 19: Finish-First Compass + Task-Timer Coupling + Density (2025-12-17)
 - **Task-Timer Coupling**: Extended focusTimerStore with TaskContext (taskId, taskTitle, projectName, stepTitle) and startWithTask() function.
@@ -372,4 +381,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 
 ### [0.1.0] - Alpha
 - Skeleton setup.
+
+### [0.10.2] - Sprint 20.2: UI Polish & Robust Dialogs (2025-12-17)
+- **Robust Dialogs**: Refactored `ConfirmDialog` and `AlertDialog` to use `React Portals` (`createPortal`), rendering them at `document.body` level. This permanently resolves z-index stacking context issues and parent container clipping.
+- **UI Polish**: Relocated "Focus Score" badge to the left side of the Focus Details header for better scanability.
+- **Code Quality**: Fixed unused variable lint errors in `scaffoldingService.ts` and `CompassPage.tsx`.
+- **Theme Awareness**: Updated `Button` component to strictly use `primary-700` (Light) and `secondary-300` (Dark).
+- **Files**: `ConfirmDialog.tsx`, `AlertDialog.tsx`, `CompassPage.tsx`, `scaffoldingService.ts`, `Button.tsx`.
+- **QA Status**: 
+  - **Browser QA**: Verified "Stop Timer" dialog appears above all elements (PASS). Verified Focus Details UI layout (PASS).
+  - **Desktop QA**: Verified file-backed features remain stable (PASS).
 

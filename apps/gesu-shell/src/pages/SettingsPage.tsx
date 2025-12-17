@@ -6,7 +6,9 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
-import { Save, Search, Loader2 } from 'lucide-react';
+import { Save, Search, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { AlertDialog } from '../components/AlertDialog';
 
 
 // --- Types & Interfaces ---
@@ -100,13 +102,6 @@ const DEFAULT_ENGINES: EngineConfig[] = [
     // Note: LibreOffice/soffice de-scoped - document conversion not in current release
 ];
 
-const ACCENT_COLORS = [
-    { id: 'cyan', label: 'Cyan', class: 'bg-cyan-500' },
-    { id: 'purple', label: 'Purple', class: 'bg-purple-500' },
-    { id: 'emerald', label: 'Emerald', class: 'bg-emerald-500' },
-    { id: 'rose', label: 'Rose', class: 'bg-rose-500' },
-    { id: 'orange', label: 'Orange', class: 'bg-orange-500' }
-];
 
 // --- Helper Components ---
 
@@ -152,7 +147,23 @@ export function SettingsPage() {
     const [installPreference, setInstallPreference] = useState<InstallMethod>('manual');
     const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
-    const [desktopPingResult, setDesktopPingResult] = useState<string | null>(null);
+
+    // Confirm dialog state
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        type?: 'confirm' | 'warning' | 'danger';
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+
+    // Alert dialog state
+    const [alertDialog, setAlertDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        type?: 'success' | 'error' | 'warning' | 'info';
+    }>({ isOpen: false, title: '', message: '' });
     const [isCheckingTools, setIsCheckingTools] = useState(false);
 
     // Hydrate state from shared hook
@@ -186,24 +197,6 @@ export function SettingsPage() {
         }
     }, [loadedSettings]);
 
-    // Handlers
-    const handleTestDesktopBridge = async () => {
-        if (!window.gesu?.ping) {
-            setDesktopPingResult('Desktop bridge is not available. (Are you in Electron?)');
-            return;
-        }
-
-        try {
-            setDesktopPingResult('Pinging...');
-            const result = await window.gesu.ping({ source: 'SettingsPage' });
-            setDesktopPingResult(`Recv: "${result.message}" @ ${result.receivedAt}`);
-            console.log('[SettingsPingResult]', result);
-        } catch (error) {
-            console.error('[SettingsPingError]', error);
-            setDesktopPingResult('Ping failed. See console.');
-        }
-    };
-
     // Settings Handlers
     const updateSettings = (section: keyof SettingsState, key: string, value: any) => {
         setSettings(prev => ({
@@ -225,7 +218,7 @@ export function SettingsPage() {
 
     const handleBrowseFolder = async (section: keyof SettingsState, key: string) => {
         if (!window.gesu?.dialog?.pickFolder) {
-            alert("Dialog API not available.");
+            setAlertDialog({ isOpen: true, title: 'Error', message: 'Dialog API not available.', type: 'error' });
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,7 +231,7 @@ export function SettingsPage() {
 
     const handleBrowseTool = async (id: EngineId) => {
         if (!window.gesu?.dialog?.pickFile) {
-            alert("Dialog API not available.");
+            setAlertDialog({ isOpen: true, title: 'Error', message: 'Dialog API not available.', type: 'error' });
             return;
         }
         const engine = engines.find(e => e.id === id);
@@ -253,7 +246,7 @@ export function SettingsPage() {
 
     const checkAllTools = async () => {
         if (!window.gesu?.checkTools) {
-            alert("Desktop bridge not available. Run inside Electron to perform real checks.");
+            setAlertDialog({ isOpen: true, title: 'Error', message: 'Desktop bridge not available. Run inside Electron to perform real checks.', type: 'error' });
             return;
         }
 
@@ -304,7 +297,7 @@ export function SettingsPage() {
             }));
         } catch (err) {
             console.error(err);
-            alert("Error running tools check.");
+            setAlertDialog({ isOpen: true, title: 'Error', message: 'Error running tools check.', type: 'error' });
         } finally {
             setIsCheckingTools(false);
         }
@@ -327,7 +320,7 @@ export function SettingsPage() {
         try {
             await saveSettings(payload);
             console.log("Settings Saved to Disk via Shared Hook:", payload);
-            alert("Settings saved successfully to disk!");
+            setAlertDialog({ isOpen: true, title: 'Success', message: 'Settings saved successfully to disk!', type: 'success' });
             setIsDirty(false);
             checkAllTools();
 
@@ -335,194 +328,285 @@ export function SettingsPage() {
             await refresh();
         } catch (err) {
             console.error(err);
-            alert("Failed to save settings.");
+            setAlertDialog({ isOpen: true, title: 'Error', message: 'Failed to save settings.', type: 'error' });
         }
     };
 
     const handleReset = () => {
-        if (confirm("Reset all settings to defaults?")) {
-            setSettings(DEFAULT_SETTINGS);
-            setEngines(DEFAULT_ENGINES);
-            setInstallPreference('manual');
-            setIsDirty(true);
-        }
+        setConfirmDialog({
+            isOpen: true,
+            title: 'Reset all settings?',
+            message: 'This will restore all settings to their default values.',
+            type: 'danger',
+            onConfirm: () => {
+                setSettings(DEFAULT_SETTINGS);
+                setEngines(DEFAULT_ENGINES);
+                setInstallPreference('manual');
+                setIsDirty(true);
+                setConfirmDialog({ ...confirmDialog, isOpen: false });
+            },
+        });
     };
 
     return (
-        <PageContainer className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
+        <>
+            <PageContainer className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
 
-            {/* Header */}
-            <div className="flex justify-between items-center mb-2">
-                <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Settings</h1>
-                    <p className="text-tokens-muted text-sm mt-1">Global configuration for paths, appearance, and tools.</p>
+                {/* Header */}
+                <div className="flex justify-between items-center mb-2">
+                    <div>
+                        <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Settings</h1>
+                        <p className="text-tokens-muted text-sm mt-1">Global configuration for paths, appearance, and tools.</p>
+                    </div>
+                    <Link to="/" className="px-4 py-2 bg-tokens-panel hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors">
+                        ← Back
+                    </Link>
                 </div>
-                <Link to="/" className="px-4 py-2 bg-tokens-panel hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors">
-                    ← Back
-                </Link>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                {/* Workspace Paths */}
-                <Card title={
-                    <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-cyan-500 rounded-full"></span>
-                        Workspace Paths
-                    </div>
-                } className="lg:col-span-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <Input
-                                label="Workflow Root"
-                                value={settings.paths.workflowRoot}
-                                onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
-                            />
-                            <div className="flex justify-between items-center">
-                                <p className="text-xs text-tokens-muted">Root folder for the entire Gesu ecosystem database.</p>
-                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'workflowRoot')}>Browse</Button>
-                            </div>
+                    {/* Workspace Paths */}
+                    <Card title={
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
+                            Workspace Paths
                         </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Input
-                                label="Projects Root"
-                                value={settings.paths.projectsRoot}
-                                onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
-                            />
-                            <div className="flex justify-between items-center">
-                                <p className="text-xs text-tokens-muted">Directory where new projects will be initialized.</p>
-                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'projectsRoot')}>Browse</Button>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Input
-                                label="Backup Location"
-                                value={settings.paths.backupRoot}
-                                onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
-                            />
-                            <div className="flex justify-end items-center">
-                                <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'backupRoot')}>Browse</Button>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Engine Manager */}
-                <Card title={
-                    <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-orange-500 rounded-full"></span>
-                        Engine Manager
-                    </div>
-                } headerAction={
-                    <div className="flex bg-tokens-panel2 p-0.5 rounded-lg border border-tokens-border">
-                        {['Manual', 'Winget', 'Choco', 'Scoop'].map((method) => (
-                            <button
-                                key={method}
-                                onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
-                                className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${installPreference === method.toLowerCase()
-                                    ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow-sm'
-                                    : 'text-tokens-muted hover:text-tokens-fg'
-                                    }`}
-                            >
-                                {method}
-                            </button>
-                        ))}
-                    </div>
-                } className="lg:col-span-2">
-                    <p className="text-sm text-tokens-muted -mt-4 mb-6">Configure paths and check the status of external tools used by Gesu.</p>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Filter out libreOffice - document conversion deferred to future release */}
-                        {engines.filter(e => e.id !== 'libreOffice').map((engine) => (
-                            <div key={engine.id} className="bg-tokens-panel2/30 border border-tokens-border rounded-xl p-4 flex flex-col gap-3">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <div className="font-semibold text-tokens-fg text-sm">{engine.label}</div>
-                                        <div className="text-[10px] text-tokens-muted">{engine.description}</div>
-                                    </div>
-                                    <StatusBadge status={engine.status} version={engine.version} />
+                    } className="lg:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex flex-col gap-2">
+                                <Input
+                                    label="Workflow Root"
+                                    value={settings.paths.workflowRoot}
+                                    onChange={(e) => updateSettings('paths', 'workflowRoot', e.target.value)}
+                                />
+                                <div className="flex justify-between items-center">
+                                    <p className="text-xs text-tokens-muted">Root folder for the entire Gesu ecosystem database.</p>
+                                    <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'workflowRoot')}>Browse</Button>
                                 </div>
+                            </div>
 
-                                <div className="flex gap-2 items-center">
-                                    <input
-                                        type="text"
-                                        value={engine.path}
-                                        onChange={(e) => updateEnginePath(engine.id, e.target.value)}
-                                        placeholder="Enter absolute path..."
-                                        className="flex-1 bg-tokens-panel border border-tokens-border rounded-lg px-3 py-1.5 text-tokens-fg focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30 font-mono text-[10px]"
-                                    />
-                                    <Button size="sm" variant="ghost" onClick={() => handleBrowseTool(engine.id)} className="h-7 px-2 text-xs">Browse</Button>
-                                    <Button size="sm" variant="ghost" onClick={() => detectEngine(engine.id)} title="Check this tool" className="h-7 px-2 text-xs">Check</Button>
+                            <div className="flex flex-col gap-2">
+                                <Input
+                                    label="Projects Root"
+                                    value={settings.paths.projectsRoot}
+                                    onChange={(e) => updateSettings('paths', 'projectsRoot', e.target.value)}
+                                />
+                                <div className="flex justify-between items-center">
+                                    <p className="text-xs text-tokens-muted">Directory where new projects will be initialized.</p>
+                                    <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'projectsRoot')}>Browse</Button>
                                 </div>
+                            </div>
 
-                                <div className="flex justify-between items-center mt-1">
-                                    <div className="text-[10px] text-tokens-muted">
-                                        Last check: {engine.lastCheckedAt ? new Date(engine.lastCheckedAt).toLocaleTimeString() : 'Never'}
+                            <div className="flex flex-col gap-2">
+                                <Input
+                                    label="Backup Location"
+                                    value={settings.paths.backupRoot}
+                                    onChange={(e) => updateSettings('paths', 'backupRoot', e.target.value)}
+                                />
+                                <div className="flex justify-end items-center">
+                                    <Button size="sm" variant="secondary" onClick={() => handleBrowseFolder('paths', 'backupRoot')}>Browse</Button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Engine Manager */}
+                    <Card title={
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
+                            Engine Manager
+                        </div>
+                    } headerAction={
+                        <div className="flex bg-tokens-panel2 p-0.5 rounded-lg border border-tokens-border">
+                            {['Manual', 'Winget', 'Choco', 'Scoop'].map((method) => (
+                                <button
+                                    key={method}
+                                    onClick={() => setInstallPreference(method.toLowerCase() as InstallMethod)}
+                                    className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${installPreference === method.toLowerCase()
+                                        ? 'bg-tokens-brand-DEFAULT text-tokens-brand-contrast shadow-sm'
+                                        : 'text-tokens-muted hover:text-tokens-fg'
+                                        }`}
+                                >
+                                    {method}
+                                </button>
+                            ))}
+                        </div>
+                    } className="lg:col-span-2">
+                        <p className="text-sm text-tokens-muted -mt-4 mb-6">Configure paths and check the status of external tools used by Gesu.</p>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Filter out libreOffice - document conversion deferred to future release */}
+                            {engines.filter(e => e.id !== 'libreOffice').map((engine) => (
+                                <div key={engine.id} className="bg-tokens-panel2/30 border border-tokens-border rounded-xl p-4 flex flex-col gap-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-semibold text-tokens-fg text-sm">{engine.label}</div>
+                                            <div className="text-[10px] text-tokens-muted">{engine.description}</div>
+                                        </div>
+                                        <StatusBadge status={engine.status} version={engine.version} />
                                     </div>
-                                    {installPreference !== 'manual' && engine.installHint[installPreference] && (
-                                        <button
-                                            onClick={() => setShowInstallHints(!showInstallHints)}
-                                            className="text-[10px] text-tokens-brand-DEFAULT hover:underline decoration-dotted"
-                                        >
-                                            {showInstallHints ? 'Hide command' : 'Install command'}
-                                        </button>
+
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="text"
+                                            value={engine.path}
+                                            onChange={(e) => updateEnginePath(engine.id, e.target.value)}
+                                            placeholder="Enter absolute path..."
+                                            className="flex-1 bg-tokens-panel border border-tokens-border rounded-lg px-3 py-1.5 text-tokens-fg focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30 font-mono text-[10px]"
+                                        />
+                                        <Button size="sm" variant="ghost" onClick={() => handleBrowseTool(engine.id)} className="h-7 px-2 text-xs">Browse</Button>
+                                        <Button size="sm" variant="ghost" onClick={() => detectEngine(engine.id)} title="Check this tool" className="h-7 px-2 text-xs">Check</Button>
+                                    </div>
+
+                                    <div className="flex justify-between items-center mt-1">
+                                        <div className="text-[10px] text-tokens-muted">
+                                            Last check: {engine.lastCheckedAt ? new Date(engine.lastCheckedAt).toLocaleTimeString() : 'Never'}
+                                        </div>
+                                        {installPreference !== 'manual' && engine.installHint[installPreference] && (
+                                            <button
+                                                onClick={() => setShowInstallHints(!showInstallHints)}
+                                                className="text-[10px] text-tokens-brand-DEFAULT hover:underline decoration-dotted"
+                                            >
+                                                {showInstallHints ? 'Hide command' : 'Install command'}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {showInstallHints && installPreference !== 'manual' && engine.installHint[installPreference] && (
+                                        <div className="mt-1 bg-black/40 p-2 rounded border border-tokens-border font-mono text-[10px] text-gray-400 select-all break-all">
+                                            &gt; {engine.installHint[installPreference]}
+                                        </div>
                                     )}
                                 </div>
-
-                                {showInstallHints && installPreference !== 'manual' && engine.installHint[installPreference] && (
-                                    <div className="mt-1 bg-black/40 p-2 rounded border border-tokens-border font-mono text-[10px] text-gray-400 select-all break-all">
-                                        &gt; {engine.installHint[installPreference]}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    <Button
-                        variant="secondary"
-                        fullWidth
-                        onClick={checkAllTools}
-                        disabled={isCheckingTools}
-                        className="mt-6"
-                        icon={isCheckingTools ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-                        iconPosition="circle"
-                    >
-                        {isCheckingTools ? 'Checking System...' : 'Run Global Tools Check'}
-                    </Button>
-                </Card>
-
-                {/* Desktop Bridge Test (Dev) */}
-                <Card title={
-                    <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-green-500 rounded-full"></span>
-                        Desktop Bridge Test
-                    </div>
-                } className="lg:col-span-2">
-                    <div className="flex justify-between items-center">
-                        <p className="text-sm text-tokens-muted">Verify IPC communication between React and Electron.</p>
-                        <div className="flex items-center gap-4">
-                            <span className="font-mono text-xs text-tokens-muted bg-tokens-panel2/50 px-3 py-1.5 rounded border border-tokens-border">
-                                {desktopPingResult || 'No ping yet'}
-                            </span>
-                            <Button onClick={handleTestDesktopBridge}>Test Bridge</Button>
+                            ))}
                         </div>
-                    </div>
-                </Card>
 
-                {/* Appearance */}
-                <Card title={
-                    <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
-                        Appearance
-                    </div>
-                } className="lg:col-span-2">
+                        <Button
+                            variant="secondary"
+                            fullWidth
+                            onClick={checkAllTools}
+                            disabled={isCheckingTools}
+                            className="mt-6"
+                            icon={isCheckingTools ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                            iconPosition="circle"
+                        >
+                            {isCheckingTools ? 'Checking System...' : 'Run Global Tools Check'}
+                        </Button>
+                    </Card>
 
-                    <div className="flex flex-col md:flex-row gap-8">
-                        <div className="flex flex-col gap-3">
-                            <label className="text-sm font-medium text-tokens-muted">Color Theme</label>
-                            <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border w-fit">
+                    {/* Configuration Health Check */}
+                    <Card title={
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
+                            Configuration Health
+                        </div>
+                    } className="lg:col-span-2">
+                        <div className="space-y-4">
+                            {/* Overall Status */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {(() => {
+                                        const toolsReady = engines.filter(e => e.status === 'ok' || e.status === 'system').length;
+                                        const pathsConfigured = [settings.paths.workflowRoot, settings.paths.projectsRoot, settings.paths.backupRoot].filter(p => p && p.trim()).length;
+                                        const allGood = toolsReady === engines.length && pathsConfigured === 3;
+
+                                        return (
+                                            <>
+                                                <div className={`p-2 rounded-lg ${allGood ? 'bg-green-500/10' : 'bg-amber-500/10'}`}>
+                                                    {allGood ? (
+                                                        <CheckCircle size={24} className="text-green-500" />
+                                                    ) : (
+                                                        <AlertCircle size={24} className="text-amber-500" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-tokens-fg">
+                                                        {allGood ? 'All Systems Ready' : 'Configuration Incomplete'}
+                                                    </div>
+                                                    <div className="text-xs text-tokens-muted">
+                                                        {allGood ? 'Everything is configured correctly' : 'Some settings need attention'}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Status Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Tools Status */}
+                                <div className="p-3 bg-tokens-panel2/50 rounded-lg border border-tokens-border">
+                                    <div className="text-xs text-tokens-muted mb-1">External Tools</div>
+                                    <div className="text-2xl font-bold text-tokens-fg">
+                                        {engines.filter(e => e.status === 'ok' || e.status === 'system').length}/{engines.length}
+                                    </div>
+                                    <div className="text-xs text-tokens-muted">Ready</div>
+                                </div>
+
+                                {/* Paths Status */}
+                                <div className="p-3 bg-tokens-panel2/50 rounded-lg border border-tokens-border">
+                                    <div className="text-xs text-tokens-muted mb-1">Directory Paths</div>
+                                    <div className="text-2xl font-bold text-tokens-fg">
+                                        {[settings.paths.workflowRoot, settings.paths.projectsRoot, settings.paths.backupRoot].filter(p => p && p.trim()).length}/3
+                                    </div>
+                                    <div className="text-xs text-tokens-muted">Configured</div>
+                                </div>
+                            </div>
+
+                            {/* Issues List */}
+                            {(() => {
+                                const issues = [];
+                                const missingTools = engines.filter(e => e.status === 'missing' || e.status === 'error');
+                                const missingPaths = [];
+
+                                if (!settings.paths.workflowRoot?.trim()) missingPaths.push('Workflow Root');
+                                if (!settings.paths.projectsRoot?.trim()) missingPaths.push('Projects Root');
+                                if (!settings.paths.backupRoot?.trim()) missingPaths.push('Backup Root');
+
+                                if (missingTools.length > 0) {
+                                    issues.push(`${missingTools.length} tool(s) not found: ${missingTools.map(t => t.id).join(', ')}`);
+                                }
+                                if (missingPaths.length > 0) {
+                                    issues.push(`Missing paths: ${missingPaths.join(', ')}`);
+                                }
+
+                                return issues.length > 0 ? (
+                                    <div className="p-3 bg-amber-500/5 rounded-lg border border-amber-500/20">
+                                        <div className="text-xs font-medium text-amber-600 dark:text-amber-400 mb-2">Issues Found:</div>
+                                        <ul className="space-y-1">
+                                            {issues.map((issue, i) => (
+                                                <li key={i} className="text-xs text-tokens-muted flex items-start gap-2">
+                                                    <span className="text-amber-500 mt-0.5">⚠</span>
+                                                    <span>{issue}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    <div className="p-3 bg-green-500/5 rounded-lg border border-green-500/20 text-center">
+                                        <span className="text-xs text-green-600 dark:text-green-400">✓ No issues found</span>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </Card>
+
+                    {/* Theme Switcher */}
+                    <Card title={
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
+                            Appearance
+                        </div>
+                    } className="lg:col-span-2">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="text-sm font-medium text-tokens-fg mb-1">Color Theme</div>
+                                <div className="text-xs text-tokens-muted">
+                                    Light mode uses Indigo accent, Dark mode uses Green accent
+                                </div>
+                            </div>
+                            <div className="flex bg-tokens-panel2 p-1 rounded-lg border border-tokens-border">
                                 {['System', 'Dark', 'Light'].map((mode) => (
                                     <button
                                         key={mode}
@@ -537,56 +621,50 @@ export function SettingsPage() {
                                 ))}
                             </div>
                         </div>
+                    </Card>
 
-                        <div className="flex flex-col gap-3">
-                            <label className="text-sm font-medium text-tokens-muted">Accent Color</label>
-                            <div className="flex gap-3">
-                                {ACCENT_COLORS.map(color => (
-                                    <button
-                                        key={color.id}
-                                        onClick={() => updateSettings('appearance', 'accentColor', color.id)}
-                                        className={`w-8 h-8 rounded-full ${color.class} transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tokens-bg focus:ring-tokens-border ${settings.appearance.accentColor === color.id ? 'ring-2 ring-tokens-fg scale-110' : ''
-                                            }`}
-                                        title={color.label}
-                                    />
-                                ))}
-                            </div>
-                        </div>
+                </div>
 
-                        <label className="flex items-center gap-3 cursor-pointer group mt-auto mb-2">
-                            <input
-                                type="checkbox"
-                                checked={settings.appearance.glassmorphism}
-                                onChange={(e) => updateSettings('appearance', 'glassmorphism', e.target.checked)}
-                                className="w-5 h-5 rounded border-tokens-border bg-tokens-panel2 text-purple-500 focus:ring-purple-500/40"
-                            />
-                            <span className="text-sm text-tokens-muted group-hover:text-tokens-fg transition-colors">Enable glassmorphism effects</span>
-                        </label>
-                    </div>
-                </Card>
+                {/* Sticky Action Footer */}
+                <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-tokens-panel/90 backdrop-blur-md border border-tokens-border rounded-full px-6 py-3 flex gap-4 items-center shadow-2xl transition-all duration-300 ${isDirty ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+                    <span className="text-sm text-tokens-muted font-medium">Unsaved changes</span>
+                    <div className="h-4 w-px bg-tokens-border"></div>
+                    <button
+                        onClick={handleReset}
+                        className="text-sm text-tokens-muted hover:text-tokens-fg transition-colors"
+                    >
+                        Reset
+                    </button>
+                    <Button
+                        variant="primary"
+                        onClick={handleSave}
+                        icon={<Save size={16} />}
+                        iconPosition="circle"
+                    >
+                        Save Settings
+                    </Button>
+                </div>
 
-            </div>
+            </PageContainer>
 
-            {/* Sticky Action Footer */}
-            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 bg-tokens-panel/90 backdrop-blur-md border border-tokens-border rounded-full px-6 py-3 flex gap-4 items-center shadow-2xl transition-all duration-300 ${isDirty ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-                <span className="text-sm text-tokens-muted font-medium">Unsaved changes</span>
-                <div className="h-4 w-px bg-tokens-border"></div>
-                <button
-                    onClick={handleReset}
-                    className="text-sm text-tokens-muted hover:text-tokens-fg transition-colors"
-                >
-                    Reset
-                </button>
-                <Button
-                    variant="primary"
-                    onClick={handleSave}
-                    icon={<Save size={16} />}
-                    iconPosition="circle"
-                >
-                    Save Settings
-                </Button>
-            </div>
+            {/* Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                type={confirmDialog.type}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+            />
 
-        </PageContainer>
+            {/* Alert Dialog */}
+            <AlertDialog
+                isOpen={alertDialog.isOpen}
+                title={alertDialog.title}
+                message={alertDialog.message}
+                type={alertDialog.type}
+                onClose={() => setAlertDialog({ ...alertDialog, isOpen: false })}
+            />
+        </>
     );
 }

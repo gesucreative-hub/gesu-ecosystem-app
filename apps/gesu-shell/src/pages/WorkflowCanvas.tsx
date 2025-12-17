@@ -16,7 +16,6 @@ import {
 import { getActiveProject } from '../stores/projectStore';
 import { loadBlueprints, getBlueprintById } from '../services/workflowBlueprintsService';
 import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
-import { DEFAULT_BLUEPRINT_ID } from '../types/workflowBlueprints';
 
 // --- Node Component ---
 interface WorkflowNodeCardProps {
@@ -123,7 +122,6 @@ export function WorkflowCanvas() {
     // Blueprint loading state
     const [baseNodes, setBaseNodes] = useState<WorkflowNode[]>(WORKFLOW_NODES);
     const [blueprintError, setBlueprintError] = useState<string | null>(null);
-    const [isLoadingBlueprint, setIsLoadingBlueprint] = useState(false);
 
     // Local state for nodes (merged with persisted progress)
     const [nodes, setNodes] = useState<WorkflowNode[]>(() => mergeNodesWithProgress(WORKFLOW_NODES));
@@ -139,10 +137,21 @@ export function WorkflowCanvas() {
                 return;
             }
 
-            const blueprintId = project.blueprintId || DEFAULT_BLUEPRINT_ID;
+            // Sprint 20.1: Check if project has blueprint assigned
+            const hasOwnBlueprint = !!project.blueprintId;
+
+            // If project has no blueprint, show blank canvas with warning
+            if (!hasOwnBlueprint) {
+                console.log('[WorkflowCanvas] Project has no blueprint, showing blank canvas:', project.name);
+                setBaseNodes([]);
+                setNodes([]);
+                setBlueprintError(`Project "${project.name}" has no blueprint assigned. Go to Standards tab to create one.`);
+                return;
+            }
+
+            const blueprintId = project.blueprintId!;
             console.log('[WorkflowCanvas] Loading blueprint for project:', project.name, 'blueprintId:', blueprintId);
 
-            setIsLoadingBlueprint(true);
             setBlueprintError(null);
 
             try {
@@ -156,28 +165,21 @@ export function WorkflowCanvas() {
                     setNodes(mergeNodesWithProgress(blueprintNodes));
                     setBlueprintError(null);
                 } else {
-                    console.warn('[WorkflowCanvas] Blueprint not found:', blueprintId, ', falling back to static');
-                    setBaseNodes(WORKFLOW_NODES);
-                    setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
-                    setBlueprintError(`Blueprint "${blueprintId}" not found. Using default workflow.`);
+                    console.warn('[WorkflowCanvas] Blueprint not found:', blueprintId, ', showing blank canvas');
+                    setBaseNodes([]);
+                    setNodes([]);
+                    setBlueprintError(`Blueprint "${blueprintId}" not found. Check Standards tab.`);
                 }
             } catch (err) {
                 console.error('[WorkflowCanvas] Failed to load blueprint:', err);
                 setBaseNodes(WORKFLOW_NODES);
                 setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
                 setBlueprintError('Failed to load blueprint. Using default workflow.');
-            } finally {
-                setIsLoadingBlueprint(false);
             }
         };
 
         loadBlueprintForProject();
     }, []); // Re-run when component mounts; external project switch triggers parent remount
-
-    // Refresh helper for external triggers (uses current baseNodes)
-    const refreshNodes = useCallback(() => {
-        setNodes(mergeNodesWithProgress(baseNodes));
-    }, [baseNodes]);
 
     // Find selected node
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
@@ -241,8 +243,11 @@ export function WorkflowCanvas() {
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         if (!isPanning) return;
-        const newX = e.clientX - panStart.x;
-        const newY = e.clientY - panStart.y;
+        // Sprint 20.1: Limit pan to stay within the 10000px background (centered at -5000)
+        // Allow ±4000px to keep the edge hidden
+        const PAN_LIMIT = 4000;
+        const newX = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, e.clientX - panStart.x));
+        const newY = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, e.clientY - panStart.y));
         setPan({ x: newX, y: newY });
     }, [isPanning, panStart]);
 
@@ -278,21 +283,50 @@ export function WorkflowCanvas() {
         }).filter(Boolean) as { id: string; fromX: number; fromY: number; toX: number; toY: number }[];
     }, [nodePositions]);
 
+    // Sprint 20.1: Check if canvas should be empty (no blueprint)
+    const isEmptyCanvas = nodes.length === 0;
+
     return (
         <div className="flex gap-6 h-[600px]">
-            {/* Canvas Column */}
-            <div className="flex-1 relative bg-tokens-panel2 rounded-xl border border-tokens-border overflow-hidden">
-                {/* Reset View Button */}
-                <button
-                    onClick={handleReset}
-                    className="absolute top-3 right-3 z-20 px-3 py-1.5 bg-tokens-panel border border-tokens-border 
-                               rounded-lg text-xs font-medium text-tokens-muted hover:text-tokens-fg 
-                               hover:bg-tokens-panel2 transition-colors flex items-center gap-1.5 shadow-sm"
-                    title="Reset view"
-                >
-                    <RotateCcw size={14} />
-                    Reset
-                </button>
+            {/* Canvas Column - Sprint 20.1: Theme-aware background like Obsidian */}
+            <div
+                className="flex-1 relative rounded-xl border border-tokens-border overflow-hidden"
+                style={{
+                    backgroundColor: 'var(--color-tokens-panel2)'
+                }}
+            >
+                {/* Sprint 20.1: Centered "No blueprint yet" message */}
+                {isEmptyCanvas && blueprintError && (
+                    <div className="absolute inset-0 flex items-center justify-center z-20">
+                        <div
+                            className="px-6 py-4 rounded-xl border-2 border-dashed border-tokens-border bg-tokens-panel/80 backdrop-blur-sm"
+                            style={{
+                                background: 'repeating-linear-gradient(45deg, var(--color-tokens-panel), var(--color-tokens-panel) 10px, var(--color-tokens-panel2) 10px, var(--color-tokens-panel2) 20px)'
+                            }}
+                        >
+                            <div className="text-tokens-muted text-sm font-medium text-center">
+                                No blueprint yet
+                            </div>
+                            <div className="text-tokens-muted/60 text-xs text-center mt-1">
+                                Go to Standards tab to create one
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reset View Button - only show when there are nodes */}
+                {!isEmptyCanvas && (
+                    <button
+                        onClick={handleReset}
+                        className="absolute top-3 right-3 z-20 px-3 py-1.5 bg-tokens-panel border border-tokens-border 
+                                   rounded-lg text-xs font-medium text-tokens-muted hover:text-tokens-fg 
+                                   hover:bg-tokens-panel2 transition-colors flex items-center gap-1.5 shadow-sm"
+                        title="Reset view"
+                    >
+                        <RotateCcw size={14} />
+                        Reset
+                    </button>
+                )}
 
                 {/* Pannable Container */}
                 <div
@@ -310,7 +344,22 @@ export function WorkflowCanvas() {
                         style={{ width: '200%', height: '200%', left: '-50%', top: '-50%' }}
                     />
 
-                    {/* Transformed Layer */}
+                    {/* Infinite dotted background - Sprint 20.1: Separate layer for background only */}
+                    <div
+                        className="absolute pointer-events-none dark:opacity-100 opacity-50"
+                        style={{
+                            transform: `translate(${pan.x}px, ${pan.y}px)`,
+                            width: '10000px',
+                            height: '10000px',
+                            left: '-5000px',
+                            top: '-5000px',
+                            backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                            backgroundSize: '20px 20px',
+                            color: 'rgba(128, 128, 128, 0.15)'
+                        }}
+                    />
+
+                    {/* Content layer - nodes, phases, connectors */}
                     <div
                         className="absolute pointer-events-none"
                         style={{
@@ -351,8 +400,8 @@ export function WorkflowCanvas() {
                             ))}
                         </svg>
 
-                        {/* Swimlane Headers */}
-                        {WORKFLOW_PHASES.map((phase, index) => {
+                        {/* Phase Headers - Sprint 20.1: Show for projects with blueprints */}
+                        {!isEmptyCanvas && WORKFLOW_PHASES.map((phase, index) => {
                             const { nodeWidth, nodeGapX, swimlanePadding, swimlaneHeaderHeight } = CANVAS_CONFIG;
                             const phaseX = index * (nodeWidth + nodeGapX * 2) + swimlanePadding;
 

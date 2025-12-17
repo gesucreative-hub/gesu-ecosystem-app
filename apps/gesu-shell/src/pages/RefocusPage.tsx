@@ -101,7 +101,7 @@ export function RefocusPage() {
                     {/* State Selection Card */}
                     <Card title={
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-tokens-brand-DEFAULT rounded-full"></span>
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                             How are you feeling right now?
                         </div>
                     }>
@@ -114,8 +114,8 @@ export function RefocusPage() {
                                         key={state.id}
                                         onClick={() => setSelectedState(state.id)}
                                         className={`p-4 rounded-lg border-2 text-left transition-all ${isSelected
-                                                ? `${state.border} ${state.bg} bg-opacity-10`
-                                                : 'border-tokens-border hover:border-tokens-brand-DEFAULT/30 bg-tokens-panel2'
+                                            ? `${state.border} ${state.bg} bg-opacity-10`
+                                            : 'border-tokens-border hover:border-tokens-brand-DEFAULT/30 bg-tokens-panel2'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -170,7 +170,7 @@ export function RefocusPage() {
                     {/* Rescue Focus CTA */}
                     <Card title={
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
                             Rescue Focus (15 min)
                         </div>
                     } className="sticky top-24">

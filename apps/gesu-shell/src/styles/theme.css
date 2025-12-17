@@ -29,8 +29,8 @@
     /* High contrast dark blue/purple */
     --muted: #6d6d6d;
     --panel: #ffffff;
-    --panel2: #f3fbea;
-    /* Slight tint? Or #eff4fe */
+    --panel2: #f0f0f0;
+    /* Neutral grey - removed green tint */
     --border: rgba(0, 0, 0, 0.08);
     --ring: rgba(65, 65, 185, 0.3);
 

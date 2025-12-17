@@ -386,11 +386,15 @@ ipcMain.handle('projects:list', async () => {
         const settings = await loadGlobalSettings();
         const projectsRoot = settings.paths?.projectsRoot;
 
+        console.log('[projects:list] projectsRoot from settings:', projectsRoot);
+
         if (!projectsRoot || projectsRoot.trim() === '') {
+            console.log('[projects:list] No projectsRoot configured, returning empty');
             return [];
         }
 
         const projects = await listProjects(projectsRoot);
+        console.log('[projects:list] Found', projects.length, 'projects');
         return projects;
     } catch (err) {
         console.error('[projects:list] Error:', err);

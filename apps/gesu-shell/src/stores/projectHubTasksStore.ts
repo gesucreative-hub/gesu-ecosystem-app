@@ -146,6 +146,7 @@ export function addTaskToToday(params: {
     const tasks = getTodayTasks();
     tasks.push(task);
     saveTasksForDate(dateKey, tasks);
+    notifySubscribers(); // Notify subscribers immediately
     return task;
 }
 
@@ -156,6 +157,7 @@ export function toggleTaskDone(taskId: string): void {
         t.id === taskId ? { ...t, done: !t.done } : t
     );
     saveTasksForDate(dateKey, updated);
+    notifySubscribers(); // Notify after mutation
 }
 
 export function removeTask(taskId: string): void {
@@ -163,4 +165,26 @@ export function removeTask(taskId: string): void {
     const tasks = getTodayTasks();
     const filtered = tasks.filter(t => t.id !== taskId);
     saveTasksForDate(dateKey, filtered);
+    notifySubscribers(); // Notify after mutation
 }
+
+// --- Reactive Subscription Pattern ---
+
+const subscribers = new Set<() => void>();
+
+/**
+ * Subscribe to task changes (add/remove/toggle)
+ * Returns unsubscribe function
+ */
+export function subscribe(callback: () => void): () => void {
+    subscribers.add(callback);
+    return () => subscribers.delete(callback);
+}
+
+/**
+ * Notify all subscribers that tasks have changed
+ */
+function notifySubscribers(): void {
+    subscribers.forEach(callback => callback());
+}
+

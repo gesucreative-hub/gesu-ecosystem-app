@@ -7,7 +7,8 @@ import { Textarea } from '../components/Textarea';
 import { Badge } from '../components/Badge';
 import { CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { addTaskToToday } from '../stores/projectHubTasksStore';
-import { canAddTask, getRemainingSlots, getBlockedMessage } from '../utils/taskGuardrail';
+import { getBlockedMessage } from '../utils/taskGuardrail';
+import { useTaskGuardrail } from '../hooks/useTaskGuardrail';
 
 const PROMPTS = [
     {
@@ -37,8 +38,8 @@ export function LostModePage() {
     const [taskCreated, setTaskCreated] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const canCreateTask = canAddTask();
-    const remainingSlots = getRemainingSlots();
+    // Use reactive task guardrail hook
+    const { canAddTask, remainingSlots } = useTaskGuardrail();
     const isFormComplete = answers.next_action.trim().length > 0;
 
     const handleAnswerChange = (id: string, value: string) => {
@@ -54,7 +55,7 @@ export function LostModePage() {
             return;
         }
 
-        if (!canCreateTask) {
+        if (!canAddTask) {
             setErrorMessage(getBlockedMessage());
             return;
         }
@@ -139,7 +140,7 @@ export function LostModePage() {
                             {/* Guardrail Status */}
                             <div className="p-3 bg-tokens-panel2 rounded-lg border border-tokens-border">
                                 <div className="flex items-center gap-2 text-sm">
-                                    {canCreateTask ? (
+                                    {canAddTask ? (
                                         <>
                                             <CheckCircle2 size={16} className="text-emerald-500" />
                                             <span className="text-tokens-fg">
@@ -186,7 +187,7 @@ export function LostModePage() {
                             <Button
                                 variant="primary"
                                 onClick={handleConvertToTask}
-                                disabled={!isFormComplete || !canCreateTask || taskCreated}
+                                disabled={!isFormComplete || !canAddTask || taskCreated}
                                 icon={<ArrowRight size={16} />}
                                 fullWidth
                                 className="justify-center"
@@ -195,7 +196,7 @@ export function LostModePage() {
                             </Button>
 
                             {/* Secondary Actions */}
-                            {!canCreateTask && (
+                            {!canAddTask && (
                                 <Button
                                     variant="secondary"
                                     onClick={() => navigate('/compass')}

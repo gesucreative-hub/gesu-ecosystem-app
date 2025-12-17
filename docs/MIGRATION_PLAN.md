@@ -280,6 +280,15 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Files**: DistractionGuard.tsx (enhanced), DistractionModal.tsx (new), LostModePage.tsx (guardrail),MIGRATION_PLAN.md (entry).
 - **QA**: Distraction Shield PASS, Universal Guardrail PARTIAL (works but has sync timing issue).
 
+### [0.8.2] - Sprint 17: Universal Guardrail Sync Hardening (2025-12-17)
+- **Reactive Subscription Pattern**: Added subscribe() to projectHubTasksStore with notifySubscribers() on all mutations.
+- **React Hook**: Created useTaskGuardrail hook for reactive task capacity updates across pages.
+- **Cross-Page Sync**: Task counts now update immediately across all pages (Project Hub, Lost Mode, Compass) without page refresh.
+- **LostModePage Integration**: Updated to use useTaskGuardrail hook for real-time slot updates.
+- **Manual QA**: VERIFIED - Lost Mode correctly shows "Daily limit reached (0/3)" after tasks created in Project Hub without refresh.
+- **Files**: projectHubTasksStore.ts (+subscribe), useTaskGuardrail.ts (new), LostModePage.tsx (hook integration).
+- **Status**: Universal guardrail now fully functional with reactive cross-page synchronization.
+
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).

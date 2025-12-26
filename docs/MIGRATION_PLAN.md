@@ -1,5 +1,34 @@
 # Gesu Ecosystem v2 - Massive Migration / Build Checklist
 
+## Current Status (Single Source of Truth)
+
+- Current Sprint: **S0 — Stabilize / Trust Fixes**
+- Active item: **None (S0-1 completed)**
+- Next: **S0-2 — Media job history pagination/performance**
+
+### S0-1 — Safe migrations (backup + no reset on unknown schema) — ✅ DONE
+
+Evidence:
+
+- Commit: **c68d120** — "S0-1: QA closeout evidence (safe migrations verified)"
+- QA Walkthrough: `walkthrough.md`
+- Final Closeout Report: `s0-1_final_closeout_report.md`
+
+Outcome (summary):
+
+- FUTURE_VERSION: preserved data + FS backup + warning banner, no destructive reset
+- CORRUPT payload: preserved data + FS backup + warning banner, no destructive reset
+- v1→v2: backup-before-migration confirmed
+- SchemaWarningBanner mounted globally
+
+Known limitations / Backlog (NOT in S0-1):
+
+- LexendDeca font decode warning
+- ECharts DOM size warnings
+- Repeated 429 requests / Firebase deprecation notices
+
+---
+
 ## 1. North Star / Vision
 
 To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a unified, modern **React + TypeScript + Electron** application ("Gesu Ecosystem v2"). The goal is to provide a premium, cohesive "Operating System for Life" that integrates Focus (Compass), Mental Reset (Refocus), Media Management (Media Suite), and Project Initiation (Initiator) under one performant shell, while enforcing strict data safety constraints.
@@ -779,9 +808,9 @@ _(Template)_
 
 **QA Checklist**:
 
-- [ ] Set `schemaVersion: 999` in `gesu-projects` → verify backup created, no data loss
-- [ ] Set invalid JSON in `gesu-projects` → verify backup exists, warning shown
-- [ ] Run v1→v2 project migration → verify backup created before migration
+- [x] Set `schemaVersion: 999` in `gesu-projects` → verify backup created, no data loss
+- [x] Set invalid JSON in `gesu-projects` → verify backup exists, warning shown
+- [x] Run v1→v2 project migration → verify backup created before migration
 
 #### S0-2: Job History Pagination/Perf (future)
 

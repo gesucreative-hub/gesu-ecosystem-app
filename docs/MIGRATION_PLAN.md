@@ -3,8 +3,8 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-2a — Daily Check-in v0** ✅ IMPLEMENTED (2025-12-27)
-- Next: **S1-2b — Activate First / Focus First workflow** 📋 TBD
+- Active item: **S1-2b — Activate First / Focus First workflow** ✅ IMPLEMENTED (2025-12-27)
+- Next: **S1-2c — Project Hub "Set as Today's Focus" button** 📋 BACKLOG
 
 ### S1-2a — Daily Check-in v0 (Energy/Why/Top Focus) — ✅ IMPLEMENTED
 
@@ -42,24 +42,41 @@ Known Limitations:
 
 ---
 
-### S1-2b — Activate First / Focus First Workflow — 📋 NEXT (TBD)
+### S1-2b — Activate First / Focus First Workflow — ✅ IMPLEMENTED
 
-**Scope** (Placeholder - NOT YET IMPLEMENTED):
+**Completed**: 2025-12-27
 
-- **"Activate First" Button**: When user creates/selects a project in Project Hub, show prominent "Activate as Today's Focus" action
-- **Auto-populate Check-in**: If daily check-in hasn't happened yet, pre-fill "Top Focus" with activated project/task
-- **One-click Flow**: User can go from "new project" → "activated" → "check-in done" → "timer started" in <30 seconds
-- **Task Context Coupling**: Activated task automatically links to timer (extends existing task-timer coupling from S0.9.1)
+Evidence:
 
-**Definition of Done** (Acceptance Criteria):
+- Commit: **7a39b02** — "S1-2b: activate first / focus first workflow"
+- Files changed: `dailyCheckInStore.ts` (+36 lines), `CompassPage.tsx` (+160 lines), `locales/*/compass.json`
 
-- [ ] Project Hub shows "Set as Today's Focus" button for each project
-- [ ] Clicking button updates daily check-in store (if no check-in exists, prompts modal with pre-filled Top Focus)
-- [ ] If check-in exists, shows confirmation + updates Top Focus field
-- [ ] "Start Focus" button on Compass correctly links to activated project context
-- [ ] Manual QA: Create project → Activate → Verify appears in Compass "Top Focus" → Start timer → Verify pill shows project name
+Changes Made:
 
-**Rationale**: Reduces friction between planning (Project Hub) and execution (Compass + Timer). Enforces "decide once, execute immediately" pattern.
+- **Focus First Card**: Inline card at top of Compass left column (Compass-first approach)
+- **3-Step Flow**: Pick focus (project/task/text) → Quick win (optional) → Start Focus
+- **Pre-fill from Check-in**: If today's check-in exists, pre-fills from `topFocus` fields
+- **Update Check-in**: `updateTodayTopFocus()` updates or creates minimal check-in with selected focus
+- **WIP Enforcement**: If WIP at 3/3, button disabled unless selecting existing active task
+- **Timer Integration**: Starts `focusTimerStore.startWithTask()` with context from selection
+
+QA Checklist:
+
+- [x] Focus First card visible at top of Compass left column
+- [x] Mode toggle (Select project vs Type manually) works correctly
+- [x] Text inputs for focus and quick win work
+- [x] Start Focus button starts timer with correct task context
+- [x] Card shows active state with "Focus Active" badge when timer running
+- [x] Timer pill in header shows focus task title
+- [x] No console errors during interaction
+
+Design Decisions:
+
+- **Compass-first, not Project Hub**: Entry point is Compass (user lands here to execute)
+- **Micro-step resets each session**: No persistence, stored only in `sessionGoal` when timer starts
+- **Project Hub button deferred to S1-2c**: Keeps this sprint minimal
+
+**Rationale**: Reduces friction between check-in and execution. Enforces "decide once, execute immediately" pattern.
 
 ---
 

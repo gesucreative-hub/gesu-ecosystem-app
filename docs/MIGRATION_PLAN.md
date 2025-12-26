@@ -3,16 +3,16 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-1 — WIP Limit + Distraction Shield** ✅ IMPLEMENTED
+- Active item: **S1-1 — WIP Limit + Distraction Shield** ✅ DONE
 - Next: **S1-2 — (TBD based on backlog triage)**
 
-### S1-1 — WIP Limit + Distraction Shield — ✅ IMPLEMENTED
+### S1-1 — WIP Limit + Distraction Shield — ✅ DONE
 
 **Completed**: 2025-12-26
 
 Evidence:
 
-- Commit: _(pending commit)_
+- Commit: **0dac83d** — "S1-1: enforce WIP limit and add distraction shield"
 - Files changed: `config/guardrails.ts` (NEW), `components/focus/BlockedRouteToast.tsx` (NEW), `components/focus/DistractionGuard.tsx`, `stores/projectHubTasksStore.ts`, `locales/*/focus.json`
 
 Changes Made:
@@ -28,11 +28,14 @@ Changes Made:
 
 QA Checklist:
 
-- [ ] Focus active => click Media Suite => toast shows, no navigation
-- [ ] Focus active => click Compass => navigates silently
-- [ ] Focus active => click Settings => modal with Pause/End/Continue
-- [ ] Focus NOT active => any navigation works normally
-- [ ] Ctrl+K (command palette) works during focus
+- [x] Focus active => click Dashboard => toast shows, no navigation (BLOCKED)
+- [x] Focus active => click Media Suite => toast shows, no navigation (BLOCKED)
+- [x] Focus active => click Refocus => navigates silently (ALLOWED)
+- [x] Focus active => click Settings => modal with Pause/End/Continue (PROMPT)
+- [x] Focus NOT active => any navigation works normally
+- [x] Ctrl+K (command palette) works during focus
+- [x] WIP limit enforced: Cannot add 4th active task from Project Hub
+- [x] WIP limit verified: State remains with only 3 active tasks
 
 ---
 
@@ -42,7 +45,7 @@ QA Checklist:
 
 Evidence:
 
-- Commit: _(pending commit)_
+- Commit: **c8bffa8** — "S0-2: paginate media job history for performance"
 - Files changed: `media-jobs.cjs`, `main.js`, `preload.cjs`, `global.d.ts`, `MediaSuitePage.tsx`
 - Test script: `scripts/generate-test-history.js`
 

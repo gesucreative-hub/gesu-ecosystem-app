@@ -23,6 +23,7 @@ export function DailyCheckInBanner() {
             const hasCheckIn = getTodayCheckIn() !== null;
             const focusActive = isSessionActive();
             const shouldShow = !hasCheckIn && !focusActive && !dismissed;
+            console.log('[DailyCheckInBanner] Checking visibility:', { hasCheckIn, focusActive, dismissed, shouldShow });
             setShowBanner(shouldShow);
         };
 
@@ -31,7 +32,13 @@ export function DailyCheckInBanner() {
         // Subscribe to check-in updates
         const unsubCheckIn = subscribe(checkShouldShow);
 
-        return unsubCheckIn;
+        // Also check periodically (for focus timer state changes)
+        const interval = setInterval(checkShouldShow, 1000);
+
+        return () => {
+            unsubCheckIn();
+            clearInterval(interval);
+        };
     }, [dismissed]);
 
     const handleDismiss = () => {

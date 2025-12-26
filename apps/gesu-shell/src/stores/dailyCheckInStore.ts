@@ -69,14 +69,18 @@ function loadState(): DailyCheckInStoreState {
     }
     console.log('[dailyCheckInStore] loadState: raw data found', raw.substring(0, 100));
 
-    const parsed = parse(raw);
-    if (!parsed) {
+    const parseResult = parse(raw);
+    if (!parseResult) {
         console.log('[dailyCheckInStore] loadState: parse failed, registering CORRUPT');
         registerSchemaWarning(STORAGE_KEY, 'CORRUPT');
         createBackupSnapshot(STORAGE_KEY, raw);
         return defaultState;
     }
-    console.log('[dailyCheckInStore] loadState: parsed successfully', parsed);
+    console.log('[dailyCheckInStore] loadState: parsed successfully', parseResult);
+
+    // CRITICAL FIX: parse() returns {success: true, data: {...}}, not the raw object
+    const parsed = (parseResult as any).data || parseResult;
+    console.log('[dailyCheckInStore] loadState: unwrapped data', parsed);
 
     const detectedVersion = detectVersion(parsed);
     console.log('[dailyCheckInStore] loadState: detectedVersion=', detectedVersion, 'CURRENT=', CURRENT_SCHEMA_VERSION);

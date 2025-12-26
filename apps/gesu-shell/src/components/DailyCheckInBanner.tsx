@@ -23,7 +23,6 @@ export function DailyCheckInBanner() {
             const hasCheckIn = getTodayCheckIn() !== null;
             const focusActive = isSessionActive();
             const shouldShow = !hasCheckIn && !focusActive && !dismissed;
-            console.log('[DailyCheckInBanner] Checking visibility:', { hasCheckIn, focusActive, dismissed, shouldShow });
             setShowBanner(shouldShow);
         };
 

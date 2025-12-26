@@ -61,45 +61,30 @@ function loadState(): DailyCheckInStoreState {
         checkIns: []
     };
 
-    console.log('[dailyCheckInStore] loadState: starting');
     const raw = readRaw(STORAGE_KEY);
-    if (!raw) {
-        console.log('[dailyCheckInStore] loadState: no raw data');
-        return defaultState;
-    }
-    console.log('[dailyCheckInStore] loadState: raw data found', raw.substring(0, 100));
+    if (!raw) return defaultState;
 
     const parseResult = parse(raw);
     if (!parseResult) {
-        console.log('[dailyCheckInStore] loadState: parse failed, registering CORRUPT');
         registerSchemaWarning(STORAGE_KEY, 'CORRUPT');
         createBackupSnapshot(STORAGE_KEY, raw);
         return defaultState;
     }
-    console.log('[dailyCheckInStore] loadState: parsed successfully', parseResult);
 
     // CRITICAL FIX: parse() returns {success: true, data: {...}}, not the raw object
     const parsed = (parseResult as any).data || parseResult;
-    console.log('[dailyCheckInStore] loadState: unwrapped data', parsed);
 
     const detectedVersion = detectVersion(parsed);
-    console.log('[dailyCheckInStore] loadState: detectedVersion=', detectedVersion, 'CURRENT=', CURRENT_SCHEMA_VERSION);
     if (detectedVersion !== null && detectedVersion > CURRENT_SCHEMA_VERSION) {
-        console.log('[dailyCheckInStore] loadState: FUTURE_VERSION detected');
         registerSchemaWarning(STORAGE_KEY, 'FUTURE_VERSION');
         createBackupSnapshot(STORAGE_KEY, raw);
         return defaultState;
     }
 
     // No migration needed for v1
-    const hasSchema = 'schemaVersion' in parsed;
-    const hasCheckIns = 'checkIns' in parsed;
-    console.log('[dailyCheckInStore] loadState: schema check', { hasSchema, hasCheckIns, parsed });
-    if (typeof parsed === 'object' && parsed !== null && hasSchema && hasCheckIns) {
-        console.log('[dailyCheckInStore] loadState: returning parsed state with', parsed.checkIns?.length, 'check-ins');
+    if (typeof parsed === 'object' && parsed !== null && 'schemaVersion' in parsed && 'checkIns' in parsed) {
         return parsed as DailyCheckInStoreState;
     }
-    console.log('[dailyCheckInStore] loadState: schema check failed, returning defaultState');
     return defaultState;
 }
 
@@ -120,15 +105,7 @@ function notifySubscribers(): void {
 
 export function getTodayCheckIn(): DailyCheckIn | null {
     const todayKey = getTodayKey();
-    console.log('[dailyCheckInStore] getTodayCheckIn:', { 
-        todayKey, 
-        checkInsCount: state.checkIns.length,
-        checkInDates: state.checkIns.map(c => c.date),
-        state: state 
-    });
-    const result = state.checkIns.find(c => c.date === todayKey) || null;
-    console.log('[dailyCheckInStore] Found check-in:', result !== null);
-    return result;
+    return state.checkIns.find(c => c.date === todayKey) || null;
 }
 
 export function getCheckInByDate(date: string): DailyCheckIn | null {

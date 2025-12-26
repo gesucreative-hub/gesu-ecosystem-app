@@ -3,8 +3,43 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-1 — WIP Limit + Distraction Shield** ✅ DONE
-- Next: **S1-2 — (TBD based on backlog triage)**
+- Active item: **S1-2a — Daily Check-in v0** ✅ IMPLEMENTED
+- Next: **S1-2b — Activate First / Focus First workflow (TBD)**
+
+### S1-2a — Daily Check-in v0 (Energy/Why/Top Focus) — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-26
+
+Evidence:
+
+- Commit: _(pending commit)_
+- Files changed: `dailyCheckInStore.ts` (NEW), `DailyCheckInBanner.tsx` (NEW), `DailyCheckInModal.tsx` (NEW), `Layout.tsx`, `locales/*/common.json`
+
+Changes Made:
+
+- **Store**: Created dailyCheckInStore with 90-day retention, getTodayCheckIn(), saveCheckIn()
+- **Banner**: Non-blocking prompt on app launch if no check-in today (hidden when focus active)
+- **Modal**: 3-step form (Energy 1-5, Why text, Top Focus select/text)
+- **Top Focus**: Reference-only (does NOT create/activate tasks), auto-selects first item
+- **Persistence**: localStorage with safe migration pattern
+
+QA Checklist:
+
+- [ ] First launch: banner shows (if no check-in today)
+- [ ] Focus active: banner hidden
+- [ ] Save check-in: banner disappears, toast confirms
+- [ ] Relaunch: banner does NOT show if check-in exists
+- [ ] No projects: "Other / Quick text" works
+- [ ] Dismiss: hides until next launch
+- [ ] Auto-select: first item shown clearly, 1-click to change
+
+Known Limitations:
+
+- No analytics/trends in v0
+- No "View past check-ins" UI
+- Midnight rollover requires navigation/reload
+
+---
 
 ### S1-1 — WIP Limit + Distraction Shield — ✅ DONE
 

@@ -27,10 +27,33 @@
         "signIn": "Masuk",
         "signOut": "Keluar",
         "signInWithGoogle": "Masuk dengan Google",
-        "signingIn": "Sedang masuk...",
+        "signingIn": "Masuk...",
         "signOutConfirmTitle": "Keluar",
-        "signOutConfirmMessage": "Yakin ingin keluar? Datamu tersimpan secara lokal dan akan disinkronkan saat masuk kembali.",
-        "helpSupport": "Bantuan & Dukungan"
+        "signOutConfirmMessage": "Yakin ingin keluar? Progres kamu tersimpan secara lokal dan akan sinkron saat login kembali.",
+        "helpSupport": "Bantuan \u0026 Dukungan"
+    },
+    "dailyCheckIn": {
+        "title": "Check-in harian",
+        "bannerTitle": "Check-in harian: Bagaimana kabarmu hari ini?",
+        "bannerHint": "Energi · Alasan · Fokus Utama · <60d",
+        "energyPrompt": "Bagaimana energimu hari ini?",
+        "low": "Rendah",
+        "high": "Tinggi",
+        "whyPrompt": "Apa yang mendorong fokusmu hari ini?",
+        "whyPlaceholder": "Contoh: \"Deadline klien\" atau \"Belajar skill baru\"",
+        "whyHint": "Opsional tapi disarankan",
+        "focusPrompt": "Apa fokus utamamu?",
+        "projects": "Proyek Aktif",
+        "tasks": "Tugas Hari Ini",
+        "other": "Lainnya / Teks cepat...",
+        "textPlaceholder": "Ketik fokusmu...",
+        "back": "Kembali ke daftar"
+    },
+    "actions": {
+        "continue": "Lanjut",
+        "save": "Simpan",
+        "back": "Kembali",
+        "cancel": "Batal"
     },
     "buttons": {
         "save": "Simpan",

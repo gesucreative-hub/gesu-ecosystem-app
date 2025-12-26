@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoginButton } from './auth/LoginButton';
 import { UserMenu } from './auth/UserMenu';
 import { SchemaWarningBanner } from './SchemaWarningBanner';
+import { DailyCheckInBanner } from './DailyCheckInBanner';
 
 // NavItem Component matching Reference (Pill shape, Left indicator/Rail)
 interface NavItemProps {
@@ -280,6 +281,8 @@ export function Layout() {
                     <div className="sticky top-0 z-10 flex items-center justify-end gap-2 px-6 py-3 rounded-t-2xl">
                         <FocusTimerPill />
                     </div>
+                    {/* Daily Check-in Banner - Non-blocking prompt if no check-in today */}
+                    <DailyCheckInBanner />
                     {/* Schema Warning Banner - Shows non-blocking warnings for version mismatches */}
                     <SchemaWarningBanner />
                     {/* Page Transition Wrapper */}

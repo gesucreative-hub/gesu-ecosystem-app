@@ -1,0 +1,89 @@
+/**
+ * Daily Check-in Banner
+ * Non-blocking prompt shown on app launch if no check-in exists for today
+ * Hidden when focus session is active
+ * S1-2a: Entry point for daily check-in flow
+ */
+
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Sunrise, X } from 'lucide-react';
+import { getTodayCheckIn, subscribe } from '../stores/dailyCheckInStore';
+import { isSessionActive } from '../stores/focusTimerStore';
+import { DailyCheckInModal } from './DailyCheckInModal';
+
+export function DailyCheckInBanner() {
+    const { t } = useTranslation('common');
+    const [showBanner, setShowBanner] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [dismissed, setDismissed] = useState(false);
+
+    useEffect(() => {
+        const checkShouldShow = () => {
+            const hasCheckIn = getTodayCheckIn() !== null;
+            const focusActive = isSessionActive();
+            const shouldShow = !hasCheckIn && !focusActive && !dismissed;
+            setShowBanner(shouldShow);
+        };
+
+        checkShouldShow();
+
+        // Subscribe to check-in updates
+        const unsubCheckIn = subscribe(checkShouldShow);
+
+        return unsubCheckIn;
+    }, [dismissed]);
+
+    const handleDismiss = () => {
+        setDismissed(true);
+        setShowBanner(false);
+    };
+
+    const handleOpenModal = () => {
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setShowBanner(false); // Hide banner after saving (getTodayCheckIn will be non-null)
+    };
+
+    if (!showBanner) return null;
+
+    return (
+        <>
+            <div className="mx-6 mb-4">
+                <div
+                    className="bg-gradient-to-r from-brand/10 to-purple-500/10 border border-brand/30 rounded-lg overflow-hidden cursor-pointer hover:border-brand/50 transition-colors"
+                    onClick={handleOpenModal}
+                >
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <div className="p-2 bg-brand/20 rounded-lg shrink-0">
+                            <Sunrise size={20} className="text-brand" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-tokens-fg">
+                                {t('dailyCheckIn.bannerTitle', 'Quick check-in: How are you today?')}
+                            </p>
+                            <p className="text-xs text-tokens-muted">
+                                {t('dailyCheckIn.bannerHint', 'Energy · Why · Top Focus · <60s')}
+                            </p>
+                        </div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDismiss();
+                            }}
+                            className="p-1 rounded-lg hover:bg-tokens-panel transition-colors shrink-0"
+                            aria-label="Dismiss"
+                        >
+                            <X size={16} className="text-tokens-muted" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {showModal && <DailyCheckInModal onClose={handleCloseModal} />}
+        </>
+    );
+}

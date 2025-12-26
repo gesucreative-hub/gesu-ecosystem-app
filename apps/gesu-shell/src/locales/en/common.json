@@ -32,6 +32,29 @@
         "signOutConfirmMessage": "Are you sure you want to sign out? Your progress is saved locally and will sync when you log back in.",
         "helpSupport": "Help & Support"
     },
+    "dailyCheckIn": {
+        "title": "Quick check-in",
+        "bannerTitle": "Quick check-in: How are you today?",
+        "bannerHint": "Energy · Why · Top Focus · <608s",
+        "energyPrompt": "How's your energy today?",
+        "low": "Low",
+        "high": "High",
+        "whyPrompt": "What's driving your focus today?",
+        "whyPlaceholder": "Example: \"Client deadline\" or \"Learning new skill\"",
+        "whyHint": "Optional but encouraged",
+        "focusPrompt": "What's your #1 focus?",
+        "projects": "Active Projects",
+        "tasks": "Today's Tasks",
+        "other": "Other / Quick text...",
+        "textPlaceholder": "Type your focus...",
+        "back": "Back to list"
+    },
+    "actions": {
+        "continue": "Continue",
+        "save": "Save",
+        "back": "Back",
+        "cancel": "Cancel"
+    },
     "buttons": {
         "save": "Save",
         "saveSettings": "Save Settings",

@@ -29,6 +29,7 @@ WIP Surface Audit:
 - [x] StepDetailPanel: Enforced via `canAddTask()`
 - [x] CompassPage Focus First: Enforced via `getRemainingSlots()`
 - [x] Finish Mode: Inherent WIP counting (session counts as 1 task)
+- **Result**: No WIP bypass found
 
 QA Checklist:
 
@@ -37,7 +38,12 @@ QA Checklist:
 - [x] Button hidden when focusActive
 - [x] Toast shows on click
 - [x] isComplete=false for minimal check-ins from Project Hub
-- [ ] E2E test pending (blocked by Simulation Mode in browser)
+- [N/A] E2E test (Simulation Mode — requires Electron)
+
+Design Notes:
+
+- **isComplete=false stub**: When focus is set from Project Hub, creates minimal check-in with `isComplete: false`. Full check-in flow (banner → modal) sets `isComplete: true`. This prevents silent "completion" of check-ins.
+- **"Go to Compass" action**: Deferred due to AlertDialog type constraints (string-only message).
 
 **Rationale**: Extends focus activation from Compass to Project Hub. Preference-only update, does NOT create tasks.
 

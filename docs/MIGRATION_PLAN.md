@@ -2,11 +2,41 @@
 
 ## Current Status (Single Source of Truth)
 
-- Current Sprint: **S0 — Stabilize / Trust Fixes**
-- Active item: **S0-2 — Media job history pagination/performance** ✅ IMPLEMENTED
-- Next: **S0-3 — (TBD based on backlog triage)**
+- Current Sprint: **S1 — Guardrails**
+- Active item: **S1-1 — WIP Limit + Distraction Shield** ✅ IMPLEMENTED
+- Next: **S1-2 — (TBD based on backlog triage)**
 
-### S0-2 — Media job history pagination/performance — ✅ IMPLEMENTED
+### S1-1 — WIP Limit + Distraction Shield — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-26
+
+Evidence:
+
+- Commit: _(pending commit)_
+- Files changed: `config/guardrails.ts` (NEW), `components/focus/BlockedRouteToast.tsx` (NEW), `components/focus/DistractionGuard.tsx`, `stores/projectHubTasksStore.ts`, `locales/*/focus.json`
+
+Changes Made:
+
+- **Config**: Created `config/guardrails.ts` with MAX_ACTIVE_ITEMS=3 constant + route policies
+- **WIP Limit**: projectHubTasksStore now imports from shared config
+- **Distraction Shield**: DistractionGuard now checks route policy (blocked/allowed/prompt)
+- **Route Policies**:
+  - BLOCKED: `/`, `/dashboard`, `/launcher`, `/activity`, `/media-suite`, `/initiator`
+  - ALLOWED: `/compass`, `/refocus`, `/refocus/lost`, `/login`
+  - PROMPT: `/settings`, unknown routes
+- **UI**: BlockedRouteToast shows when blocked route attempted
+
+QA Checklist:
+
+- [ ] Focus active => click Media Suite => toast shows, no navigation
+- [ ] Focus active => click Compass => navigates silently
+- [ ] Focus active => click Settings => modal with Pause/End/Continue
+- [ ] Focus NOT active => any navigation works normally
+- [ ] Ctrl+K (command palette) works during focus
+
+---
+
+### S0-2 — Media job history pagination/performance — ✅ DONE
 
 **Completed**: 2025-12-26
 

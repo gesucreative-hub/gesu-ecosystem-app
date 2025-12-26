@@ -85,5 +85,9 @@
         "endAndContinue": "End session & continue",
         "continueRunning": "Continue (keep timer running)",
         "hint": "Press ESC or click Continue to proceed without changes"
+    },
+    "distractionShield": {
+        "blocked": "Screen blocked during focus",
+        "finishFirst": "Finish your session to access {{screen}}"
     }
 }

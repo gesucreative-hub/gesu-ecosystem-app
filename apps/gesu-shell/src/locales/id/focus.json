@@ -85,5 +85,9 @@
         "endAndContinue": "Akhiri sesi & lanjutkan",
         "continueRunning": "Lanjutkan (timer terus berjalan)",
         "hint": "Tekan ESC atau klik Lanjutkan untuk melanjutkan tanpa perubahan"
+    },
+    "distractionShield": {
+        "blocked": "Layar diblokir selama fokus",
+        "finishFirst": "Selesaikan sesi untuk mengakses {{screen}}"
     }
 }

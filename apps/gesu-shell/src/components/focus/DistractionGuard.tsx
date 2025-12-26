@@ -1,10 +1,13 @@
 // Distraction Guard - Prompts when user tries to navigate during active focus session
 // Handles both browser close (beforeunload) and in-app navigation
+// S1-1: Added route-specific policies (blocked/allowed/prompt)
 
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isSessionActive, pause, stop } from '../../stores/focusTimerStore';
+import { getRoutePolicy } from '../../config/guardrails';
 import { DistractionModal } from './DistractionModal';
+import { BlockedRouteToast } from './BlockedRouteToast';
 
 interface DistractionGuardProps {
     children: React.ReactNode;
@@ -14,6 +17,7 @@ export function DistractionGuard({ children }: DistractionGuardProps) {
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [pendingPath, setPendingPath] = useState<string | null>(null);
+    const [blockedPath, setBlockedPath] = useState<string | null>(null);
 
     // Handle browser/tab close during active session
     useEffect(() => {
@@ -38,13 +42,34 @@ export function DistractionGuard({ children }: DistractionGuardProps) {
             const link = target.closest('a[href]');
 
             if (link && link.getAttribute('href')?.startsWith('/')) {
+                const href = link.getAttribute('href')!;
+                
+                // Skip if already on the same path
+                if (window.location.pathname === href) return;
+
+                // Check route policy
+                const policy = getRoutePolicy(href);
+
+                if (policy === 'allowed') {
+                    // Allow navigation silently - don't prevent default
+                    return;
+                }
+
+                if (policy === 'blocked') {
+                    // Block navigation entirely, show toast
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBlockedPath(href);
+                    // Auto-hide toast after 3 seconds
+                    setTimeout(() => setBlockedPath(null), 3000);
+                    return;
+                }
+
+                // policy === 'prompt': Show modal with Pause/End/Continue options
                 e.preventDefault();
                 e.stopPropagation();
-                const href = link.getAttribute('href');
-                if (href && window.location.pathname !== href) {
-                    setPendingPath(href);
-                    setShowModal(true);
-                }
+                setPendingPath(href);
+                setShowModal(true);
             }
         };
 
@@ -79,23 +104,30 @@ export function DistractionGuard({ children }: DistractionGuardProps) {
         }
     }, [navigate, pendingPath]);
 
-    // Handle ESC key
+    const handleDismissModal = useCallback(() => {
+        // User cancelled, stay on current page
+        setShowModal(false);
+        setPendingPath(null);
+    }, []);
+
+    // Handle ESC key - dismiss without navigating
     useEffect(() => {
         if (!showModal) return;
 
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                handleContinue();
+                handleDismissModal();
             }
         };
 
         window.addEventListener('keydown', handleEscape);
         return () => window.removeEventListener('keydown', handleEscape);
-    }, [showModal, handleContinue]);
+    }, [showModal, handleDismissModal]);
 
     return (
         <>
             {children}
+            {blockedPath && <BlockedRouteToast path={blockedPath} />}
             {showModal && (
                 <DistractionModal
                     onPause={handlePause}
@@ -106,3 +138,4 @@ export function DistractionGuard({ children }: DistractionGuardProps) {
         </>
     );
 }
+

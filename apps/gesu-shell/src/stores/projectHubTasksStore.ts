@@ -1,7 +1,9 @@
 // Project Hub Tasks Store - Shared state for Project Hub -> Compass integration
 // Uses localStorage for date-scoped persistence (MVP - no backend needed)
+// S1-1: Uses shared MAX_ACTIVE_ITEMS from guardrails config
 
 import { toggleDoDItem } from './workflowProgressStore';
+import { MAX_ACTIVE_ITEMS } from '../config/guardrails';
 
 export interface ProjectHubTask {
     id: string;
@@ -18,7 +20,7 @@ export interface ProjectHubTask {
 }
 
 const STORAGE_KEY = 'gesu-projecthub-tasks';
-const MAX_ACTIVE_TASKS_PER_DAY = 3;
+const MAX_ACTIVE_TASKS_PER_DAY = MAX_ACTIVE_ITEMS; // From shared guardrails config
 
 // --- Utility Functions ---
 

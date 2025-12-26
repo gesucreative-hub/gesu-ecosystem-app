@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAlertDialog } from '../components/AlertDialog';
 import { useNavigate } from 'react-router-dom';
-import { Check, CheckCircle2, Send, Compass, Target } from 'lucide-react';
-import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
+import { useTranslation } from 'react-i18next';
+import { Check, CheckCircle2, Target } from 'lucide-react';
+import { WorkflowNode, WORKFLOW_PHASES, WorkflowPhase } from './workflowData';
 import { Button } from '../components/Button';
 import {
     isDodItemAlreadySentToday,
@@ -9,8 +11,6 @@ import {
 } from '../stores/projectHubTasksStore';
 import {
     canAddTask,
-    getRemainingSlots,
-    getActiveTaskCount,
     getBlockedMessage,
 } from '../utils/taskGuardrail';
 import {
@@ -20,80 +20,34 @@ import {
 import { RotateCcw } from 'lucide-react';
 import { getActiveProject } from '../stores/projectStore';
 
+interface BlueprintPhase {
+    id: string;
+    label: string;
+    color: string;
+}
+
 interface StepDetailPanelProps {
     selectedNode: WorkflowNode | null;
     onToggleDoDItem: (nodeId: string, dodItemId: string) => void;
     onMarkAsDone: (nodeId: string) => void;
     onReopenNode?: (nodeId: string) => void;
+    blueprintPhases?: BlueprintPhase[];
 }
 
 export function StepDetailPanel({
     selectedNode,
     onToggleDoDItem,
     onMarkAsDone,
-    onReopenNode
+    onReopenNode,
+    blueprintPhases
 }: StepDetailPanelProps) {
-    // State for Compass send selection
-    const [selectedForCompass, setSelectedForCompass] = useState<Set<string>>(new Set());
-    const [sentItems, setSentItems] = useState<Set<string>>(new Set());
-    const [remainingSlots, setRemainingSlots] = useState(3);
+    const { t } = useTranslation(['initiator', 'common']);
+    // Use blueprint phases if provided, otherwise fallback to defaults
+    const phasesToUse = blueprintPhases || WORKFLOW_PHASES;
 
-    // Refresh sent status when node changes
-    useEffect(() => {
-        if (selectedNode) {
-            const sent = new Set<string>();
-            selectedNode.dodChecklist.forEach(item => {
-                if (isDodItemAlreadySentToday(selectedNode.id, item.id)) {
-                    sent.add(item.id);
-                }
-            });
-            setSentItems(sent);
-            setSelectedForCompass(new Set());
-            setRemainingSlots(getRemainingSlots());
-        }
-    }, [selectedNode?.id]);
 
-    const handleToggleCompassSelection = useCallback((dodItemId: string) => {
-        setSelectedForCompass(prev => {
-            const next = new Set(prev);
-            if (next.has(dodItemId)) {
-                next.delete(dodItemId);
-            } else {
-                // Limit to remaining slots or 3 max per send
-                const maxAllowed = Math.min(remainingSlots, 3);
-                if (next.size < maxAllowed) {
-                    next.add(dodItemId);
-                }
-            }
-            return next;
-        });
-    }, [remainingSlots]);
 
-    const handleSendToCompass = useCallback(() => {
-        if (!selectedNode || selectedForCompass.size === 0) return;
-
-        selectedForCompass.forEach(dodItemId => {
-            const item = selectedNode.dodChecklist.find(d => d.id === dodItemId);
-            if (item) {
-                addTaskToToday({
-                    stepId: selectedNode.id,
-                    stepTitle: selectedNode.title,
-                    dodItemId: item.id,
-                    dodItemLabel: item.label,
-                    projectName: getActiveProject()?.name || 'Project',
-                });
-            }
-        });
-
-        // Update UI
-        setSentItems(prev => {
-            const next = new Set(prev);
-            selectedForCompass.forEach(id => next.add(id));
-            return next;
-        });
-        setSelectedForCompass(new Set());
-        setRemainingSlots(getRemainingSlots());
-    }, [selectedNode, selectedForCompass]);
+    const { alert, AlertDialogComponent } = useAlertDialog();
 
     // --- Finish Mode State ---
     const navigate = useNavigate();
@@ -128,14 +82,18 @@ export function StepDetailPanel({
 
         // Check universal task guardrail
         if (!canAddTask()) {
-            alert(getBlockedMessage());
+            alert({
+                title: t('common:alerts.limitReached', 'Limit Reached'),
+                message: getBlockedMessage(),
+                type: 'warning'
+            });
             return;
         }
 
         // Build actions from selected DoD items
         const actions = Array.from(selectedForFinish).map(id => {
             const item = selectedNode.dodChecklist.find(d => d.id === id);
-            return { id, label: item?.label || 'Action' };
+            return { id: id as string, label: item?.label || 'Action' };
         });
 
         // Start Finish Mode session
@@ -175,10 +133,10 @@ export function StepDetailPanel({
                         <CheckCircle2 size={32} className="text-tokens-muted" />
                     </div>
                     <h3 className="text-sm font-medium text-tokens-muted mb-2">
-                        Pilih Step
+                        {t('initiator:workflow.selectStep', 'Select a Step')}
                     </h3>
                     <p className="text-xs text-tokens-muted/70">
-                        Klik salah satu node di canvas untuk melihat detail step dan checklist.
+                        {t('initiator:workflow.selectStepDesc', 'Click a node on the canvas to view step details and checklist.')}
                     </p>
                 </div>
             </div>
@@ -186,12 +144,11 @@ export function StepDetailPanel({
     }
 
     // Find phase info
-    const phaseInfo = WORKFLOW_PHASES.find(p => p.id === selectedNode.phase);
+    const phaseInfo = phasesToUse.find(p => p.id === selectedNode.phase);
     const allDoDDone = selectedNode.dodChecklist.every(item => item.done);
     const completedCount = selectedNode.dodChecklist.filter(item => item.done).length;
     const totalCount = selectedNode.dodChecklist.length;
-    const canSend = canAddTask() && selectedForCompass.size > 0;
-    const limitReached = remainingSlots === 0;
+
 
     return (
         <div className="w-80 xl:w-96 flex-shrink-0 border-l border-tokens-border bg-tokens-panel/30 flex flex-col">
@@ -215,7 +172,7 @@ export function StepDetailPanel({
 
                 {/* Title */}
                 <h2 className="text-xl font-bold text-tokens-fg mb-2">
-                    {selectedNode.title}
+                    {selectedNode.titleKey ? t(selectedNode.titleKey, selectedNode.title) : selectedNode.title}
                 </h2>
 
                 {/* Status Badge */}
@@ -224,7 +181,7 @@ export function StepDetailPanel({
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                                        bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                             <Check size={12} />
-                            Done
+                            {t('common:status.completed', 'Done')}
                         </span>
                     )}
                     {selectedNode.status === 'in-progress' && (
@@ -247,10 +204,10 @@ export function StepDetailPanel({
                 {/* Description */}
                 <div>
                     <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">
-                        Kenapa Step Ini Ada?
+                        {t('initiator:stepDetail.whyThisStep', 'Why This Step Exists')}
                     </h3>
                     <p className="text-sm text-tokens-fg leading-relaxed">
-                        {selectedNode.description}
+                        {selectedNode.descKey ? t(selectedNode.descKey, selectedNode.description) : selectedNode.description}
                     </p>
                 </div>
 
@@ -258,7 +215,7 @@ export function StepDetailPanel({
                 <div>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider">
-                            Definition of Done
+                            {t('initiator:stepDetail.definitionOfDone', 'Definition of Done')}
                         </h3>
                         <span className="text-xs text-tokens-muted">
                             {completedCount}/{totalCount}
@@ -288,101 +245,55 @@ export function StepDetailPanel({
                     </div>
                 </div>
 
-                {/* Compass - Hari Ini Section */}
+
+                {/* Today's Focus Section (formerly Finish Mode) */}
                 <div className="border-t border-tokens-border pt-6">
                     <div className="flex items-center gap-2 mb-3">
-                        <Compass size={16} className="text-tokens-brand-DEFAULT" />
-                        <h3 className="text-xs font-semibold text-tokens-brand-DEFAULT uppercase tracking-wider">
-                            Compass - Hari Ini
+                        <Target size={16} className={allDoDDone ? 'text-emerald-500' : 'text-amber-500'} />
+                        <h3 className={`text-xs font-semibold uppercase tracking-wider ${allDoDDone ? 'text-emerald-500' : 'text-amber-500'}`}>
+                            {allDoDDone ? t('initiator:stepDetail.stepCompleted', 'Step Completed') : t('initiator:stepDetail.todaysFocus', "Today's Focus")}
                         </h3>
-                    </div>
-
-                    {limitReached ? (
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
-                            {getBlockedMessage()} ({getActiveTaskCount()}/3 tasks active)
-                        </div>
-                    ) : (
-                        <>
-                            <p className="text-xs text-tokens-muted mb-3">
-                                Pilih 1-{remainingSlots} item DoD untuk dikirim sebagai task hari ini.
-                            </p>
-
-                            <div className="space-y-2 mb-4">
-                                {selectedNode.dodChecklist.map((item) => {
-                                    const isSent = sentItems.has(item.id);
-                                    const isSelected = selectedForCompass.has(item.id);
-
-                                    return (
-                                        <label
-                                            key={`compass-${item.id}`}
-                                            className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer
-                                                      ${isSent
-                                                    ? 'bg-emerald-500/10 border-emerald-500/30 cursor-default'
-                                                    : isSelected
-                                                        ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT/50'
-                                                        : 'bg-tokens-panel border-tokens-border hover:border-tokens-brand-DEFAULT/30'}`}
-                                        >
-                                            {isSent ? (
-                                                <Check size={14} className="text-emerald-500" />
-                                            ) : (
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => handleToggleCompassSelection(item.id)}
-                                                    disabled={isSent}
-                                                    className="rounded border-tokens-border bg-tokens-panel2
-                                                             text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40"
-                                                />
-                                            )}
-                                            <span className={`text-xs flex-1 ${isSent ? 'text-emerald-600 dark:text-emerald-400' : 'text-tokens-fg'}`}>
-                                                {item.label}
-                                            </span>
-                                            {isSent && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                                                    Terkirim
-                                                </span>
-                                            )}
-                                        </label>
-                                    );
-                                })}
-                            </div>
-
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                fullWidth
-                                onClick={handleSendToCompass}
-                                disabled={!canSend}
-                                icon={<Send size={14} />}
-                            >
-                                Kirim ke Compass ({selectedForCompass.size})
-                            </Button>
-                        </>
-                    )}
-                </div>
-
-                {/* Finish Mode Section */}
-                <div className="border-t border-tokens-border pt-6">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Target size={16} className="text-amber-500" />
-                        <h3 className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
-                            Finish Mode
-                        </h3>
-                        {isFinishModeActive && (
+                        {isFinishModeActive && !allDoDDone && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
                                 Active
                             </span>
                         )}
                     </div>
 
-                    {isFinishModeActive ? (
+                    {/* State 1: All DoD items completed - show success */}
+                    {allDoDDone ? (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <CheckCircle2 size={18} className="text-emerald-500" />
+                                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                    {t('initiator:stepDetail.allTasksFinished', 'All tasks finished!')}
+                                </span>
+                            </div>
+                            <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mb-3">
+                                {t('initiator:stepDetail.allTasksFinishedDesc', 'You\'ve completed all {{count}} items in this step. Great work!', { count: totalCount })}
+                            </p>
+                            {onReopenNode && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    fullWidth
+                                    onClick={() => onReopenNode(selectedNode.id)}
+                                    icon={<RotateCcw size={14} />}
+                                >
+                                    {t('initiator:stepDetail.reopenStep', 'Reopen Step')}
+                                </Button>
+                            )}
+                        </div>
+                    ) : isFinishModeActive ? (
+                        /* State 2: Focus session is active */
                         <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
-                            Finish Mode aktif untuk step ini. Buka Compass untuk melanjutkan.
+                            {t('initiator:stepDetail.focusSessionActive', 'Focus session active. Go to Compass page to work on your tasks.')}
                         </div>
                     ) : (
+                        /* State 3: Default - selection form */
                         <>
                             <p className="text-xs text-tokens-muted mb-3">
-                                Pilih 1-3 aksi untuk fokus (max 3). Selesaikan sebelum menambah task baru.
+                                {t('initiator:stepDetail.selectFocusItems', 'Select 1-3 items to focus on. Opens in Compass for focused work session.')}
                             </p>
 
                             <div className="space-y-2 mb-4">
@@ -423,9 +334,8 @@ export function StepDetailPanel({
                                 onClick={handleStartFinishMode}
                                 disabled={selectedForFinish.size === 0}
                                 icon={<Target size={14} />}
-                                className="!bg-amber-500 hover:!bg-amber-600"
                             >
-                                Mulai Finish Mode ({selectedForFinish.size}/3)
+                                {t('initiator:stepDetail.startFocusedWork', 'Start Focused Work →')} ({selectedForFinish.size}/3)
                             </Button>
                         </>
                     )}
@@ -435,7 +345,7 @@ export function StepDetailPanel({
                 {selectedNode.tools && selectedNode.tools.length > 0 && (
                     <div>
                         <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">
-                            Recommended Tools
+                            {t('initiator:stepDetail.recommendedTools', 'Recommended Tools')}
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {selectedNode.tools.map((tool, index) => (
@@ -463,10 +373,10 @@ export function StepDetailPanel({
                             onClick={() => onReopenNode?.(selectedNode.id)}
                             icon={<RotateCcw size={16} />}
                         >
-                            Buka Kembali
+                            {t('initiator:stepDetail.reopenStep', 'Reopen Step')}
                         </Button>
                         <p className="text-xs text-tokens-muted text-center">
-                            Step ini sudah selesai. Klik untuk membatalkan.
+                            {t('initiator:stepDetail.stepCompletedUndo', 'This step is completed. Click to undo.')}
                         </p>
                     </>
                 ) : (
@@ -478,16 +388,17 @@ export function StepDetailPanel({
                             onClick={() => onMarkAsDone(selectedNode.id)}
                             icon={allDoDDone ? <Check size={16} /> : undefined}
                         >
-                            Tandai Selesai
+                            {t('initiator:stepDetail.markAsDone', 'Mark as Done')}
                         </Button>
                         {allDoDDone && (
                             <p className="text-xs text-tokens-brand-DEFAULT text-center">
-                                Semua checklist sudah selesai!
+                                {t('initiator:stepDetail.allChecklistComplete', 'All checklist items are complete!')}
                             </p>
                         )}
                     </>
                 )}
             </div>
+            <AlertDialogComponent />
         </div>
     );
 }

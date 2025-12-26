@@ -11,14 +11,17 @@
 import {
     saveSnapshot as saveToLocalStorage,
     getAllSnapshots as getFromLocalStorage,
+    deleteSnapshot as deleteFromLocalStorage,
 } from '../stores/compassSnapshotStore';
 
 export interface CompassSnapshotData {
     energy: number;
     focus: number; // Derived from focusAreas average
     sessions: string[]; // Session labels only
+    note?: string; // Optional contextual note
     timestamp?: string;
     id?: string;
+    focusAreas?: Record<string, number>; // Individual focus area values for radar chart
 }
 
 export interface CompassSnapshotListItem {
@@ -27,6 +30,8 @@ export interface CompassSnapshotListItem {
     energy: number;
     focus: number;
     sessions: string[];
+    note?: string; // Optional contextual note
+    focusAreas?: Record<string, number>; // Individual focus area values for radar chart
 }
 
 export interface AppendResult {
@@ -99,9 +104,16 @@ export async function appendSnapshot(
                 sessions: snapshot.sessions,
                 timestamp: snapshot.timestamp,
                 id: snapshot.id,
-            });
+                note: snapshot.note,
+                focusAreas: snapshot.focusAreas,
+            } as any); // Type assertion needed as bridge types may not be fully updated
 
             if (result.ok && result.snapshot) {
+                // Award XP for compass snapshot
+                import('./gamificationService').then(({ onCompassSnapshot }) => {
+                    onCompassSnapshot();
+                }).catch(err => console.error('[compassSnapshotsService] Gamification failed:', err));
+                
                 return {
                     ok: true,
                     snapshot: result.snapshot,
@@ -134,6 +146,11 @@ export async function appendSnapshot(
                 })),
             });
 
+            // Award XP for compass snapshot
+            import('./gamificationService').then(({ onCompassSnapshot }) => {
+                onCompassSnapshot();
+            }).catch(err => console.error('[compassSnapshotsService] Gamification failed:', err));
+
             return {
                 ok: true,
                 snapshot: {
@@ -151,6 +168,28 @@ export async function appendSnapshot(
             ok: false,
             error: err instanceof Error ? err.message : 'Unknown error',
         };
+    }
+}
+
+/**
+ * Delete a snapshot by ID
+ * Note: Currently only works in localStorage mode. Bridge mode delete is not yet implemented.
+ * 
+ * @param workflowRoot - Workflow root from settings (not used yet)
+ * @param snapshotId - ID of the snapshot to delete
+ */
+export async function deleteSnapshot(
+    _workflowRoot: string | undefined,
+    snapshotId: string
+): Promise<boolean> {
+    try {
+        // For now, only delete from localStorage
+        // Bridge mode delete would need to be implemented in Electron
+        deleteFromLocalStorage(snapshotId);
+        return true;
+    } catch (err) {
+        console.error('[compassSnapshotsService] Failed to delete snapshot:', err);
+        return false;
     }
 }
 

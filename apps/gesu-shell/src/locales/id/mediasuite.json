@@ -1,0 +1,187 @@
+{
+    "title": "Media Suite",
+    "subtitle": "Unduh, konversi, dan proses file media",
+    "tabs": {
+        "download": "Unduh",
+        "convert": "Konversi",
+        "queue": "Antrian"
+    },
+    "download": {
+        "title": "Unduh Media",
+        "urlPlaceholder": "Tempel URL di sini...",
+        "format": "Format",
+        "quality": "Kualitas",
+        "startDownload": "Mul ai Unduh",
+        "downloading": "Mengunduh..."
+    },
+    "convert": {
+        "title": "Konversi Media",
+        "selectFile": "Pilih File",
+        "outputFormat": "Format Output",
+        "startConvert": "Mulai Konversi",
+        "converting": "Mengkonversi..."
+    },
+    "queue": {
+        "title": "Antrian",
+        "noJobs": "Tidak ada pekerjaan dalam antrian",
+        "empty": "Antrian kosong",
+        "recentJobs": "Pekerjaan Terbaru",
+        "clearCompleted": "Hapus yang Selesai",
+        "cancelAll": "Batalkan Semua",
+        "cancel": "Batal",
+        "filters": {
+            "allJobs": "Semua Pekerjaan",
+            "downloads": "Download",
+            "converts": "Konversi"
+        }
+    },
+    "status": {
+        "pending": "Menunggu",
+        "queued": "Dalam Antrian",
+        "running": "Berjalan",
+        "runningProgress": "Berjalan ({{progress}}%)",
+        "completed": "Selesai",
+        "done": "Selesai",
+        "success": "Berhasil",
+        "failed": "Gagal",
+        "error": "Error",
+        "canceled": "Dibatalkan"
+    },
+    "presets": {
+        "download": {
+            "musicMp3": "Musik MP3",
+            "video1080p": "Video 1080p",
+            "videoBest": "Video Terbaik"
+        },
+        "convert": {
+            "audioMp3320": "Audio MP3 – 320 kbps",
+            "audioMp3192": "Audio MP3 – 192 kbps",
+            "audioAac256": "Audio AAC – 256 kbps",
+            "audioWav48k": "Audio WAV – 48 kHz",
+            "videoMp41080p": "Video MP4 – 1080p (HQ)",
+            "videoMp4720p": "Video MP4 – 720p",
+            "videoMp4540pLite": "Video MP4 – 540p (Ringan)",
+            "imagePng": "Gambar PNG",
+            "imageJpg90": "Gambar JPG (90%)",
+            "imageWebp": "Gambar WebP",
+            "imageIco256": "Ikon ICO (256px)",
+            "videoAdvanced": "Video (Lanjutan)"
+        }
+    },
+    "networkProfiles": {
+        "hemat": "Hemat (Bandwidth Rendah)",
+        "normal": "Normal",
+        "gaspol": "Gaspol (Kecepatan Maks)"
+    },
+    "toolStatus": {
+        "readyConfigured": "Siap (Konfigurasi)",
+        "readyPath": "Siap (Sistem)",
+        "fallbackPath": "PERINGATAN (Fallback)",
+        "missing": "TIDAK ADA",
+        "error": "ERROR",
+        "unknown": "Tidak Diketahui",
+        "configLabel": "Konfigurasi",
+        "usingLabel": "Menggunakan",
+        "sourceLabel": "Sumber",
+        "noPath": "(kosong)"
+    },
+    "categories": {
+        "video": "Video",
+        "audio": "Audio",
+        "image": "Gambar"
+    },
+    "quickDownload": {
+        "title": "Unduhan Cepat",
+        "sourceUrl": "URL Sumber",
+        "preset": "Preset",
+        "networkProfile": "Profil Jaringan",
+        "outputFolder": "Folder Output",
+        "open": "Buka",
+        "authentication": "Autentikasi",
+        "cookiesMode": "Mode Cookies",
+        "cookies": {
+            "none": "Tidak Ada",
+            "fromBrowser": "Cookies dari Browser",
+            "file": "File Cookies"
+        },
+        "cookiesFile": "File Cookies",
+        "enableSafeThrottling": "Aktifkan Pembatasan Aman",
+        "queueDownload": "Antri Unduhan",
+        "selectCookiesFile": "Pilih file cookies.txt"
+    },
+    "localConverter": {
+        "title": "Konverter Lokal",
+        "sourceFiles": "File Sumber",
+        "single": "Tunggal",
+        "batch": "Batch",
+        "mode": {
+            "simple": "Sederhana",
+            "advanced": "Lanjutan"
+        },
+        "noFileSelected": "Tidak ada file dipilih...",
+        "browse": "Jelajahi...",
+        "category": "Kategori",
+        "preset": "Preset",
+        "resolution": "Resolusi",
+        "quality": "Kualitas",
+        "audio": "Audio",
+        "selectMultiple": "+ Pilih Beberapa File",
+        "queueConvertJob": "Antri Pekerjaan Konversi"
+    },
+    "jobQueue": {
+        "title": "Antrian Pekerjaan",
+        "allJobs": "Semua Pekerjaan",
+        "queueIsEmpty": "Antrian kosong",
+        "recentJobs": "Pekerjaan Terbaru",
+        "allTypes": "Semua Tipe",
+        "refresh": "Segarkan",
+        "time": "Waktu",
+        "type": "Tipe",
+        "status": "Status",
+        "preset": "Preset",
+        "network": "Jaringan",
+        "target": "Target",
+        "details": "Detail"
+    },
+    "quickTips": {
+        "title": "Tips Cepat"
+    },
+    "filters": {
+        "allTypes": "Semua Tipe",
+        "downloads": "Download",
+        "converts": "Konversi",
+        "advanced": "Lanjutan"
+    },
+    "tips": {
+        "workflowTarget": "Gunakan folder target WorkFlow DB untuk download yang terorganisir",
+        "gaspolProfile": "Profil jaringan Gaspol mendukung platform musik Indonesia",
+        "advancedConverter": "Konverter Lanjutan",
+        "advancedConverterDesc": "memungkinkan kontrol manual atas FFmpeg CRF dan Audio Bitrate."
+    },
+    "buttons": {
+        "update": "Perbarui",
+        "updating": "Memperbarui...",
+        "configure": "Konfigurasi",
+        "open": "Buka",
+        "browse": "Jelajahi..."
+    },
+    "engineStatus": "Status Mesin",
+    "tooltips": {
+        "refreshStatus": "Segarkan Status",
+        "updateYtDlp": "Perbarui yt-dlp ke versi terbaru",
+        "browseFolder": "Jelajahi folder",
+        "openInExplorer": "Buka folder di Explorer",
+        "cancelAll": "Batalkan semua pekerjaan yang berjalan dan antrian",
+        "cancelJob": "Batalkan pekerjaan"
+    },
+    "errors": {
+        "invalidUrl": "Masukkan URL yang valid",
+        "noFilesSelected": "Tidak ada file dipilih untuk konversi batch",
+        "noSourceFile": "Pilih file sumber",
+        "noOutputFolder": "Folder output belum diatur"
+    },
+    "messages": {
+        "filesSelected": "{{count}} file dipilih"
+    },
+    "back": "Kembali"
+}

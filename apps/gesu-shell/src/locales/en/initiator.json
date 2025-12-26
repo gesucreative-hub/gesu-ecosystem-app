@@ -1,0 +1,253 @@
+{
+    "title": "Project Hub",
+    "subtitle": "Create, manage, and track your projects",
+    "hub": {
+        "title": "Project Hub",
+        "subtitle": "Manage projects from start to finish"
+    },
+    "tabs": {
+        "projects": "Projects",
+        "workflow": "Workflow",
+        "generator": "Generator",
+        "standards": "Standards"
+    },
+    "createProject": {
+        "title": "Create New Project",
+        "name": "Project Name",
+        "namePlaceholder": "Enter project name...",
+        "blueprint": "Blueprint",
+        "selectBlueprint": "Select a blueprint",
+        "generate": "Generate Project",
+        "generating": "Generating...",
+        "assignBlueprint": "Assign Blueprint",
+        "assigning": "Assigning..."
+    },
+    "projectList": {
+        "title": "Your Projects",
+        "noProjects": "No projects yet",
+        "createFirst": "Create your first project to get started",
+        "search": "Search projects...",
+        "sortBy": "Sort by",
+        "filterBy": "Filter by"
+    },
+    "generator": {
+        "projectSetup": "Project Setup",
+        "livePreview": "Live Preview",
+        "newProject": "New Project",
+        "existingProject": "Existing Project",
+        "selectFolderTemplate": "Select Folder Template...",
+        "projectName": "Project Name",
+        "projectType": "Project Type",
+        "blueprint": "Blueprint",
+        "clientName": "Client Name",
+        "folderTemplate": "Folder Template",
+        "manage": "Manage",
+        "folders": "folders",
+        "gitInit": "Git Init",
+        "livePreviewNote": "Live Preview",
+        "initializeGit": "Initialize Git repository",
+        "createProject": "Create Project",
+        "selectExisting": "Select Existing Folder",
+        "assignBlueprint": "Assign Blueprint",
+        "itemsToCreate": "{{count}} items to create",
+        "descriptionBrief": "Description / Brief",
+        "folderNameLabel": "FOLDER NAME",
+        "folderStructureLabel": "FOLDER STRUCTURE"
+    },
+    "placeholders": {
+        "projectName": "Enter project name...",
+        "clientName": "Enter client name...",
+        "description": "Optional project summary...",
+        "selectBlueprint": "Select Blueprint..."
+    },
+    "projectTypes": {
+        "client": "Client Project",
+        "gesu-creative": "Personal project",
+        "other": "Other"
+    },
+    "messages": {
+        "deleteProjectConfirm": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
+    },
+    "templatePicker": {
+        "title": "Choose Template",
+        "subtitle": "Start with a ready-made workflow",
+        "searchPlaceholder": "Search templates...",
+        "copyAiPrompt": "Copy AI Prompt",
+        "copied": "Copied!",
+        "import": "Import",
+        "phases": "phases",
+        "steps": "steps",
+        "phaseStepCount": "{{phases}} phases · {{steps}} steps",
+        "cancel": "Cancel",
+        "showHidden": "Show Hidden ({{count}})",
+        "hideHidden": "Hide",
+        "restoreTemplate": "Restore template",
+        "hideTemplate": "Hide template",
+        "noResults": "No templates match \"{{query}}\"",
+        "categories": {
+            "creative": "Creative",
+            "development": "Development",
+            "general": "General"
+        }
+    },
+    "blueprints": {
+        "templates": {
+            "archviz": { "name": "ArchViz Standard" },
+            "brand": { "name": "Brand Design" },
+            "motion": { "name": "Motion Graphics" },
+            "uiux": { "name": "UI/UX Project" },
+            "webdev": { "name": "Web Development" },
+            "appdev": { "name": "App Development" },
+            "content": { "name": "Content Creator" },
+            "client": { "name": "Client Project" }
+        }
+    },
+    "workflow": {
+        "title": "Workflow Canvas",
+        "noWorkflow": "No workflow selected",
+        "selectProject": "Select a project to view its workflow",
+        "selectStep": "Select a Step",
+        "selectStepDesc": "Click a node on the canvas to view step details and checklist.",
+        "phasesLabel": "Phases",
+        "statusProject": "Status Project",
+        "progress": "Progress",
+        "itemsCompleted": "items completed",
+        "legend": "Legend",
+        "done": "Done",
+        "inProgress": "In Progress",
+        "toDo": "To Do",
+        "clearProgress": "Clear Progress",
+        "clearProgressTitle": "Clear All Progress?",
+        "clearProgressMessage": "This will reset all step statuses and checklist items for this project. This action cannot be undone.",
+        "type": "Type",
+        "client": "Client",
+        "noBlueprintAssigned": "No Blueprint Assigned",
+        "noProjectSelected": "No Project Selected",
+        "selectProjectHint": "Select a project from the top bar to view its workflow.",
+        "phases": {
+            "planning": "Planning",
+            "design": "Design",
+            "frontend": "Frontend",
+            "backend": "Backend",
+            "ops": "Ops & Quality",
+            "execution": "Execution",
+            "finalize": "Finalize"
+        },
+        "steps": {
+            "p1": { "title": "Requirements & Goals", "desc": "Define project scope, objectives, and success criteria" },
+            "p2": { "title": "Research & Brief", "desc": "Gather references, research, and create project brief" },
+            "p3": { "title": "Blueprint & Roadmap", "desc": "Create execution plan and timeline" },
+            "e1": { "title": "Core Work", "desc": "Execute main deliverables and primary tasks" },
+            "e2": { "title": "Quality Check", "desc": "Test, debug, and ensure quality standards" },
+            "e3": { "title": "Polish & Refinement", "desc": "Fine-tune details and optimize" },
+            "f1": { "title": "Review & Feedback", "desc": "Gather feedback and make final adjustments" },
+            "f2": { "title": "Delivery & Handoff", "desc": "Package and deliver final assets" }
+        }
+    },
+    "filter": {
+        "allBlueprints": "All Blueprints",
+        "noBlueprint": "No Blueprint",
+        "allProjects": "All Projects"
+    },
+    "standards": {
+        "title": "Blueprints",
+        "subtitle": "Manage your project blueprints and templates",
+        "newBlueprint": "New Blueprint",
+        "newPhase": "New Phase",
+        "newStep": "New Step",
+        "loading": "Loading blueprints...",
+        "noBlueprints": "No blueprints yet",
+       "searchPlaceholder": "Search blueprints...",
+        "blueprintNamePlaceholder": "Blueprint name...",
+        "addToolPlaceholder": "Add tool...",
+        "workflowStructure": "Workflow Structure",
+        "newPhaseName": "New Phase Name",
+        "deleteStepConfirm": "Delete Step?",
+        "renameBlueprint": "Rename Blueprint",
+        "deleteBlueprint": "Delete Blueprint",
+        "deletePhaseConfirm": "Delete Phase?",
+        "reassignTo": "Reassign To",
+        "editStep": "Edit Step",
+        "stepTitle": "Title",
+        "stepDescription": "Description",
+        "definitionOfDone": "Definition of Done ({{count}}/7)",
+        "saving": "Saving...",
+        "saved": "Saved!",
+        "saveChanges": "Save Changes",
+        "stepsCount_one": "{{count}} step",
+        "stepsCount_other": "{{count}} steps",
+        "createNewHint": "Create a new one or add from templates below",
+        "manageStructures": "Manage structures",
+        "templates": "Templates",
+        "duplicateTemplate": "Duplicate Template",
+        "duplicateTemplateMessage": "This blueprint already exists as a template."
+    },
+    "stepDetail": {
+        "whyThisStep": "Why This Step Exists",
+        "definitionOfDone": "Definition of Done",
+        "stepCompleted": "Step Completed",
+        "todaysFocus": "Today's Focus",
+        "allTasksFinished": "All tasks finished!",
+        "allTasksFinishedDesc": "You've completed all {{count}} items in this step. Great work!",
+        "reopenStep": "Reopen Step",
+        "focusSessionActive": "Focus session active. Go to Compass page to work on your tasks.",
+        "selectFocusItems": "Select 1-3 items to focus on. Opens in Compass for focused work session.",
+        "startFocusedWork": "Start Focused Work →",
+        "recommendedTools": "Recommended Tools",
+        "markAsDone": "Mark as Done",
+        "stepCompletedUndo": "This step is completed. Click to undo.",
+        "allChecklistComplete": "All checklist items are complete!"
+    },
+    "tooltips": {
+        "clearProgress": "Clear all progress",
+        "openFolder": "Open folder in explorer",
+        "deleteProject": "Delete this project permanently",
+        "deleteStep": "Delete step",
+        "renamePhase": "Rename phase",
+        "deletePhase": "Delete phase"
+    },
+    "templates": {
+        "archvizStandard": "ArchViz Standard",
+        "brandDesign": "Brand Design",
+        "motionGraphics": "Motion Graphics",
+        "uiuxProject": "UI/UX Project",
+        "webDevelopment": "Web Development",
+        "appDevelopment": "App Development",
+        "contentCreator": "Content Creator",
+        "clientProject": "Client Project"
+    },
+    "folderTemplates": {
+        "archvizStandard": "ArchViz Standard",
+        "brandDesignStandard": "Brand Design Standard",
+        "motionGraphics": "Motion Graphics",
+        "uiuxProject": "UI/UX Project",
+        "webDevelopment": "Web Development",
+        "appDevelopment": "App Development",
+        "contentCreator": "Content Creator",
+        "clientProject": "Client Project",
+        "generalCreative": "General Creative"
+    },
+    "templateCategories": {
+        "creative": "Creative",
+        "development": "Development",
+        "general": "General"
+    },
+    "ai": {
+        "suggestionsTitle": "AI Suggestions",
+        "enhanceButton": "Enhance with AI",
+        "enhancing": "Enhancing...",
+        "enhanceTooltip": "Get AI suggestions for this blueprint",
+        "notAvailable": "AI not available",
+        "generating": "Generating suggestions...",
+        "errorTitle": "Failed to get suggestions",
+        "noSuggestions": "No suggestions available",
+        "selectedCount": "{{count}} selected",
+        "applySelected": "Apply Selected",
+        "opRenamePhase": "Rename phase",
+        "opRenameNode": "Rename step",
+        "opAddDoD": "Add checklist items",
+        "applied": "AI suggestions applied",
+        "validationFailed": "Invalid AI response",
+        "timeout": "Request timed out"
+    }
+}

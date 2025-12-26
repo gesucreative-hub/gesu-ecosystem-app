@@ -1,0 +1,89 @@
+{
+    "timer": {
+        "title": "Focus Timer",
+        "focus": "Focus",
+        "break": "Break",
+        "start": "Start Focus",
+        "pause": "Pause",
+        "resume": "Resume",
+        "stop": "Stop",
+        "reset": "Reset",
+        "skip": "Skip",
+        "complete": "Complete"
+    },
+    "session": {
+        "active": "Session Active",
+        "remaining": "remaining",
+        "elapsed": "elapsed",
+        "completed": "Session Completed!",
+        "takeBreak": "Take a break",
+        "continueWork": "Continue working",
+        "endSession": "End session?",
+        "progressSaved": "Your progress will be saved."
+    },
+    "goal": {
+        "title": "Session Goal",
+        "placeholder": "What do you want to accomplish?",
+        "set": "Set Goal",
+        "clear": "Clear"
+    },
+    "distraction": {
+        "title": "Distraction Guard",
+        "blocked": "Stay focused!",
+        "message": "You have an active focus session. Are you sure you want to leave?",
+        "stay": "Stay Focused",
+        "leave": "Leave Anyway"
+    },
+    "presets": {
+        "title": "Presets",
+        "hide": "Hide",
+        "custom": "Custom",
+        "quick": "Quick",
+        "classic": "Classic",
+        "deep": "Deep"
+    },
+    "break": {
+        "activities": "Break Activities",
+        "activity": {
+            "water": "Drink a glass of water",
+            "breathe": "Take 5 deep breaths",
+            "lookFar": "Look at something far away",
+            "walk": "Walk around for a minute",
+            "stretch": "Stretch your shoulders",
+            "window": "Look out the window"
+        }
+    },
+    "config": {
+        "title": "Timer Settings",
+        "focusDuration": "Focus Duration",
+        "breakDuration": "Break Duration",
+        "longBreakDuration": "Long Break Duration",
+        "sessionsUntilLongBreak": "Sessions until long break",
+        "minutes": "minutes",
+        "apply": "Apply",
+        "focusMin": "Focus (min)",
+        "shortBreak": "Short break",
+        "longBreak": "Long break",
+        "autoStartNext": "Auto-start next",
+        "autoStartDesc": "Begin automatically"
+    },
+    "stats": {
+        "todaySessions": "Today's Sessions",
+        "totalFocusTime": "Total Focus Time",
+        "currentStreak": "Current Streak",
+        "completed": "Completed",
+        "untilLongBreak": "Until Long Break"
+    },
+    "hints": {
+        "openRefocus": "Open the Refocus page →",
+        "needRefocus": "Need to refocus?"
+    },
+    "distractionModal": {
+        "title": "Focus session active",
+        "subtitle": "What would you like to do?",
+        "pauseAndContinue": "Pause timer & continue",
+        "endAndContinue": "End session & continue",
+        "continueRunning": "Continue (keep timer running)",
+        "hint": "Press ESC or click Continue to proceed without changes"
+    }
+}

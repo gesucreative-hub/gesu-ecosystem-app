@@ -24,9 +24,15 @@ contextBridge.exposeInMainWorld('gesu', {
     scaffold: {
         preview: (input) => ipcRenderer.invoke('scaffold:preview', input),
         create: (input) => ipcRenderer.invoke('scaffold:create', input),
+        initializeGit: (path) => ipcRenderer.invoke('scaffold:gitInit', path),
     },
     projects: {
         list: () => ipcRenderer.invoke('projects:list'),
+        onChange: (callback) => {
+            const subscription = () => callback();
+            ipcRenderer.on('projects:changed', subscription);
+            return () => ipcRenderer.removeListener('projects:changed', subscription);
+        },
     },
     compassSnapshots: {
         append: (snapshot) => ipcRenderer.invoke('compass:snapshots:append', snapshot),
@@ -61,11 +67,34 @@ contextBridge.exposeInMainWorld('gesu', {
         getRecentJobs: () => ipcRenderer.invoke('mediaSuite:getRecentJobs'),
         openFolder: (target) => ipcRenderer.invoke('mediaSuite:openFolder', target),
         pickSourceFile: () => ipcRenderer.invoke('mediaSuite:pickSourceFile'),
+        pickMultipleFiles: () => ipcRenderer.invoke('mediaSuite:pickMultipleFiles'),
         pickOutputFolder: (defaultPath) => ipcRenderer.invoke('mediaSuite:pickOutputFolder', defaultPath),
         updateYtDlp: () => ipcRenderer.invoke('mediaSuite:updateYtDlp'),
     },
     shell: {
         openPath: (path) => ipcRenderer.invoke('shell:openPath', path),
+    },
+    activityTracking: {
+        startSession: (payload) => ipcRenderer.invoke('activity:start-session', payload),
+        endSession: (payload) => ipcRenderer.invoke('activity:end-session', payload),
+        getSummary: (payload) => ipcRenderer.invoke('activity:get-summary', payload),
+        recordTaskCompletion: (payload) => ipcRenderer.invoke('activity:record-task-completion', payload),
+        clearAllSessions: (payload) => ipcRenderer.invoke('activity:clear-all-sessions', payload),
+    },
+    fs: {
+        ensureDir: (path) => ipcRenderer.invoke('fs:ensureDir', path),
+        pathExists: (path) => ipcRenderer.invoke('fs:pathExists', path),
+        readDir: (path) => ipcRenderer.invoke('fs:readDir', path),
+        readFile: (path) => ipcRenderer.invoke('fs:readFile', path),
+        writeFile: (path, data) => ipcRenderer.invoke('fs:writeFile', path, data),
+    },
+    database: {
+        switchUser: (userId) => ipcRenderer.invoke('database:switchUser', userId),
+        getCurrentUser: () => ipcRenderer.invoke('database:getCurrentUser'),
+    },
+    userSettings: {
+        read: () => ipcRenderer.invoke('user-settings:read'),
+        write: (settings) => ipcRenderer.invoke('user-settings:write', settings),
     },
 });
 

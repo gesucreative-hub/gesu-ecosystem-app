@@ -16,6 +16,7 @@
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
+    "@types/chokidar": "^2.1.7",
     "concurrently": "^8.2.2",
     "electron": "^28.0.0",
     "eslint": "^8.56.0",
@@ -27,5 +28,9 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "firebase": "^12.7.0"
   }
 }

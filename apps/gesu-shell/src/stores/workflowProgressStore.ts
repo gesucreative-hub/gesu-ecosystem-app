@@ -3,6 +3,7 @@
 
 import { WorkflowNode, DoDItem, NodeStatus } from '../pages/workflowData';
 import { getActiveProjectId } from './projectStore';
+import { recordTaskCompletion } from '../services/activityTrackingService';
 
 export interface NodeProgress {
     status: NodeStatus;
@@ -81,7 +82,7 @@ export function setNodeStatus(nodeId: string, status: NodeStatus): void {
     saveState(state);
 }
 
-export function toggleDoDItem(nodeId: string, dodItemId: string): boolean {
+export function toggleDoDItem(nodeId: string, dodItemId: string, totalDoDItems?: number): boolean {
     const projectId = getActiveProjectId();
     if (!projectId) return false;
 
@@ -97,10 +98,55 @@ export function toggleDoDItem(nodeId: string, dodItemId: string): boolean {
 
     const node = progress.nodeProgress[nodeId];
     const currentValue = node.dodChecklist[dodItemId] || false;
-    node.dodChecklist[dodItemId] = !currentValue;
+    const newValue = !currentValue;
+    node.dodChecklist[dodItemId] = newValue;
     progress.lastUpdatedAt = Date.now();
 
+    // Auto-update node status based on DoD completion
+    const checkedItems = Object.values(node.dodChecklist).filter(Boolean).length;
+    const wasComplete = node.status === 'done';
+    
+    if (totalDoDItems && checkedItems === totalDoDItems) {
+        node.status = 'done';
+    } else if (checkedItems > 0) {
+        node.status = 'in-progress';
+    } else {
+        node.status = 'todo';
+    }
+
+    const isNowComplete = node.status === 'done';
+
     saveState(state);
+
+    // Create unique IDs for gamification tracking
+    const taskId = `${projectId}:${nodeId}:${dodItemId}`;
+    const stepId = `${projectId}:${nodeId}:step-complete`;
+
+    // Track completion if marked done - XP only awarded ONCE per task ever
+    if (newValue) {
+        recordTaskCompletion(dodItemId).catch(err => console.error('[Workflow] Failed to record completion:', err));
+
+        // Award XP for completing DoD item - only if not already rewarded (one-time)
+        import('../stores/gamificationStore').then(({ hasTaskBeenRewarded, markTaskRewarded }) => {
+            if (!hasTaskBeenRewarded(taskId)) {
+                import('../services/gamificationService').then(({ onDoDItemComplete, onWorkflowStepComplete }) => {
+                    onDoDItemComplete(dodItemId);
+                    markTaskRewarded(taskId);
+
+                    // Check if this completion finished the entire step
+                    if (!wasComplete && isNowComplete && !hasTaskBeenRewarded(stepId)) {
+                        onWorkflowStepComplete(nodeId);
+                        markTaskRewarded(stepId);
+                        console.log('[Workflow] Step complete bonus!', nodeId);
+                    }
+                }).catch(err => console.error('[Workflow] Gamification failed:', err));
+            } else {
+                console.log('[Workflow] Task already rewarded, skipping XP:', taskId);
+            }
+        }).catch(err => console.error('[Workflow] Gamification check failed:', err));
+    }
+    // Note: We do NOT unmark tasks when unchecked - XP is a one-time reward
+
     return node.dodChecklist[dodItemId];
 }
 
@@ -124,18 +170,69 @@ export function markNodeInProgress(nodeId: string): void {
     setNodeStatus(nodeId, 'in-progress');
 }
 
+// Set all DoD items as done for a node
+export function setAllDoDItemsDone(nodeId: string, dodItemIds: string[]): void {
+    const projectId = getActiveProjectId();
+    if (!projectId) return;
+
+    const state = loadState();
+    if (!state.progressByProject[projectId]) {
+        state.progressByProject[projectId] = { nodeProgress: {}, lastUpdatedAt: Date.now() };
+    }
+
+    const progress = state.progressByProject[projectId];
+    if (!progress.nodeProgress[nodeId]) {
+        progress.nodeProgress[nodeId] = { status: 'done', dodChecklist: {} };
+    }
+
+    // Mark all DoD items as done
+    dodItemIds.forEach(id => {
+        // Only record if not already done
+        if (!progress.nodeProgress[nodeId].dodChecklist[id]) {
+            recordTaskCompletion(id).catch(err => console.error('[Workflow] Failed to record completion:', err));
+        }
+        progress.nodeProgress[nodeId].dodChecklist[id] = true;
+    });
+    progress.nodeProgress[nodeId].status = 'done';
+    progress.lastUpdatedAt = Date.now();
+
+    saveState(state);
+}
+
+// Clear all DoD items (mark as undone) for a node
+export function clearAllDoDItems(nodeId: string, dodItemIds: string[]): void {
+    const projectId = getActiveProjectId();
+    if (!projectId) return;
+
+    const state = loadState();
+    if (!state.progressByProject[projectId]) {
+        state.progressByProject[projectId] = { nodeProgress: {}, lastUpdatedAt: Date.now() };
+    }
+
+    const progress = state.progressByProject[projectId];
+    if (!progress.nodeProgress[nodeId]) {
+        progress.nodeProgress[nodeId] = { status: 'in-progress', dodChecklist: {} };
+    }
+
+    // Mark all DoD items as undone
+    dodItemIds.forEach(id => {
+        progress.nodeProgress[nodeId].dodChecklist[id] = false;
+    });
+    progress.nodeProgress[nodeId].status = 'in-progress';
+    progress.lastUpdatedAt = Date.now();
+
+    saveState(state);
+}
+
 // --- Merge with Static Data ---
 
-export function mergeNodesWithProgress(staticNodes: WorkflowNode[]): WorkflowNode[] {
-    const progress = getActiveProgress();
+export function mergeNodesWithProgress(staticNodes: WorkflowNode[], progressOverride?: WorkflowProgress | null): WorkflowNode[] {
+    const progress = progressOverride !== undefined ? progressOverride : getActiveProgress();
     if (!progress) return staticNodes;
 
     return staticNodes.map(node => {
         const nodeProgress = progress.nodeProgress[node.id];
         if (!nodeProgress) return node;
-
-        // Overlay status
-        const mergedStatus = nodeProgress.status;
 
         // Overlay DoD done states
         const mergedDoD: DoDItem[] = node.dodChecklist.map(item => ({
@@ -143,9 +240,27 @@ export function mergeNodesWithProgress(staticNodes: WorkflowNode[]): WorkflowNod
             done: nodeProgress.dodChecklist[item.id] ?? item.done,
         }));
 
+        // Compute status based on DoD completion
+        const checkedCount = mergedDoD.filter(item => item.done).length;
+        const totalCount = mergedDoD.length;
+        
+        let computedStatus: NodeStatus;
+        if (totalCount > 0) {
+            if (checkedCount === totalCount) {
+                computedStatus = 'done';
+            } else if (checkedCount > 0) {
+                computedStatus = 'in-progress';
+            } else {
+                computedStatus = 'todo';
+            }
+        } else {
+            // No DoD items, use stored status
+            computedStatus = nodeProgress.status || node.status;
+        }
+
         return {
             ...node,
-            status: mergedStatus,
+            status: computedStatus,
             dodChecklist: mergedDoD,
         };
     });

@@ -1,0 +1,70 @@
+{
+    "greeting": {
+        "morning": "Selamat pagi",
+        "afternoon": "Selamat siang",
+        "evening": "Selamat malam"
+    },
+    "focusActive": "Fokus Aktif",
+    "quickStats": {
+        "compass": "Kompas",
+        "snapshots": "snapshot",
+        "activity": "Aktivitas",
+        "doneToday": "selesai hari ini",
+        "projectHub": "Hub Proyek",
+        "projects": "proyek"
+    },
+    "activeProject": {
+        "title": "Proyek terbaru",
+        "openWorkflow": "Buka Workflow",
+        "noProject": "Tidak ada proyek aktif",
+        "noProjects": "Belum ada proyek",
+        "createFirst": "Buat proyek pertamamu",
+        "mostRecent": "Proyek terbaru"
+    },
+    "activeProjects": {
+        "title": "Proyek Aktif",
+        "loading": "Memuat...",
+        "empty": "Tidak ada proyek aktif",
+        "viewAll": "Lihat Semua Proyek"
+    },
+    "tooltips": {
+        "addTask": "Tambah Tugas",
+        "addProject": "Tambah Proyek"
+    },
+    "hoursActivity": {
+        "title": "Aktivitas Jam",
+        "weekly": "Mingguan",
+        "vsLastWeek": "vs minggu lalu",
+        "noData": "Belum ada data aktivitas"
+    },
+    "dailySchedule": {
+        "title": "Jadwal Harian",
+        "focusSession": "Sesi Fokus",
+        "focusSessionDesc": "Mulai sesi kerja mendalam",
+        "logEnergy": "Catat Energi",
+        "logEnergyDesc": "Snapshot kompas",
+        "reviewActivity": "Tinjau Aktivitas",
+        "reviewActivityDesc": "Periksa kemajuanmu"
+    },
+    "calendar": {
+        "title": "Kalender"
+    },
+    "tasksDue": {
+        "title": "Tugas",
+        "noTasks": "Tidak ada tugas untuk hari ini",
+        "startTimer": "Mulai Timer",
+        "addTasks": "Tambah tugas dari Hub Proyek →"
+    },
+    "taskStatus": {
+        "completed": "Selesai",
+        "inProgress": "Sedang dikerjakan",
+        "upcoming": "Akan datang"
+    },
+    "task": "Tugas",
+    "focusPill": {
+        "focusing": "Fokus",
+        "break": "Istirahat",
+        "longBreak": "Istirahat Panjang",
+        "idle": "Idle"
+    }
+}

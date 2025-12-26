@@ -1,3 +1,12 @@
+export type AIProviderType = 'none' | 'ollama' | 'mock';
+
+export interface AISettings {
+    enabled: boolean;
+    provider: AIProviderType;
+    endpoint: string;
+    model: string;
+}
+
 export interface GesuSettings {
     paths: {
         workflowRoot: string;
@@ -15,6 +24,14 @@ export interface GesuSettings {
         accentColor: string;
         glassmorphism: boolean;
     };
+    ai?: AISettings;
     installPreference?: 'manual' | 'winget' | 'choco' | 'scoop';
     [key: string]: unknown;
 }
+
+export const DEFAULT_AI_SETTINGS: AISettings = {
+    enabled: false,
+    provider: 'none',
+    endpoint: 'http://localhost:11434',
+    model: 'llama3.2',
+};

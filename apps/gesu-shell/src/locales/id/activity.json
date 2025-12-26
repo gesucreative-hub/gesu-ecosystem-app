@@ -1,0 +1,97 @@
+{
+    "title": "Pelacak Aktivitas",
+    "subtitle": "Lacak sesi fokus dan metrik produktivitas Anda.",
+    "clearData": {
+        "title": "Hapus Data",
+        "todayOnly": "Hari ini saja",
+        "todayDesc": "Sesi dari hari ini",
+        "last7Days": "7 hari terakhir",
+        "last7DaysDesc": "Sesi dari minggu ini",
+        "last30Days": "30 hari terakhir",
+        "last30DaysDesc": "Sesi dari bulan ini",
+        "allData": "Semua data",
+        "allDataDesc": "Hapus semuanya",
+        "clearAll": "Hapus Semua Data",
+        "clearSelected": "Hapus yang Dipilih",
+        "allTitle": "Hapus Semua Data Aktivitas",
+        "todayTitle": "Hapus Data Hari Ini",
+        "weekTitle": "Hapus Data 7 Hari Terakhir",
+        "monthTitle": "Hapus Data 30 Hari Terakhir",
+        "allMessage": "Ini akan menghapus SEMUA sesi aktivitas Anda secara permanen. Tindakan ini tidak dapat dibatalkan.",
+        "todayMessage": "Ini akan menghapus sesi fokus dan istirahat hari ini.",
+        "weekMessage": "Ini akan menghapus sesi dari 7 hari terakhir.",
+        "monthMessage": "Ini akan menghapus sesi dari 30 hari terakhir.",
+        "confirmAll": "Hapus Semua Data",
+        "confirmSelected": "Hapus yang Dipilih"
+    },
+    "stats": {
+        "focusToday": "Fokus Hari Ini",
+        "sessions": "Sesi",
+        "dayStreak": "Streak Harian"
+    },
+    "viewModes": {
+        "daily": "Harian",
+        "weekly": "Mingguan",
+        "monthly": "Bulanan",
+        "annual": "Tahunan",
+        "heatmap": "Heatmap"
+    },
+    "swipeHint": "Geser untuk navigasi",
+    "charts": {
+        "heatmap": "Heatmap",
+        "last7DaysFocusHours": "Fokus 7 Hari Terakhir (Jam)",
+        "last30DaysFocusHours": "Fokus 30 Hari Terakhir (Jam)",
+        "todaysFocusMinutes": "Fokus Hari Ini (Menit)",
+        "weeklyTotal": "Total Mingguan (Menit)"
+    },
+    "heatmap": {
+        "yearActivity": "Aktivitas {{year}}",
+        "hoursTracked": "jam tercatat",
+        "dailyAverage": "Rata-rata harian:",
+        "daysLearned": "Hari belajar:",
+        "longestStreak": "Streak terpanjang:",
+        "currentStreak": "Streak saat ini:",
+        "mins": "menit",
+        "days": "hari"
+    },
+    "tooltips": {
+        "previousDay": "Hari sebelumnya",
+        "backToToday": "Kembali ke hari ini",
+        "nextDay": "Hari berikutnya",
+        "clearData": "Hapus data aktivitas",
+        "previousYear": "Tahun sebelumnya",
+        "nextYear": "Tahun berikutnya"
+    },
+    "session": {
+        "deepFocus": "Fokus Mendalam",
+        "breakTime": "Waktu Istirahat",
+        "stayInZone": "Tetap dalam zona",
+        "recharge": "Isi ulang energi Anda",
+        "stopSession": "Hentikan Sesi",
+        "readyToStart": "Siap memulai sesi?",
+        "startFocus": "Mulai Fokus",
+        "focus": "Fokus",
+        "break": "Istirahat",
+        "active": "Aktif"
+    },
+    "history": {
+        "title": "Riwayat Sesi",
+        "loading": "Memuat riwayat...",
+        "noHistory": "Belum ada riwayat"
+    },
+    "timeGroups": {
+        "today": "Hari Ini",
+        "yesterday": "Kemarin",
+        "lastWeek": "Minggu Lalu",
+        "older": "Lebih Lama"
+    },
+    "time": {
+        "h": "j",
+        "m": "m",
+        "s": "d"
+    },
+    "sessionTypes": {
+        "focus": "Fokus",
+        "break": "Istirahat"
+    }
+}

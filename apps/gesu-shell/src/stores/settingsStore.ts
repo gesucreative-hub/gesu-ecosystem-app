@@ -22,6 +22,12 @@ export const DEFAULT_SETTINGS: GesuSettings = {
         accentColor: 'cyan',
         glassmorphism: true,
     },
+    ai: {
+        enabled: false,
+        provider: 'none',
+        endpoint: 'http://localhost:11434',
+        model: 'llama3.2',
+    },
     installPreference: 'manual',
 };
 

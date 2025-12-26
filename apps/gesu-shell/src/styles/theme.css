@@ -40,15 +40,23 @@
     --brand-contrast: #ffffff;
     --brand-hover: #3a3b99;
 
+    /* Popover / Tooltip */
+    --popover: #ffffff;
+    --popover-fg: #1f1f47;
+
+    /* Status Colors */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --brand-light: rgba(65, 65, 185, 0.1);
+
     /* Sidebar (Light) */
     --sidebar-bg: #ffffff;
     --sidebar-fg: #454545;
     --sidebar-muted: #888888;
     --sidebar-border: rgba(0, 0, 0, 0.06);
     --sidebar-active-bg: #eff4fe;
-    /* Light primary tint */
     --sidebar-active-fg: #4141b9;
-    /* Primary-700 */
     --sidebar-hover: #f6f6f6;
   }
 
@@ -66,29 +74,106 @@
     --border: rgba(255, 255, 255, 0.08);
     --ring: rgba(164, 219, 116, 0.3);
 
-    /* Brand / Accent */
-    --brand: #a4db74;
-    /* Secondary-300 */
+    /* Brand / Accent - Brighter green for better visibility */
+    --brand: #7cb342;
+    /* Brighter green instead of Secondary-300 */
     --brand-contrast: #15280b;
     /* Secondary-950 */
     --brand-hover: #87cb50;
 
+    /* Popover / Tooltip */
+    --popover: #3d3d3d;
+    --popover-fg: #f6f6f6;
+
+    /* Status Colors */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --brand-light: rgba(124, 179, 66, 0.1);
+
     /* Sidebar (Dark) */
-    --sidebar-bg: #1f1f47;
-    /* Primary-950 as requested/implied or #202020? Let's check user Requirement.
-                              User said: "Dark theme uses Theme 2 ... Brand #a4db74 ... BG #292929".
-                              Sidebar Ref: "Dark Sidebar".
-                              My previous used #202020. User didn't complain but said "Sidebar visual target: Must look like my reference".
-                              Reference usually implies slightly darker or lighter than main BG.
-                              Main BG is #292929. Let's make sidebar #232323 or allow #1f1f47 if that was the "design" choice.
-                              Actually, let's stick to safe #252525 (Gray-925 approx) or keep #202020. #202020 is fine.
-                              Let's explicitly add sidebar-muted. */
     --sidebar-bg: #202020;
     --sidebar-fg: #d1d1d1;
     --sidebar-muted: #6b7280;
     --sidebar-border: rgba(255, 255, 255, 0.05);
-    --sidebar-active-bg: rgba(164, 219, 116, 0.1);
-    --sidebar-active-fg: #a4db74;
+    --sidebar-active-bg: rgba(124, 179, 66, 0.1);
+    --sidebar-active-fg: #7cb342;
     --sidebar-hover: rgba(255, 255, 255, 0.05);
+  }
+
+  /* =========================================
+     COLOR VARIATION TOKENS
+     Professional, Playful & Minimal palettes
+     ========================================= */
+
+  :root[data-theme="light"] {
+    /* Accent Variations (Complimentary to Indigo) */
+    --accent-cyan: #06b6d4;
+    --accent-purple: #8b5cf6;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+
+    /* Semantic Status Colors */
+    --status-success: #10b981;
+    --status-warning: #f59e0b;
+    --status-error: #ef4444;
+    --status-info: #06b6d4;
+
+    /* Chart / Graph Colors */
+    --chart-primary: #4141b9;
+    --chart-secondary: #8b5cf6;
+    --chart-tertiary: #06b6d4;
+    --chart-positive: #10b981;
+    --chart-negative: #ef4444;
+
+    /* Phase / Category Colors (Fixed - not theme dependent) */
+    --phase-1: #6366f1;
+    --phase-2: #8b5cf6;
+    --phase-3: #06b6d4;
+    --phase-4: #10b981;
+    --phase-5: #f59e0b;
+  }
+
+  :root[data-theme="dark"] {
+    /* Accent Variations (Complimentary to Green) */
+    --accent-cyan: #22d3ee;
+    --accent-purple: #a78bfa;
+    --accent-amber: #fbbf24;
+    --accent-rose: #fb7185;
+
+    /* Semantic Status Colors */
+    --status-success: #34d399;
+    --status-warning: #fbbf24;
+    --status-error: #f87171;
+    --status-info: #22d3ee;
+
+    /* Chart / Graph Colors */
+    --chart-primary: #7cb342;
+    --chart-secondary: #a78bfa;
+    --chart-tertiary: #22d3ee;
+    --chart-positive: #34d399;
+    --chart-negative: #f87171;
+
+    /* Phase / Category Colors (Fixed - not theme dependent) */
+    --phase-1: #818cf8;
+    --phase-2: #a78bfa;
+    --phase-3: #22d3ee;
+    --phase-4: #34d399;
+    --phase-5: #fbbf24;
+  }
+
+  /* =========================================
+     Z-INDEX SCALE
+     Documented hierarchy for consistent layering
+     ========================================= */
+  :root {
+    --z-behind: -1;
+    --z-base: 0;
+    --z-sticky: 10;
+    --z-sidebar: 20;
+    --z-dropdown: 50;
+    --z-modal: 100;
+    --z-confirm: 200;
+    --z-toast: 9999;
   }
 }

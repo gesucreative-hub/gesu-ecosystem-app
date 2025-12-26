@@ -3,6 +3,7 @@
 import { Button } from './Button';
 import { AlertCircle, HelpCircle, AlertTriangle } from 'lucide-react';
 import { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 
 type DialogType = 'confirm' | 'warning' | 'danger';
@@ -22,12 +23,13 @@ export function ConfirmDialog({
     isOpen,
     title,
     message,
-    confirmLabel = 'OK',
-    cancelLabel = 'Cancel',
+    confirmLabel,
+    cancelLabel,
     type = 'confirm',
     onConfirm,
     onCancel,
 }: ConfirmDialogProps) {
+    const { t } = useTranslation('modals');
     // Handle ESC key
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -48,9 +50,9 @@ export function ConfirmDialog({
     const getIcon = () => {
         switch (type) {
             case 'danger':
-                return <AlertTriangle size={24} className="text-red-500" />;
+                return <AlertTriangle size={24} className="text-tokens-error" />;
             case 'warning':
-                return <AlertCircle size={24} className="text-amber-500" />;
+                return <AlertCircle size={24} className="text-tokens-warning" />;
             default:
                 return <HelpCircle size={24} className="text-tokens-brand-DEFAULT" />;
         }
@@ -59,9 +61,9 @@ export function ConfirmDialog({
     const getIconBg = () => {
         switch (type) {
             case 'danger':
-                return 'bg-red-500/10';
+                return 'bg-tokens-error/10';
             case 'warning':
-                return 'bg-amber-500/10';
+                return 'bg-tokens-warning/10';
             default:
                 return 'bg-tokens-brand-DEFAULT/10';
         }
@@ -70,14 +72,14 @@ export function ConfirmDialog({
     const getConfirmButtonClass = () => {
         switch (type) {
             case 'danger':
-                return 'bg-red-500 hover:bg-red-600 text-white border-red-500';
+                return 'bg-tokens-error hover:bg-tokens-error/90 text-white border-tokens-error';
             default:
                 return '';
         }
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] overflow-y-auto bg-black/50 backdrop-blur-sm">
             <div
                 className="flex min-h-full items-center justify-center p-4"
                 onClick={(e) => e.target === e.currentTarget && onCancel()}
@@ -102,7 +104,7 @@ export function ConfirmDialog({
                             onClick={onCancel}
                             size="sm"
                         >
-                            {cancelLabel}
+                            {cancelLabel || t('confirm.cancel')}
                         </Button>
                         <Button
                             variant="primary"
@@ -111,7 +113,7 @@ export function ConfirmDialog({
                             className={getConfirmButtonClass()}
                             autoFocus
                         >
-                            {confirmLabel}
+                            {confirmLabel || t('alert.ok')}
                         </Button>
                     </div>
                 </div>

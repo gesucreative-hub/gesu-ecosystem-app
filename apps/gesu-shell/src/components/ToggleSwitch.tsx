@@ -85,7 +85,7 @@ export function ToggleSwitch({
                             data-toggle-option={option.id}
                             onClick={() => onChange(option.id)}
                             className={`
-                                relative z-10 px-4 py-1.5 text-xs font-medium rounded-md
+                                relative z-10 px-4 py-2 text-sm font-medium rounded-md
                                 transition-colors duration-200
                                 ${fullWidth ? 'flex-1' : ''}
                                 ${isActive

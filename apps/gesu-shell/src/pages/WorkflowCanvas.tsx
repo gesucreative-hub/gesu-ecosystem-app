@@ -1,8 +1,11 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
     WORKFLOW_PHASES,
     WORKFLOW_NODES,
     WorkflowNode,
+    NodeStatus,
 } from './workflowData';
 import { StepDetailPanel } from './StepDetailPanel';
 import {
@@ -10,33 +13,49 @@ import {
     toggleDoDItem as persistToggleDoDItem,
     markNodeDone as persistMarkNodeDone,
     setNodeStatus,
+    setAllDoDItemsDone,
+    clearAllDoDItems,
+    clearProgressForProject,
 } from '../stores/workflowProgressStore';
-import { getActiveProject } from '../stores/projectStore';
+import { getActiveProject, getActiveProjectId, Project, deleteProject } from '../stores/projectStore';
 import { loadBlueprints, getBlueprintById } from '../services/workflowBlueprintsService';
 import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
 import { calculateOverallProgress } from '../utils/workflowProgress';
+import { markAllTasksDoneForStep, markAllTasksUndoneForStep, toggleTaskForDoDItem } from '../stores/projectHubTasksStore';
+import { isFinishModeForStep, markAllActionsDone, markAllActionsUndone, setActionDone } from '../stores/finishModeStore';
+import { FolderOpen, Search, FileWarning, Trash2, RotateCcw } from 'lucide-react';
+import { useConfirmDialog } from '../components/ConfirmDialog';
+
+interface WorkflowCanvasProps {
+    project?: Project;
+}
 
 // --- Main Canvas Component ---
-export function WorkflowCanvas() {
+export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
+    const { t } = useTranslation(['initiator', 'common']);
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [hoveredPhase, setHoveredPhase] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
-    // Blueprint loading state
-    const [baseNodes, setBaseNodes] = useState<WorkflowNode[]>(WORKFLOW_NODES);
+    // Blueprint loading state - start empty until we check for active project
+    const [baseNodes, setBaseNodes] = useState<WorkflowNode[]>([]);
     const [blueprintError, setBlueprintError] = useState<string | null>(null);
+    const [currentBlueprint, setCurrentBlueprint] = useState<any>(null); // Track loaded blueprint
 
-    // Local state for nodes (merged with persisted progress)
-    const [nodes, setNodes] = useState<WorkflowNode[]>(() => mergeNodesWithProgress(WORKFLOW_NODES));
+    // Local state for nodes (merged with persisted progress) - start empty
+    const [nodes, setNodes] = useState<WorkflowNode[]>([]);
 
     // Load blueprint for active project on mount and when project changes
     useEffect(() => {
         const loadBlueprintForProject = async () => {
             const project = getActiveProject();
             if (!project) {
-                console.log('[WorkflowCanvas] No active project, using static nodes');
-                setBaseNodes(WORKFLOW_NODES);
-                setNodes(mergeNodesWithProgress(WORKFLOW_NODES));
+                console.log('[WorkflowCanvas] No active project, showing select project message');
+                setBaseNodes([]);
+                setNodes([]);
+                setBlueprintError(null);  // null = "Select a project" message
                 return;
             }
 
@@ -59,6 +78,7 @@ export function WorkflowCanvas() {
                     const workflowNodes = blueprintToWorkflowNodes(blueprint);
                     setBaseNodes(workflowNodes);
                     setNodes(mergeNodesWithProgress(workflowNodes));
+                    setCurrentBlueprint(blueprint); // Store the blueprint
                     setBlueprintError(null);
                 } else {
                     console.warn('[WorkflowCanvas] Blueprint not found:', project.blueprintId);
@@ -76,26 +96,104 @@ export function WorkflowCanvas() {
         loadBlueprintForProject();
     }, []);
 
+    // Auto-select step from URL param (when navigating from Compass)
+    useEffect(() => {
+        const stepId = searchParams.get('stepId');
+        if (stepId && nodes.length > 0) {
+            // Check if this step exists in current nodes
+            const stepExists = nodes.some(n => n.id === stepId);
+            if (stepExists) {
+                setSelectedNodeId(stepId);
+                // Clear the param after selection to keep URL clean
+                searchParams.delete('stepId');
+                setSearchParams(searchParams, { replace: true });
+            }
+        }
+    }, [searchParams, nodes, setSearchParams]);
+
     // Find selected node
     const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
 
-    // Handler to toggle DoD item (persists to store)
+    // Handler to toggle DoD item (persists to store and syncs with Compass/Finish Mode)
     const handleToggleDoDItem = useCallback((nodeId: string, dodItemId: string) => {
-        persistToggleDoDItem(nodeId, dodItemId);
+        // Toggle in workflow store and get new value
+        const newValue = persistToggleDoDItem(nodeId, dodItemId);
+
+        // Sync with Compass tasks (if task was sent to Compass)
+        toggleTaskForDoDItem(nodeId, dodItemId, newValue);
+
+        // Sync with Finish Mode (if Finish Mode is active for this step)
+        if (isFinishModeForStep(nodeId)) {
+            setActionDone(dodItemId, newValue);
+        }
+
         setNodes(mergeNodesWithProgress(baseNodes));
     }, [baseNodes]);
 
-    // Handler to mark node as done (persists to store)
+    // Handler to mark node as done (persists to store + marks all DoD items done + syncs Compass/Finish Mode)
     const handleMarkAsDone = useCallback((nodeId: string) => {
-        persistMarkNodeDone(nodeId);
-        setNodes(mergeNodesWithProgress(baseNodes));
-    }, [baseNodes]);
+        // Find the node to get its DoD item IDs
+        const node = nodes.find(n => n.id === nodeId);
+        if (node) {
+            const dodItemIds = node.dodChecklist.map(item => item.id);
+            // Mark all DoD items as done in workflow progress
+            setAllDoDItemsDone(nodeId, dodItemIds);
+        } else {
+            persistMarkNodeDone(nodeId);
+        }
 
-    // Handler to reopen a done node (revert to in-progress)
-    const handleReopenNode = useCallback((nodeId: string) => {
-        setNodeStatus(nodeId, 'in-progress');
+        // Sync with Compass tasks for this step
+        markAllTasksDoneForStep(nodeId);
+
+        // Sync with Finish Mode if active for this step
+        if (isFinishModeForStep(nodeId)) {
+            markAllActionsDone();
+        }
+
         setNodes(mergeNodesWithProgress(baseNodes));
-    }, [baseNodes]);
+    }, [baseNodes, nodes]);
+
+    // Handler to reopen a done node (revert to in-progress + clear all DoD items + sync Compass/Finish Mode)
+    const handleReopenNode = useCallback((nodeId: string) => {
+        // Find the node to get its DoD item IDs
+        const node = nodes.find(n => n.id === nodeId);
+        if (node) {
+            const dodItemIds = node.dodChecklist.map(item => item.id);
+            // Clear all DoD items in workflow progress
+            clearAllDoDItems(nodeId, dodItemIds);
+        } else {
+            setNodeStatus(nodeId, 'in-progress');
+        }
+
+        // Sync with Compass tasks for this step
+        markAllTasksUndoneForStep(nodeId);
+
+        // Sync with Finish Mode if active for this step
+        if (isFinishModeForStep(nodeId)) {
+            markAllActionsUndone();
+        }
+
+        setNodes(mergeNodesWithProgress(baseNodes));
+    }, [baseNodes, nodes]);
+
+    // Handler to clear all progress for current project
+    const handleClearProgress = useCallback(async () => {
+        const projectId = getActiveProjectId();
+        if (!projectId) return;
+
+        const shouldClear = await confirm({
+            title: t('initiator:workflow.clearProgressTitle', 'Clear All Progress?'),
+            message: t('initiator:workflow.clearProgressMessage', 'This will reset all step statuses and checklist items for this project. This action cannot be undone.'),
+            confirmLabel: t('initiator:workflow.clearProgress', 'Clear Progress'),
+            cancelLabel: t('common:buttons.cancel', 'Cancel'),
+            type: 'warning'
+        });
+
+        if (shouldClear) {
+            clearProgressForProject(projectId);
+            setNodes(mergeNodesWithProgress(baseNodes));
+        }
+    }, [baseNodes, confirm]);
 
     // Re-merge nodes when baseNodes change
     useEffect(() => {
@@ -128,14 +226,15 @@ export function WorkflowCanvas() {
         return () => { document.body.style.overflow = ''; };
     }, [selectedNodeId]);
 
-    // Sprint 21.1: Group nodes by phase for horizontal view
+    // Sprint 21.1: Group nodes by phase for horizontal view - use blueprint's phases
+    const phasesToUse = currentBlueprint?.phases || WORKFLOW_PHASES;
     const nodesByPhase = useMemo(() => {
-        const grouped = WORKFLOW_PHASES.reduce((acc, phase) => {
+        const grouped = phasesToUse.reduce((acc: Record<string, WorkflowNode[]>, phase: any) => {
             acc[phase.id] = nodes.filter(n => n.phase === phase.id);
             return acc;
         }, {} as Record<string, WorkflowNode[]>);
         return grouped;
-    }, [nodes]);
+    }, [nodes, phasesToUse]);
 
     // Sprint 21.2: Panning state for middle-click drag
     const [isPanning, setIsPanning] = useState(false);
@@ -180,70 +279,84 @@ export function WorkflowCanvas() {
         <div className="flex gap-6 h-[600px]">
             {/* Horizontal View (Only Mode) */}
             <div className="flex-1 flex h-full rounded-xl border border-tokens-border overflow-hidden">
-                {/* Left Sidebar */}
-                <div className="w-52 border-r border-tokens-border bg-tokens-panel flex flex-col">
-                    {/* Phases Section */}
-                    <div className="p-4 border-b border-tokens-border">
-                        <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">Phases</h3>
-                        <div className="space-y-2">
-                            {WORKFLOW_PHASES.map(phase => {
-                                const count = nodesByPhase[phase.id]?.length || 0;
-                                return (
-                                    <div
-                                        key={phase.id}
-                                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-tokens-panel2 transition-colors cursor-pointer"
-                                    >
+                {/* Left Sidebar - only show when canvas has content */}
+                {!isEmptyCanvas && (
+                    <div className="w-52 border-r border-tokens-border bg-tokens-panel flex flex-col">
+                        {/* Phases Section */}
+                        <div className="p-4 border-b border-tokens-border">
+                            <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">{t('initiator:workflow.phasesLabel', 'Phases')}</h3>
+                            <div className="space-y-2">
+                                {phasesToUse.map((phase: any) => {
+                                    const count = nodesByPhase[phase.id]?.length || 0;
+                                    return (
                                         <div
-                                            className="w-2 h-2 rounded-full flex-shrink-0"
-                                            style={{ backgroundColor: phase.color }}
-                                        />
-                                        <span className="text-xs text-tokens-fg flex-1 truncate">{phase.label}</span>
-                                        <span className="text-[10px] text-tokens-muted">{count}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Progress Section */}
-                    <div className="p-4 border-b border-tokens-border">
-                        <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">Status Project</h3>
-                        <div className="space-y-2">
-                            <div className="text-xs text-tokens-muted">Progress</div>
-                            <div className="text-2xl font-bold text-tokens-fg">{progress.percent}%</div>
-                            <div className="w-full h-1.5 bg-tokens-panel2 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary-700 dark:bg-secondary-300 transition-all duration-300"
-                                    style={{ width: `${progress.percent}%` }}
-                                />
+                                            key={phase.id}
+                                            className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-tokens-panel2 transition-colors cursor-pointer"
+                                        >
+                                            <div
+                                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: phase.color }}
+                                            />
+                                            <span className="text-xs text-tokens-fg flex-1 truncate">{phase.label}</span>
+                                            <span className="text-[10px] text-tokens-muted">{count}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            {progress.totalDoD > 0 && (
-                                <div className="text-[10px] text-tokens-muted">
-                                    {progress.completedDoD}/{progress.totalDoD} items completed
+                        </div>
+
+                        {/* Progress Section */}
+                        <div className="p-4 border-b border-tokens-border">
+                            <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">{t('initiator:workflow.statusProject')}</h3>
+                            <div className="space-y-2">
+                                <div className="text-xs text-tokens-muted">{t('initiator:workflow.progress', 'Progress')}</div>
+                                <div className="text-2xl font-bold text-tokens-fg">{progress.percent}%</div>
+                                <div className="w-full h-1.5 bg-tokens-panel2 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary-700 dark:bg-secondary-300 transition-all duration-300"
+                                        style={{ width: `${progress.percent}%` }}
+                                    />
                                 </div>
+                                {progress.totalDoD > 0 && (
+                                    <div className="text-[10px] text-tokens-muted">
+                                        {t('initiator:workflow.itemsCompleted', '{{completed}}/{{total}} items completed', { completed: progress.completedDoD, total: progress.totalDoD })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Status Legend */}
+                        <div className="p-4">
+                            <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">{t('initiator:workflow.legend', 'Legend')}</h3>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                                    <span className="text-xs text-tokens-fg">{t('initiator:workflow.done', 'Done')}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
+                                    <span className="text-xs text-tokens-fg">{t('initiator:workflow.inProgress')}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-gray-400 flex-shrink-0" />
+                                    <span className="text-xs text-tokens-fg">{t('initiator:workflow.toDo')}</span>
+                                </div>
+                            </div>
+
+                            {/* Clear Progress Button */}
+                            {progress.percent > 0 && (
+                                <button
+                                    onClick={handleClearProgress}
+                                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-colors"
+                                    title={t('initiator:tooltips.clearProgress', 'Clear all progress')}
+                                >
+                                    <RotateCcw size={12} />
+                                    {t('initiator:workflow.clearProgress', 'Clear Progress')}
+                                </button>
                             )}
                         </div>
                     </div>
-
-                    {/* Status Legend */}
-                    <div className="p-4">
-                        <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">Legend</h3>
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                                <span className="text-xs text-tokens-fg">Done</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
-                                <span className="text-xs text-tokens-fg">In Progress</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-gray-400 flex-shrink-0" />
-                                <span className="text-xs text-tokens-fg">To Do</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 {/* Main Canvas Area - Pannable with middle-click */}
                 <div
@@ -273,16 +386,101 @@ export function WorkflowCanvas() {
                         }
                     `}</style>
 
-                    {/* No blueprint message */}
-                    {isEmptyCanvas && blueprintError && (
+                    {/* Project Info Header - only shown when project is selected and has content */}
+                    {project && !isEmptyCanvas && (
+                        <div className="sticky top-0 z-sticky m-4 mb-0 p-3 bg-tokens-panel/95 backdrop-blur-sm border border-tokens-border rounded-lg flex items-center gap-4 text-xs shadow-sm">
+                            {/* Project Type */}
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-tokens-muted">{t('initiator:workflow.type', 'Type')}:</span>
+                                <span className="font-medium text-tokens-fg">
+                                    {project.type === 'client' ? t('initiator:projectTypes.client', 'Client') :
+                                        project.type === 'gesu-creative' ? t('initiator:projectTypes.gesu-creative', 'Personal') :
+                                            t('initiator:projectTypes.other', 'Other')}
+                                </span>
+                            </div>
+
+                            {/* Client Name - only for client projects */}
+                            {project.type === 'client' && project.clientName && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-tokens-muted">{t('initiator:workflow.client', 'Client')}:</span>
+                                    <span className="font-medium text-tokens-brand-DEFAULT">{project.clientName}</span>
+                                </div>
+                            )}
+
+                            {/* Folder Path - clickable */}
+                            {project.projectPath && (
+                                <button
+                                    onClick={() => {
+                                        if (window.gesu?.shell?.openPath) {
+                                            window.gesu.shell.openPath(project.projectPath!);
+                                        } else {
+                                            console.log('[WorkflowCanvas] Would open:', project.projectPath);
+                                        }
+                                    }}
+                                    className="flex items-center gap-1.5 flex-1 min-w-0 group hover:text-tokens-brand-DEFAULT transition-colors"
+                                    title={t('initiator:tooltips.openFolder', 'Open folder in explorer')}
+                                >
+                                    <FolderOpen size={12} className="text-tokens-muted group-hover:text-tokens-brand-DEFAULT shrink-0" />
+                                    <span className="font-mono text-tokens-muted group-hover:text-tokens-brand-DEFAULT truncate">{project.projectPath}</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Empty state message */}
+                    {isEmptyCanvas && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="px-6 py-4 rounded-xl border-2 border-dashed border-tokens-border bg-tokens-panel/80 backdrop-blur-sm">
-                                <div className="text-tokens-muted text-sm font-medium text-center">
-                                    No blueprint yet
+                            <div className="px-8 py-6 rounded-xl border-2 border-dashed border-tokens-border bg-tokens-panel/80 backdrop-blur-sm max-w-sm text-center">
+                                {blueprintError ? (
+                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
+                                        <FileWarning className="text-amber-500" size={24} />
+                                    </div>
+                                ) : (
+                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-tokens-brand-DEFAULT/10 flex items-center justify-center">
+                                        <Search className="text-tokens-brand-DEFAULT" size={24} />
+                                    </div>
+                                )}
+                                <div className="text-tokens-fg text-sm font-medium mb-1">
+                                    {blueprintError ? 'No Blueprint Assigned' : 'No Project Selected'}
                                 </div>
-                                <div className="text-tokens-muted/60 text-xs text-center mt-1">
-                                    Go to Standards tab to create one
+                                <div className="text-tokens-muted/70 text-xs mb-4">
+                                    {blueprintError
+                                        ? blueprintError
+                                        : 'Select a project from the top bar to view its workflow.'}
                                 </div>
+                                {blueprintError && (
+                                    <div className="flex gap-2 justify-center">
+                                        <button
+                                            onClick={() => {
+                                                // Navigate to Generator tab with 'Existing Project' mode
+                                                setSearchParams({ tab: 'generator', mode: 'exist' });
+                                            }}
+                                            className="px-4 py-2 bg-tokens-fg text-tokens-bg text-xs font-medium rounded-lg hover:opacity-90 transition-colors"
+                                        >
+                                            Assign Blueprint →
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (project && await confirm({
+                                                    title: 'Delete Project?',
+                                                    message: t('initiator:messages.deleteProjectConfirm', { name: project.name }),
+                                                    type: 'danger',
+                                                    confirmLabel: 'Delete',
+                                                    cancelLabel: 'Keep Project'
+                                                })) {
+                                                    deleteProject(project.id);
+                                                    // Force reload to clear state and refresh UI
+                                                    window.location.reload();
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-medium rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1"
+                                            title={t('initiator:tooltips.deleteProject', 'Delete this project permanently')}
+                                        >
+                                            <Trash2 size={12} />
+                                            Delete Project
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -290,12 +488,12 @@ export function WorkflowCanvas() {
                     {/* Phase Rows - Extra padding for hover overflow */}
                     {!isEmptyCanvas && (
                         <div className="p-6 pb-12 min-w-max">
-                            {WORKFLOW_PHASES.map((phase, phaseIndex) => {
+                            {phasesToUse.map((phase: any, phaseIndex: number) => {
                                 const phaseNodes = nodesByPhase[phase.id] || [];
                                 if (phaseNodes.length === 0) return null;
 
                                 const isPhaseHovered = hoveredPhase === phase.id;
-                                const nextPhase = WORKFLOW_PHASES[phaseIndex + 1];
+                                const nextPhase = phasesToUse[phaseIndex + 1];
                                 const nextPhaseNodes = nextPhase ? nodesByPhase[nextPhase.id] || [] : [];
                                 const hasNextPhase = nextPhaseNodes.length > 0;
 
@@ -327,8 +525,8 @@ export function WorkflowCanvas() {
 
                                             {/* Horizontal Cards with Arrows */}
                                             <div className="flex-1 flex items-center gap-0">
-                                                {phaseNodes.map((node, index) => {
-                                                    const statusColors = {
+                                                {phaseNodes.map((node: WorkflowNode, index: number) => {
+                                                    const statusColors: Record<NodeStatus, string> = {
                                                         'todo': 'border-tokens-border/50 bg-tokens-panel',
                                                         'in-progress': 'border-amber-400/60 bg-amber-500/5',
                                                         'done': 'border-emerald-400/60 bg-emerald-500/5',
@@ -373,10 +571,10 @@ export function WorkflowCanvas() {
                                                                 </div>
 
                                                                 <h4 className="text-xs font-semibold text-tokens-fg line-clamp-2 leading-tight mb-1">
-                                                                    {index}. {node.title}
+                                                                    {index}. {node.titleKey ? t(node.titleKey, node.title) : node.title}
                                                                 </h4>
                                                                 <p className="text-[10px] text-tokens-muted line-clamp-2 mb-1.5 min-h-[1.75rem]">
-                                                                    {node.description}
+                                                                    {node.descKey ? t(node.descKey, node.description) : node.description}
                                                                 </p>
 
                                                                 {/* Details - only visible on phase hover */}
@@ -446,10 +644,12 @@ export function WorkflowCanvas() {
                             onToggleDoDItem={handleToggleDoDItem}
                             onMarkAsDone={handleMarkAsDone}
                             onReopenNode={handleReopenNode}
+                            blueprintPhases={currentBlueprint?.phases}
                         />
                     </div>
                 </div>
             )}
+            <ConfirmDialogComponent />
         </div>
     );
 }

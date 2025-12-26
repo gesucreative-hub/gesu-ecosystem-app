@@ -41,11 +41,11 @@ export function AlertDialog({
     const getIcon = () => {
         switch (type) {
             case 'success':
-                return <CheckCircle size={24} className="text-green-500" />;
+                return <CheckCircle size={24} className="text-tokens-success" />;
             case 'error':
-                return <XCircle size={24} className="text-red-500" />;
+                return <XCircle size={24} className="text-tokens-error" />;
             case 'warning':
-                return <AlertCircle size={24} className="text-amber-500" />;
+                return <AlertCircle size={24} className="text-tokens-warning" />;
             default:
                 return <Info size={24} className="text-tokens-brand-DEFAULT" />;
         }
@@ -54,11 +54,11 @@ export function AlertDialog({
     const getIconBg = () => {
         switch (type) {
             case 'success':
-                return 'bg-green-500/10';
+                return 'bg-tokens-success/10';
             case 'error':
-                return 'bg-red-500/10';
+                return 'bg-tokens-error/10';
             case 'warning':
-                return 'bg-amber-500/10';
+                return 'bg-tokens-warning/10';
             default:
                 return 'bg-tokens-brand-DEFAULT/10';
         }
@@ -98,4 +98,64 @@ export function AlertDialog({
             </div>
         </div>
     );
+}
+
+// Hook for easier usage with state management
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+
+interface UseAlertDialogReturn {
+    isOpen: boolean;
+    dialogProps: Omit<AlertDialogProps, 'isOpen' | 'onClose'>;
+    alert: (options: {
+        title: string;
+        message: string;
+        type?: AlertType;
+    }) => Promise<void>;
+    AlertDialogComponent: React.FC;
+}
+
+export function useAlertDialog(): UseAlertDialogReturn {
+    const [isOpen, setIsOpen] = useState(false);
+    const [dialogProps, setDialogProps] = useState<Omit<AlertDialogProps, 'isOpen' | 'onClose'>>({
+        title: '',
+        message: '',
+        type: 'info',
+    });
+    const [resolveRef, setResolveRef] = useState<(() => void) | null>(null);
+
+    const alert = (options: {
+        title: string;
+        message: string;
+        type?: AlertType;
+    }): Promise<void> => {
+        return new Promise((resolve) => {
+            setDialogProps(options);
+            setResolveRef(() => resolve);
+            setIsOpen(true);
+        });
+    };
+
+    const handleClose = () => {
+        setIsOpen(false);
+        resolveRef?.();
+    };
+
+    const AlertDialogComponent: React.FC = () => (
+        isOpen ? createPortal(
+            <AlertDialog
+                isOpen={isOpen}
+                {...dialogProps}
+                onClose={handleClose}
+            />,
+            document.body
+        ) : null
+    );
+
+    return {
+        isOpen,
+        dialogProps,
+        alert,
+        AlertDialogComponent,
+    };
 }

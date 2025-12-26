@@ -41,14 +41,13 @@ export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
                            border border-tokens-border/50
                            shadow-sm"
             >
-                {/* Sliding Active Indicator Capsule - indigo (light) / green (dark) */}
+                {/* Sliding Active Indicator Capsule - uses var(--brand) for consistency */}
                 <div
-                    className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out
-                               bg-[#4141b9] dark:bg-[#7cb342]
-                               shadow-md"
+                    className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out shadow-md"
                     style={{
                         left: `${indicatorStyle.left}px`,
                         width: `${indicatorStyle.width}px`,
+                        backgroundColor: 'var(--brand)'
                     }}
                 />
 

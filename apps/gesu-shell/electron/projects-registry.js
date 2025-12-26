@@ -98,7 +98,10 @@ export async function listProjects(projectsRoot) {
                     // Sprint 20: Blueprint fields
                     categoryId: metadata.categoryId,
                     blueprintId: metadata.blueprintId,
-                    blueprintVersion: metadata.blueprintVersion
+                    blueprintVersion: metadata.blueprintVersion,
+                    // Sprint 23: Project type and client info
+                    projectType: metadata.projectType,
+                    clientName: metadata.clientName
                 };
 
                 projects.push(project);

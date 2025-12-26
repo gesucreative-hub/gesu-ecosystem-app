@@ -107,13 +107,13 @@ declare global {
                 pickFile: (opts: { defaultPath?: string; filters?: Electron.FileFilter[] }) => Promise<string | null>;
             };
             scaffold?: {
-                preview: (input: { projectName: string; templateId: string }) => Promise<{
+                preview: (input: { projectName: string; templateId: string; folderTemplateFolders?: string[] }) => Promise<{
                     ok: boolean;
                     projectPath?: string;
                     plan?: Array<{ kind: 'dir' | 'file'; relativePath: string; content?: string }>;
                     error?: string;
                 }>;
-                create: (input: { projectName: string; templateId: string }) => Promise<{
+                create: (input: { projectName: string; templateId: string; categoryId?: string; blueprintId?: string; blueprintVersion?: number; folderTemplateFolders?: string[]; options?: { gitInit?: boolean; includeMedia?: boolean; includeNotion?: boolean; includeLog?: boolean; } }) => Promise<{
                     ok: boolean;
                     projectPath?: string;
                     projectId?: string;
@@ -121,7 +121,9 @@ declare global {
                     warnings?: string[];
                     error?: string;
                 }>;
+                initializeGit: (path: string) => Promise<{ success: boolean; message?: string; error?: string; }>;
             };
+
             projects?: {
                 list: () => Promise<Array<{
                     id: string;
@@ -131,6 +133,14 @@ declare global {
                     updatedAt?: string;
                     templateId?: string;
                 }>>;
+                onChange: (callback: () => void) => () => void;
+            };
+            fs?: {
+                ensureDir: (path: string) => Promise<void>;
+                pathExists: (path: string) => Promise<boolean>;
+                readDir: (path: string) => Promise<Array<{ name: string; isDirectory: boolean }>>;
+                readFile: (path: string) => Promise<string>;
+                writeFile: (path: string, data: string) => Promise<void>;
             };
             compassSnapshots?: {
                 append: (snapshot: {
@@ -161,6 +171,10 @@ declare global {
                 get: () => Promise<any>;
                 save: (data: any) => Promise<{ ok: boolean; error?: string }>;
             };
+            folderTemplates?: {
+                get: () => Promise<any>;
+                save: (data: any) => Promise<{ ok: boolean; error?: string }>;
+            };
             mediaSuite?: {
                 getRecentJobs: () => Promise<MediaSuiteJob[]>;
                 openFolder: (target: MediaOutputTarget) => Promise<void>;
@@ -170,6 +184,20 @@ declare global {
             };
             shell?: {
                 openPath: (path: string) => Promise<{ success: boolean; error?: string }>;
+            };
+            activityTracking?: {
+                startSession: (payload: { type: 'focus' | 'break' | 'idle'; taskId?: string; projectId?: string }) => Promise<{ ok: boolean; sessionId?: string; error?: string }>;
+                endSession: (payload: { sessionId: string }) => Promise<{ ok: boolean; error?: string }>;
+                getSummary: (payload: { startDate: string; endDate: string }) => Promise<{ ok: boolean; sessions?: any[]; error?: string }>;
+                recordTaskCompletion: (payload: { taskId: string; duration?: number }) => Promise<{ ok: boolean; completionId?: string; error?: string }>;
+            };
+            database?: {
+                switchUser: (userId: string | null) => Promise<{ ok: boolean; error?: string }>;
+                getCurrentUser: () => Promise<string | null>;
+            };
+            userSettings?: {
+                read: () => Promise<any>;
+                write: (settings: any) => Promise<void>;
             };
         };
     }

@@ -1,0 +1,160 @@
+{
+    "title": "Settings",
+    "subtitle": "Customize your workspace and preferences",
+    "tabs": {
+        "general": "General",
+        "appearance": "Appearance",
+        "paths": "Paths",
+        "account": "Account"
+    },
+    "sections": {
+        "externalTools": "External Tools",
+        "directoryPaths": "Directory Paths"
+    },
+    "validation": {
+        "issuesFound": "Issues Found:"
+    },
+    "language": {
+        "title": "Language",
+        "select": "Select Language",
+        "description": "Change the display language of the app"
+    },
+    "theme": {
+        "title": "Theme",
+        "description": "Choose your preferred color scheme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+    },
+    "configHealth": {
+        "title": "Configuration Health",
+        "incomplete": "Configuration Incomplete",
+        "incomplete_desc": "Some settings need attention",
+        "allReady": "All Systems Ready",
+        "allReady_desc": "Everything is configured correctly",
+        "checkingSystem": "Checking System...",
+        "externalTools": "External Tools",
+        "directoryPaths": "Directory Paths",
+        "ready": "Ready",
+        "configured": "Configured",
+        "noIssues": "No issues found",
+        "runCheck": "Run Global Tools Check"
+    },
+    "appearance": {
+        "title": "Appearance",
+        "colorTheme": "Color Theme",
+        "colorThemeDesc": "Light mode uses Indigo accent, Dark mode uses Green accent"
+    },
+    "paths": {
+        "title": "Workspace Paths",
+        "workflowRoot": "Workflow Root",
+        "workflowRootDesc": "Base path for your workflow database",
+        "projectsFolder": "Projects Folder",
+        "projectsFolderDesc": "Default folder for new projects",
+        "backupFolder": "Backup Folder",
+        "backupFolderDesc": "Location for automatic backups"
+    },
+    "engines": {
+        "title": "External Tools",
+        "description": "Configure paths to external tools used by Media Suite",
+        "ytDlp": "yt-dlp",
+        "ytDlpDesc": "Command-line audio/video downloader",
+        "ffmpeg": "FFmpeg",
+        "ffmpegDesc": "Video and audio processing tool",
+        "imageMagick": "ImageMagick",
+        "imageMagickDesc": "Image manipulation tool",
+        "libreOffice": "LibreOffice",
+        "libreOfficeDesc": "Document conversion tool",
+        "installMethod": "Install Method",
+        "pathLabel": "Path to executable"
+    },
+    "accent": {
+        "title": "Accent Color",
+        "description": "Choose your preferred accent color"
+    },
+    "account": {
+        "title": "Account",
+        "signedInAs": "Signed in as",
+        "notSignedIn": "Not signed in",
+        "signInPrompt": "Sign in to sync your data across devices"
+    },
+    "about": {
+        "title": "About",
+        "version": "Version",
+        "buildDate": "Build Date"
+    },
+    "danger": {
+        "title": "Danger Zone",
+        "reset": "Reset Settings",
+        "resetDesc": "Reset all settings to default values",
+        "resetConfirm": "Are you sure? This will reset all settings to their defaults."
+    },
+    "messages": {
+        "settingsSaved": "Settings saved successfully to disk!",
+        "settingsReset": "Settings have been reset to defaults"
+    },
+    "engineStatus": {
+        "unknown": "Unknown",
+        "readyConfigured": "Ready (Configured)",
+        "readySystem": "Ready (System PATH)",
+        "warningFallback": "Warning (Fallback)",
+        "missing": "Missing",
+        "error": "Error"
+    },
+    "buttons": {
+        "check": "Check",
+        "showCommand": "Install command",
+        "hideCommand": "Hide command"
+    },
+    "tooltips": {
+        "checkTool": "Check this tool"
+    },
+    "placeholders": {
+        "enterPath": "Enter absolute path..."
+    },
+    "footer": {
+        "unsavedChanges": "Unsaved changes"
+    },
+    "ai": {
+        "title": "AI Suggestions",
+        "description": "Configure local AI for blueprint enhancement suggestions",
+        "enabled": "Enable AI Suggestions",
+        "enabledDesc": "Use local AI to suggest blueprint improvements",
+        "provider": "AI Provider",
+        "providerDesc": "Select your local AI provider",
+        "providerNone": "None (Disabled)",
+        "providerOllama": "Ollama (Local)",
+        "providerMock": "Mock (Testing)",
+        "endpoint": "API Endpoint",
+        "endpointDesc": "URL of your local AI server",
+        "endpointPlaceholder": "http://localhost:11434",
+        "model": "Model Name",
+        "modelDesc": "Name of the model to use",
+        "modelPlaceholder": "llama3.2",
+        "testConnection": "Test Connection",
+        "testing": "Testing...",
+        "connected": "Connected",
+        "connectionFailed": "Connection failed",
+        "notConfigured": "AI not configured",
+        "modelSetup": {
+            "title": "Model Setup",
+            "needOllama": "Need Ollama? Download the installer for Windows:",
+            "downloadOllama": "Download Ollama for Windows",
+            "installedModels": "Installed Models",
+            "noModels": "No models installed yet",
+            "downloadModel": "Download {{model}}",
+            "downloading": "Downloading... {{percent}}%",
+            "cancel": "Cancel Download",
+            "downloadSuccess": "Model downloaded successfully!",
+            "downloadError": "Failed to download model",
+            "refreshModels": "Refresh",
+            "ollamaNotRunning": "Ollama is not running",
+            "status": {
+                "pulling": "Pulling manifest...",
+                "downloading": "Downloading layers...",
+                "verifying": "Verifying...",
+                "success": "Complete!"
+            }
+        }
+    }
+}

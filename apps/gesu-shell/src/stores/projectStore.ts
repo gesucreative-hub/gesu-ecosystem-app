@@ -1,17 +1,23 @@
 // Project Store - Manages project identity and active project selection
 // Uses localStorage with schemaVersion for safe migrations
 
+export type ProjectType = 'client' | 'gesu-creative' | 'other';
+
 export interface Project {
     id: string;
     name: string;
     createdAt: number;
     updatedAt: number;
     archived?: boolean;
+    // Sprint 21: Project type categorization
+    type: ProjectType;              // NEW: client, gesu-creative, or other
+    clientName?: string;            // NEW: e.g. 'SERAYA' (for client projects)
+    projectTitle?: string;          // NEW: e.g. 'Rony and Lia WD' (for client projects)
     // Sprint 20: Blueprint integration
-    categoryId?: string;           // e.g. 'archviz', 'general'
-    blueprintId?: string;          // e.g. 'general-default'
-    blueprintVersion?: number;     // e.g. 1
-    projectPath?: string;          // Disk path (for imported projects)
+    categoryId?: string;            // e.g. 'archviz', 'general'
+    blueprintId?: string;           // e.g. 'general-default'
+    blueprintVersion?: number;      // e.g. 1
+    projectPath?: string;           // Disk path (for imported projects)
 }
 
 interface ProjectStoreState {
@@ -21,12 +27,57 @@ interface ProjectStoreState {
 }
 
 const STORAGE_KEY = 'gesu-projects';
-const CURRENT_SCHEMA_VERSION = 1;
+const CURRENT_SCHEMA_VERSION = 2;  // Bumped for type migration
 
 // --- Utility ---
 
 function generateId(): string {
     return `proj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Detect project type from name patterns
+ */
+function detectProjectType(name: string): {
+    type: ProjectType;
+    clientName?: string;
+    projectTitle?: string;
+} {
+    // Check for SERAYA (client)
+    if (name.startsWith('SERAYA')) {
+        const parts = name.split(' ');
+        return {
+            type: 'client',
+            clientName: 'SERAYA',
+            projectTitle: parts.slice(1).join(' ')
+        };
+    }
+
+    // Check for Gesu Creative
+    if (name.toLowerCase().includes('gesu')) {
+        return { type: 'gesu-creative' };
+    }
+
+    // Default to other
+    return { type: 'other' };
+}
+
+/**
+ * Migrate projects from v1 to v2 (add type field)
+ */
+function migrateProjectsV1ToV2(projects: Project[]): Project[] {
+    return projects.map(project => {
+        if (!project.type) {
+            const detected = detectProjectType(project.name);
+            return {
+                ...project,
+                type: detected.type,
+                clientName: detected.clientName,
+                projectTitle: detected.projectTitle
+            };
+        }
+        return project;
+    });
 }
 
 // --- Storage ---
@@ -38,10 +89,17 @@ function loadState(): ProjectStoreState {
             return { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
         }
 
-        const parsed: ProjectStoreState = JSON.parse(raw);
+        const parsed = JSON.parse(raw) as ProjectStoreState;
 
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn('Project store schema mismatch. Resetting.');
+        // Handle schema migration
+        if (parsed.schemaVersion === 1) {
+            console.log('[projectStore] Migrating from schema v1 to v2...');
+            parsed.projects = migrateProjectsV1ToV2(parsed.projects);
+            parsed.schemaVersion = 2;
+            saveState(parsed);
+            console.log('[projectStore] Migration complete!');
+        } else if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+            console.warn('[projectStore] Unknown schema version, resetting.');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
         }
 
@@ -70,6 +128,9 @@ export function getProjectById(id: string): Project | null {
 export function createProject(
     name: string,
     options?: {
+        type?: ProjectType;
+        clientName?: string;
+        projectTitle?: string;
         categoryId?: string;
         blueprintId?: string;
         blueprintVersion?: number;
@@ -79,11 +140,17 @@ export function createProject(
     const state = loadState();
     const now = Date.now();
 
+    // Auto-detect type if not provided
+    const detected = options?.type ? null : detectProjectType(name);
+
     const project: Project = {
         id: generateId(),
         name: name.trim() || 'Untitled Project',
         createdAt: now,
         updatedAt: now,
+        type: options?.type || detected?.type || 'other',
+        clientName: options?.clientName || detected?.clientName,
+        projectTitle: options?.projectTitle || detected?.projectTitle,
         categoryId: options?.categoryId,
         blueprintId: options?.blueprintId,
         blueprintVersion: options?.blueprintVersion,
@@ -131,6 +198,45 @@ export function getActiveProjectId(): string | null {
     return loadState().activeProjectId;
 }
 
+export function clearActiveProject(): void {
+    const state = loadState();
+    state.activeProjectId = null;
+    saveState(state);
+}
+
+/**
+ * Get all projects using a specific blueprint
+ * Used for safe deletion checks
+ */
+export function getProjectsByBlueprintId(blueprintId: string): Project[] {
+    const state = loadState();
+    return state.projects.filter(p => p.blueprintId === blueprintId && !p.archived);
+}
+
+export function updateProjectBlueprint(
+    id: string,
+    blueprint: {
+        categoryId: string;
+        blueprintId: string;
+        blueprintVersion: number;
+    }
+): Project | null {
+    const state = loadState();
+    const project = state.projects.find(p => p.id === id);
+    if (!project) return null;
+
+    project.categoryId = blueprint.categoryId;
+    project.blueprintId = blueprint.blueprintId;
+    project.blueprintVersion = blueprint.blueprintVersion;
+    project.updatedAt = Date.now();
+
+    // Set as active project
+    state.activeProjectId = id;
+    saveState(state);
+
+    return project;
+}
+
 export function archiveProject(id: string): boolean {
     const state = loadState();
     const project = state.projects.find(p => p.id === id);
@@ -143,6 +249,22 @@ export function archiveProject(id: string): boolean {
     if (state.activeProjectId === id) {
         const remaining = state.projects.filter(p => !p.archived);
         state.activeProjectId = remaining.length > 0 ? remaining[0].id : null;
+    }
+
+    saveState(state);
+    return true;
+}
+
+export function deleteProject(id: string): boolean {
+    const state = loadState();
+    const initialLength = state.projects.length;
+    state.projects = state.projects.filter(p => p.id !== id);
+
+    if (state.projects.length === initialLength) return false;
+
+    // If deleting active project, clear active or select next
+    if (state.activeProjectId === id) {
+        state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
     }
 
     saveState(state);
@@ -176,6 +298,9 @@ export function importFromDisk(diskProjects: Array<{
     categoryId?: string;
     blueprintId?: string;
     blueprintVersion?: number;
+    // Sprint 23: Project type and client info
+    projectType?: ProjectType;
+    clientName?: string;
 }>): number {
     const state = loadState();
     let importCount = 0;
@@ -196,17 +321,24 @@ export function importFromDisk(diskProjects: Array<{
                     existingProject.blueprintId = diskProject.blueprintId || existingProject.blueprintId;
                     existingProject.blueprintVersion = diskProject.blueprintVersion || existingProject.blueprintVersion;
                     existingProject.projectPath = diskProject.projectPath || existingProject.projectPath;
+                    // Sprint 23: Update type and client info if available from disk
+                    if (diskProject.projectType) existingProject.type = diskProject.projectType;
+                    if (diskProject.clientName) existingProject.clientName = diskProject.clientName;
                 }
             }
             continue; // Skip import for duplicates
         }
 
-        // Import new project
+        // Import new project - use disk type if available, otherwise detect from name
+        const detected = diskProject.projectType ? null : detectProjectType(diskProject.name);
         const project: Project = {
             id: diskProject.id,
             name: diskProject.name,
             createdAt: diskProject.createdAt ? new Date(diskProject.createdAt).getTime() : Date.now(),
             updatedAt: diskProject.updatedAt ? new Date(diskProject.updatedAt).getTime() : Date.now(),
+            type: diskProject.projectType || detected?.type || 'other',
+            clientName: diskProject.clientName || detected?.clientName,
+            projectTitle: detected?.projectTitle,
             projectPath: diskProject.projectPath,
             categoryId: diskProject.categoryId,
             blueprintId: diskProject.blueprintId,
@@ -237,10 +369,85 @@ export async function refreshFromDisk(): Promise<number> {
     try {
         const diskProjects = await window.gesu.projects.list();
         const importCount = importFromDisk(diskProjects);
+
+        // Cleanup: Remove projects from state that have a projectPath but are not in diskProjects
+        // This handles deleted folders ("zombies")
+        const state = loadState();
+        const initialCount = state.projects.length;
+
+        state.projects = state.projects.filter(p => {
+            // Keep if no path (might be cloud/memory only? though we don't have those yet)
+            if (!p.projectPath) return true;
+
+            // Check if this project path exists in the scan results
+            // We normalize matches by checking if any disk project has this path
+            // Note: diskProject.projectPath comes from the bridge
+            return diskProjects.some((dp: any) => dp.projectPath === p.projectPath);
+        });
+
+        if (state.projects.length !== initialCount) {
+            console.log(`[projectStore] Pruned ${initialCount - state.projects.length} missing projects`);
+
+            // If active project was removed, clear it
+            if (state.activeProjectId && !state.projects.find(p => p.id === state.activeProjectId)) {
+                state.activeProjectId = null;
+            }
+            saveState(state);
+        }
+
         console.log(`[projectStore] Refreshed from disk: ${importCount} new projects imported`);
+
         return importCount;
     } catch (err) {
         console.error('[projectStore] Failed to refresh from disk:', err);
         return 0;
     }
+}
+
+/**
+ * Check if a project's folder exists on disk
+ * Returns true if valid, false if missing
+ * TODO: Implement actual disk check when fs API is available
+ */
+export function validateProjectExists(project: Project): boolean {
+    // Note: Currently no fs.exists API is available in window.gesu
+    // For now, assume all projects with a path are valid
+    // Future: Add window.gesu.fs?.exists when implemented in Electron bridge
+    if (!project.projectPath) {
+        // No path means it's a local-only project, assume valid
+        return true;
+    }
+
+    // For now, return true - validation will be added when fs API is available
+    return true;
+}
+
+/**
+ * Remove projects whose folders no longer exist on disk
+ * @returns Number of projects removed
+ */
+export function removeInvalidProjects(): number {
+    const state = loadState();
+    const before = state.projects.length;
+
+    state.projects = state.projects.filter(project => {
+        return validateProjectExists(project);
+    });
+
+    const removed = before - state.projects.length;
+
+    if (removed > 0) {
+        // Clear active project if it was removed
+        if (state.activeProjectId) {
+            const activeStillExists = state.projects.some(p => p.id === state.activeProjectId);
+            if (!activeStillExists) {
+                state.activeProjectId = state.projects.length > 0 ? state.projects[0].id : null;
+            }
+        }
+
+        saveState(state);
+        console.log(`[projectStore] Removed ${removed} invalid projects`);
+    }
+
+    return removed;
 }

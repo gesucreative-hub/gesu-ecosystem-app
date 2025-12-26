@@ -1,0 +1,58 @@
+{
+    "title": "Welcome back",
+    "welcomeBack": {
+        "title": "Welcome back!",
+        "subtitle": "Ready to pick up where you left off?"
+    },
+    "welcome": {
+        "title": "Welcome to Gesu Ecosystem",
+        "subtitle": "Your productivity journey starts here. Powered by Gesu Creative Lab."
+    },
+    "welcomeNew": "Welcome to Gesu Ecosystem",
+    "subtitle": "Your productivity journey starts here. Powered by Gesu Creative Lab.",
+    "subtitleReturning": "Ready to pick up where you left off?",
+    "googleSignIn": "Continue with Google",
+    "signingIn": "Signing in...",
+    "or": "or",
+    "tagline": {
+        "line1": "Level up your",
+        "line2": "productivity",
+        "description": "Track progress with XP & levels. Customize your focus pet. Compete on the leaderboard."
+    },
+    "features": {
+        "title": "What's included",
+        "xpLevels": "XP & Levels",
+        "focusPet": "Focus Pet",
+        "sync": "Cloud Sync",
+        "syncDesc": "Sync your data across devices",
+        "backup": "Auto Backup",
+        "backupDesc": "Never lose your progress",
+        "leaderboard": "Leaderboard",
+        "leaderboardDesc": "Compete with others"
+    },
+    "testimonial": {
+        "quote": "Gesu helps me stay focused and deliver projects on time. The workflow canvas is a game-changer!",
+        "role": "Creative Professional"
+    },
+    "guest": {
+        "warning": "Guest mode",
+        "warningMessage": "Your progress, XP, and achievements won't be saved across sessions.",
+        "continue": "Continue without signing in",
+        "continueAnyway": "Continue anyway as Guest"
+    },
+    "terms": {
+        "prefix": "By signing in, you agree to our",
+        "and": "and"
+    },
+    "footer": {
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "help": "Help"
+    },
+    "poweredBy": "Powered by Gesu Creative Lab",
+    "errors": {
+        "popupBlocked": "Popup was blocked. Please allow popups and try again.",
+        "cancelled": "Sign in was cancelled",
+        "generic": "Sign in failed. Please try again."
+    }
+}

@@ -1,28 +1,45 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { SelectDropdown } from '../components/Dropdown';
+import { SearchableProjectDropdown } from '../components/SearchableProjectDropdown';
 import { Tabs } from '../components/Tabs';
+import { SegmentedControl } from '../components/SegmentedControl';
+import { ProjectSearch } from '../components/ProjectSearch'; // NEW
+import { BlueprintFilter } from '../components/BlueprintFilter'; // NEW
 import { WorkflowCanvas } from './WorkflowCanvas';
-import { Zap, FileText, Settings, RefreshCw } from 'lucide-react';
+import { FolderTemplateEditorModal } from '../components/FolderTemplateEditorModal';
+import { Zap, FileText, Settings } from 'lucide-react';
+import { useAlertDialog } from '../components/AlertDialog';
 import {
     listProjects,
     getActiveProject,
     setActiveProject,
+    clearActiveProject,
+    updateProjectBlueprint,
     importFromDisk,
     refreshFromDisk,
+    validateProjectExists,
     Project,
 } from '../stores/projectStore';
-import { scaffoldingService, ScaffoldPreviewResult } from '../services/scaffoldingService';
+import { scaffoldingService } from '../services/scaffoldingService';
 import { StandardsTab } from './StandardsTab';
 import {
     loadBlueprints,
     getDefaultBlueprintForCategory,
 } from '../services/workflowBlueprintsService';
-import { DEFAULT_CATEGORY_ID, DEFAULT_BLUEPRINT_ID, BlueprintFileShape } from '../types/workflowBlueprints';
+import { loadFolderTemplates } from '../services/workflowFolderTemplatesService';
+import { generateFolderName, getNextBlueprintCount } from '../services/projectCounterService';
+import { migrateFlatTemplate } from '../utils/folderTemplateUtils';
+import { DEFAULT_BLUEPRINT_ID, BlueprintFileShape, FolderTemplateExtended } from '../types/workflowBlueprints';
+import { getProgressForProject, mergeNodesWithProgress } from '../stores/workflowProgressStore';
+import { calculateOverallProgress } from '../utils/workflowProgress';
+import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
+import { WORKFLOW_NODES } from './workflowData';
 
 
 // --- Types & Interfaces ---
@@ -36,56 +53,66 @@ interface ProjectOptions {
 
 // --- Constants ---
 
-const PROJECT_TYPES = [
-    { value: 'Client Project', label: 'Client Project' },
-    { value: 'Personal Exploration', label: 'Personal Exploration' },
-    { value: 'Content Series', label: 'Content Series' },
-    { value: 'Internal Tool', label: 'Internal Tool' },
-    { value: 'Asset Library', label: 'Asset Library' }
+// Sprint 21: Project type categorization - matches projectStore.ProjectType
+const PROJECT_TYPES: Array<{ value: 'client' | 'gesu-creative' | 'other'; label: string; icon: string }> = [
+    { value: 'client', label: 'Client Project', icon: '👥' },  // Fallback - will use t() in render
+    { value: 'gesu-creative', label: 'Personal project', icon: '🎨' },  // Fallback
+    { value: 'other', label: 'Other', icon: '📦' }  // Fallback
 ];
 
-const CATEGORIES = [
-    { value: '3D / ArchViz', label: '3D / ArchViz' },
-    { value: 'Event / Wedding', label: 'Event / Wedding' },
-    { value: 'Motion / VJ', label: 'Motion / VJ' },
-    { value: 'Dev / Code', label: 'Dev / Code' },
-    { value: 'Admin / Ops', label: 'Admin / Ops' },
-    { value: 'Audio / Sound', label: 'Audio / Sound' }
-];
-
-const TEMPLATES = [
-    { id: 'archviz', name: 'Event ArchViz (Standard)', desc: 'Structure for venue modeling and rendering.' },
-    { id: 'wedding', name: 'Wedding Visual', desc: 'Optimized for high-volume video processing.' },
-    { id: 'general', name: 'General Creative', desc: 'Blank slate for mixed media.' },
-    { id: 'admin', name: 'Admin / Ops', desc: 'Documentation and spreadsheet focus.' },
-    { id: 'empty', name: 'Empty / Custom', desc: 'Minimal structure.' }
-];
-
-// --- Mock Project Code Generator ---
-const generateProjectCode = (type: string, name: string) => {
-    const prefix = type === 'Client Project' ? 'CLT'
-        : type === 'Personal Exploration' ? 'EXP'
-            : type === 'Internal Tool' ? 'INT'
-                : 'GEN';
-
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-
-    // Simple slug for name
-    const slug = name.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, 'X');
-
-    return `${prefix}-${year}${month}-${slug || '001'}`;
-};
+// Sprint 21.3 Phase 8: Removed static CATEGORIES and TEMPLATES - now uses dynamic data from Standards tab
+// Sprint 21.3: Removed generateProjectCode - replaced with generateFolderName from projectCounterService
 
 // --- Project Generator Form Component ---
-function ProjectGeneratorForm() {
+function ProjectGeneratorForm({
+    onTabChange,
+    projects,
+    onRefresh
+}: {
+    onTabChange: (tabId: string) => void;
+    projects: Project[];
+    onRefresh: () => Promise<void>;
+}) {
     // State
+    const [searchParams] = useSearchParams();
     const [name, setName] = useState('');
-    const [type, setType] = useState(PROJECT_TYPES[0].value);
-    const [category, setCategory] = useState(CATEGORIES[0].value);
+    const [type, setType] = useState<'client' | 'gesu-creative' | 'other'>('client');
+    const [clientName, setClientName] = useState('');  // Sprint 21.3: Client name for folder naming
     const [description, setDescription] = useState('');
-    const [templateId, setTemplateId] = useState(TEMPLATES[0].id);
+
+    // UI - Polished Alert
+    const { alert, AlertDialogComponent } = useAlertDialog();
+
+    // Sprint 21.3 Phase 8: Dynamic folder template selection
+    const [selectedFolderTemplateId, setSelectedFolderTemplateId] = useState<string | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [showTemplateEditor, setShowTemplateEditor] = useState(false);  // Phase 8: Template editor modal
+
+    // Generator mode: 'new' = create new project, 'exist' = assign blueprint to existing folder
+    // Sprint 21: Auto-select mode from URL param
+    const [generatorMode, setGeneratorMode] = useState<'new' | 'exist'>(() => {
+        return searchParams.get('mode') === 'exist' ? 'exist' : 'new';
+    });
+
+    const { t } = useTranslation(['initiator', 'common']);
+
+    // Tab definitions with translated labels (inside component to access t)
+    const tabs = [
+        { id: 'workflow', label: t('initiator:tabs.workflow', 'Workflow'), icon: <FileText size={16} /> },
+        { id: 'generator', label: t('initiator:tabs.generator', 'Generator'), icon: <Zap size={16} /> },
+        { id: 'standards', label: t('initiator:tabs.standards', 'Standards'), icon: <Settings size={16} /> }
+    ];
+
+    // Update mode when URL param changes
+    useEffect(() => {
+        const modeParam = searchParams.get('mode');
+        if (modeParam === 'exist' || modeParam === 'new') {
+            setGeneratorMode(modeParam);
+        }
+    }, [searchParams]);
+    const [selectedExistingFolder, setSelectedExistingFolder] = useState<string>('');
+    const [unassignedProjects, setUnassignedProjects] = useState<Project[]>([]);
+    const [folderLoadError, setFolderLoadError] = useState<string | null>(null);
 
     const [options, setOptions] = useState<ProjectOptions>({
         includeMedia: true,
@@ -95,14 +122,16 @@ function ProjectGeneratorForm() {
     });
 
     // Preview/Generate state
-    const [previewResult, setPreviewResult] = useState<ScaffoldPreviewResult | null>(null);
+    // Preview result state removed Sprint 21.3 Phase 8 - using live preview
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Blueprint categories loaded from Standards
     const [blueprintData, setBlueprintData] = useState<BlueprintFileShape | null>(null);
+    // Sprint 21.3: Folder templates for preview (Phase 8: converted to extended format)
+    const [folderTemplatesData, setFolderTemplatesData] = useState<FolderTemplateExtended[] | null>(null);
 
-    // Load blueprint categories on mount
+    // Load blueprint categories and folder templates on mount
     useEffect(() => {
         loadBlueprints().then(data => {
             setBlueprintData(data);
@@ -110,63 +139,100 @@ function ProjectGeneratorForm() {
         }).catch(err => {
             console.error('[Generator] Failed to load blueprints:', err);
         });
+        // Sprint 21.3 Phase 8: Load and migrate folder templates
+        loadFolderTemplates().then(data => {
+            const extendedTemplates = data.templates.map(t => migrateFlatTemplate(t));
+            setFolderTemplatesData(extendedTemplates);
+        });
+    }, []);
+
+    // Load projects without blueprints when in 'exist' mode
+    useEffect(() => {
+        if (generatorMode !== 'exist') {
+            setUnassignedProjects([]);
+            setFolderLoadError(null);
+            return;
+        }
+
+        // Get projects that don't have blueprints assigned
+        // Use props.projects which is already filtered and fresh from parent
+        const projectsWithoutBlueprints = projects.filter(p => !p.blueprintId);
+
+        if (projectsWithoutBlueprints.length === 0) {
+            setFolderLoadError('All projects already have blueprints assigned. Create a new project or use the header dropdown.');
+        } else {
+            setFolderLoadError(null);
+        }
+
+        setUnassignedProjects(projectsWithoutBlueprints);
+        console.log('[Generator] Found', projectsWithoutBlueprints.length, 'projects without blueprints');
+    }, [generatorMode]);
+
+    // Phase 8: Handle template save from modal
+    const handleTemplateSave = useCallback((updatedTemplates: FolderTemplateExtended[], selectedId: string) => {
+        setFolderTemplatesData(updatedTemplates);
+        setSelectedFolderTemplateId(selectedId);
+        // TODO: Persist templates to file system
+        console.log('[Generator] Templates updated, selected:', selectedId);
     }, []);
 
     // Derived State
-    const projectCode = useMemo(() => generateProjectCode(type, name), [type, name]);
-    const selectedTemplate = TEMPLATES.find(t => t.id === templateId) || TEMPLATES[0];
+    // projectCode removed Sprint 21.3 - replaced with folderName
     const isSimulationMode = scaffoldingService.isSimulationMode();
 
-    // Map template to blueprint category (fallback to default if not found)
-    const categoryIdForTemplate = useMemo(() => {
-        if (!blueprintData) return DEFAULT_CATEGORY_ID;
-        // Map template IDs to category IDs (best effort matching)
-        const templateCategoryMap: Record<string, string> = {
-            'archviz': 'archviz',
-            'wedding': 'event',
-            'general': 'general',
-            'admin': 'admin',
-            'empty': 'general'
-        };
-        const mappedCategoryId = templateCategoryMap[templateId] || 'general';
-        // Check if this category exists in blueprint data
-        const exists = blueprintData.categories.some(c => c.id === mappedCategoryId);
-        return exists ? mappedCategoryId : DEFAULT_CATEGORY_ID;
-    }, [blueprintData, templateId]);
+    // Sprint 21.3 Phase 8: Use selectedCategoryId only - don't auto-select first
+    const effectiveCategoryId = useMemo(() => {
+        // Return null if no explicit selection - dropdown will show "Select Blueprint..."
+        return selectedCategoryId || null;
+    }, [selectedCategoryId]);
 
     // Get default blueprint for the selected category
     const selectedBlueprint = useMemo(() => {
-        if (!blueprintData) return null;
-        return getDefaultBlueprintForCategory(blueprintData, categoryIdForTemplate);
-    }, [blueprintData, categoryIdForTemplate]);
+        if (!blueprintData || !effectiveCategoryId) return null;
+        return getDefaultBlueprintForCategory(blueprintData, effectiveCategoryId);
+    }, [blueprintData, effectiveCategoryId]);
+
+    // Sprint 21.3 Phase 8: Get selected folder template (from blueprint link or manual selection)
+    const selectedFolderTemplate = useMemo(() => {
+        if (!folderTemplatesData) return null;
+        // Priority: manual selection > blueprint link > first template
+        if (selectedFolderTemplateId) {
+            return folderTemplatesData.find(t => t.id === selectedFolderTemplateId) || null;
+        }
+        if (selectedBlueprint?.folderTemplateId) {
+            return folderTemplatesData.find(t => t.id === selectedBlueprint.folderTemplateId) || null;
+        }
+        return folderTemplatesData[0] || null;
+    }, [folderTemplatesData, selectedFolderTemplateId, selectedBlueprint]);
+
+    // Sprint 21.3 Phase 8: Auto-select folder template when blueprint changes
+    useEffect(() => {
+        if (selectedBlueprint?.folderTemplateId && !selectedFolderTemplateId) {
+            setSelectedFolderTemplateId(selectedBlueprint.folderTemplateId);
+        }
+    }, [selectedBlueprint, selectedFolderTemplateId]);
+
+    // Sprint 21.3: Check if this is a client project (for conditional client name field)
+    const isClientProject = type === 'client';
+
+    // Sprint 21.3: Generate folder name with convention: YYYYMMDD_Blueprint000_Client_ProjectName
+    const folderName = useMemo(() => {
+        if (!name.trim() || !selectedBlueprint) return '';
+        const nextCount = getNextBlueprintCount(selectedBlueprint.id);
+        return generateFolderName(
+            name.trim(),
+            selectedBlueprint.name,
+            nextCount,
+            isClientProject ? clientName.trim() : undefined
+        );
+    }, [name, selectedBlueprint, clientName, isClientProject]);
 
     // Handlers
     const handleOptionToggle = (key: keyof ProjectOptions) => {
         setOptions(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const handlePreview = async () => {
-        if (!name.trim()) {
-            setError('Please enter a project name.');
-            return;
-        }
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const result = await scaffoldingService.preview(name.trim(), templateId);
-            if (result.ok) {
-                setPreviewResult(result);
-            } else {
-                setError(result.error || 'Failed to generate preview');
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // Sprint 21.3 Phase 8: handlePreview removed - using live preview instead
 
     const handleGenerate = async () => {
         if (!name.trim()) {
@@ -174,15 +240,33 @@ function ProjectGeneratorForm() {
             return;
         }
 
+        // Sprint 21.3 Phase 8: Require blueprint selection
+        if (!selectedBlueprint) {
+            setError('Please select a blueprint.');
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
         try {
-            // Sprint 20: Pass blueprint fields to scaffold service
-            const result = await scaffoldingService.scaffold(name.trim(), templateId, {
-                categoryId: categoryIdForTemplate,
+            // Sprint 21.3 Phase 8: Use selectedFolderTemplate directly
+            // Pass folderName instead of name.trim() for auto-naming convention
+            const result = await scaffoldingService.scaffold(folderName || name.trim(), selectedFolderTemplate?.id || 'general', {
+                categoryId: selectedBlueprint.categoryId || '',
                 blueprintId: selectedBlueprint?.id || DEFAULT_BLUEPRINT_ID,
                 blueprintVersion: selectedBlueprint?.version || 1,
+                folderTemplateFolders: selectedFolderTemplate?.folders,
+                projectType: type,
+                clientName: isClientProject ? clientName.trim() : undefined,
+                briefContent: description.trim() || undefined,
+                displayName: name.trim(),  // Original project name for display
+                options: {
+                    gitInit: options.gitInit,
+                    includeMedia: options.includeMedia,
+                    includeNotion: options.includeNotion,
+                    includeLog: options.includeLog
+                }
             });
             if (result.ok) {
                 // Register the created project and set it active
@@ -194,7 +278,7 @@ function ProjectGeneratorForm() {
                         projectPath: result.projectPath || '',
                         createdAt: new Date().toISOString(),
                         // Sprint 20: Include blueprint assignment
-                        categoryId: categoryIdForTemplate,
+                        categoryId: selectedBlueprint.categoryId || '',
                         blueprintId: selectedBlueprint?.id || DEFAULT_BLUEPRINT_ID,
                         blueprintVersion: selectedBlueprint?.version || 1,
                     };
@@ -204,16 +288,73 @@ function ProjectGeneratorForm() {
                     setActiveProject(result.projectId);
                 }
 
-                alert(`Project created successfully!\n\nPath: ${result.projectPath}`);
+
+                alert({
+                    title: t('common:alerts.projectCreated', 'Project Created'),
+                    message: t('common:alerts.projectCreatedMessage', 'Project created successfully!'),
+                    type: 'success'
+                });
 
                 // Reset form
+                // Reset form (preview reset removed - using live preview)
                 setName('');
-                setPreviewResult(null);
             } else {
                 setError(result.error || 'Failed to create project');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle assigning blueprint to existing folder
+    const handleAssignBlueprint = async () => {
+        if (!selectedExistingFolder || !selectedBlueprint) {
+            setError('Please select both a folder and a blueprint');
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Update existing project with blueprint
+            const project = updateProjectBlueprint(selectedExistingFolder, {
+                categoryId: selectedBlueprint.categoryId,
+                blueprintId: selectedBlueprint.id,
+                blueprintVersion: selectedBlueprint.version
+            });
+
+
+            if (!project) {
+                setError('Project not found');
+                return;
+            }
+
+            // Sprint 6.6: Git Init for existing project
+            if (options.gitInit && project.projectPath) {
+                try {
+                    console.log('[Generator] Initializing git for existing project:', project.projectPath);
+                    if (window.gesu?.scaffold?.initializeGit) {
+                        await window.gesu.scaffold.initializeGit(project.projectPath);
+                    }
+                } catch (gitErr) {
+                    console.error('[Generator] Git init failed:', gitErr);
+                    // Non-fatal, just log it
+                }
+            }
+
+            console.log('[Generator] Assigned blueprint to existing project:', project);
+
+            // Switch to Workflow tab
+            onTabChange('workflow');
+
+            // Reset form
+            setSelectedExistingFolder('');
+            setSelectedCategoryId(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to assign blueprint');
         } finally {
             setIsLoading(false);
         }
@@ -227,245 +368,343 @@ function ProjectGeneratorForm() {
                 <Card title={
                     <div className="flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
-                        Project Setup
+                        {t('initiator:generator.projectSetup', 'Project Setup')}
                     </div>
                 }>
                     <div className="flex flex-col gap-6">
 
+                        {/* Mode Toggle */}
+                        <div className="w-fit">
+                            <SegmentedControl
+                                options={[
+                                    { value: 'new', label: t('initiator:generator.newProject', 'New Project') },
+                                    { value: 'exist', label: t('initiator:generator.existingProject', 'Existing Project') }
+                                ]}
+                                value={generatorMode}
+                                onChange={(val) => setGeneratorMode(val as 'new' | 'exist')}
+                                size="sm"
+                            />
+                        </div>
+
                         {/* Basic Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <Input
-                                label={<span>Project Name <span className="text-tokens-brand-DEFAULT">*</span></span>}
-                                placeholder="e.g. Neo Tokyo Tower"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                autoFocus
-                            />
+                        {generatorMode === 'new' && (
+                            <>
+                                <div className="flex flex-col gap-4">
+                                    <Input
+                                        label={<span>{t('initiator:createProject.name', 'Project Name')} <span className="text-tokens-brand-DEFAULT">*</span></span>}
+                                        placeholder={t('initiator:placeholders.projectName', 'Enter project name...')}
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        autoFocus
+                                    />
 
-                            <SelectDropdown
-                                label="Project Type"
-                                value={type}
-                                onChange={(value) => setType(value)}
-                                options={PROJECT_TYPES}
-                            />
+                                    <SelectDropdown
+                                        label={t('initiator:generator.projectType', 'Project Type')}
+                                        value={type}
+                                        onChange={(value) => setType(value as 'client' | 'gesu-creative' | 'other')}
+                                        options={PROJECT_TYPES.map(type => ({
+                                            value: type.value,
+                                            label: t(`initiator:projectTypes.${type.value}`, type.label)
+                                        }))}
+                                    />
 
-                            <div className="md:col-span-2">
-                                <SelectDropdown
-                                    label="Category / Discipline (Blueprint)"
-                                    value={categoryIdForTemplate}
-                                    onChange={(value) => {
-                                        // Find template that maps to this category
-                                        const templateCategoryMap: Record<string, string> = {
-                                            'archviz': 'archviz',
-                                            'wedding': 'event',
-                                            'general': 'general',
-                                            'admin': 'admin',
-                                            'empty': 'general'
-                                        };
-                                        const matchingTemplate = Object.entries(templateCategoryMap).find(([_, catId]) => catId === value)?.[0];
-                                        if (matchingTemplate) setTemplateId(matchingTemplate);
-                                    }}
-                                    options={blueprintData?.categories.map(cat => ({
-                                        value: cat.id,
-                                        label: `${cat.name} (${blueprintData?.blueprints.find((b: { id: string }) => b.id === cat.defaultBlueprintId)?.nodes.length || 0} steps)`
-                                    })) || [{ value: DEFAULT_CATEGORY_ID, label: 'General Creative' }]}
-                                />
-                                {selectedBlueprint && (
-                                    <div className="text-xs text-tokens-muted mt-1">
-                                        Blueprint: {selectedBlueprint.name} v{selectedBlueprint.version}
+                                    <SelectDropdown
+                                        label={t('initiator:generator.blueprint', 'Blueprint')}
+                                        value={selectedBlueprint?.id || ''}
+                                        onChange={(value) => {
+                                            if (value === '') {
+                                                setSelectedCategoryId(null);
+                                                return;
+                                            }
+                                            // Find the blueprint and set its category
+                                            const blueprint = blueprintData?.blueprints.find(b => b.id === value);
+                                            if (blueprint) {
+                                                setSelectedCategoryId(blueprint.categoryId);
+                                            }
+                                        }}
+                                        options={[
+                                            { value: '', label: t('initiator:placeholders.selectBlueprint', 'Select Blueprint...') },
+                                            // Only show blueprints that have a matching category (filter out orphaned copies)
+                                            ...(blueprintData?.blueprints
+                                                .filter(bp => {
+                                                    // Check if any category references this blueprint
+                                                    return blueprintData.categories.some(cat => cat.defaultBlueprintId === bp.id);
+                                                })
+                                                .map(bp => ({
+                                                    value: bp.id,
+                                                    label: `${bp.name} v${bp.version} (${bp.nodes.length} steps)`
+                                                })) || [])
+                                        ]}
+                                    />
+
+                                    {/* Sprint 21.3: Conditional Client Name field */}
+                                    {isClientProject && (
+                                        <Input
+                                            label={t('initiator:generator.clientName', 'Client Name')}
+                                            placeholder={t('initiator:placeholders.clientName', 'Enter client name...')}
+                                            value={clientName}
+                                            onChange={(e) => setClientName(e.target.value)}
+                                        />
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-tokens-muted">{t('initiator:generator.descriptionBrief', 'Description / Brief')}</label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        rows={2}
+                                        placeholder={t('initiator:placeholders.description', 'Optional project summary...')}
+                                        className="bg-tokens-panel2 border border-tokens-border rounded-lg px-4 py-2.5 text-tokens-fg focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/50 resize-y placeholder:text-tokens-muted/50"
+                                    />
+                                </div>
+
+                                <div className="h-px bg-tokens-border my-2"></div>
+
+                                {/* Sprint 21.3 Phase 8: Folder Template Dropdown */}
+                                <h3 className="text-md font-medium text-tokens-fg">{t('initiator:generator.folderTemplate', 'Folder Template')}</h3>
+
+                                <div className="space-y-3">
+                                    {/* Manage Templates Button */}
+                                    <button
+                                        onClick={() => setShowTemplateEditor(true)}
+                                        className="w-full flex items-center justify-between px-4 py-3 bg-tokens-panel2 border border-tokens-border rounded-lg hover:bg-tokens-panel hover:border-tokens-brand-DEFAULT/50 transition-colors text-left"
+                                    >
+                                        <div className="flex-1">
+                                            {selectedFolderTemplate ? (
+                                                <>
+                                                    <div className="text-sm font-medium text-tokens-fg">
+                                                        {selectedFolderTemplate.name}
+                                                    </div>
+                                                    <div className="text-xs text-tokens-muted mt-0.5">
+                                                        {selectedFolderTemplate.folders.length} folders
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="text-sm text-tokens-muted">{t('initiator:generator.selectFolderTemplate', 'Select Folder Template...')}</div>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-tokens-brand-DEFAULT font-medium">
+                                            📁 {t('initiator:generator.manage', 'Manage')}
+                                        </div>
+                                    </button>
+
+                                    {/* Compact folder preview */}
+                                    {selectedFolderTemplate && (
+                                        <div className="bg-tokens-panel2/50 border border-tokens-border rounded-lg p-3 text-sm font-mono max-h-32 overflow-y-auto">
+                                            {options.gitInit && (
+                                                <div className="text-tokens-brand-DEFAULT font-medium">📁 .git</div>
+                                            )}
+                                            {selectedFolderTemplate.folders.slice(0, 5).map((folder: string, idx: number) => (
+                                                <div key={idx} className="text-tokens-muted">📁 {folder}</div>
+                                            ))}
+                                            {selectedFolderTemplate.folders.length > 5 && (
+                                                <div className="text-tokens-muted/60 text-xs mt-1">
+                                                    +{selectedFolderTemplate.folders.length - 5} more...
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Compact options */}
+                                    <div className="flex flex-wrap gap-4">
+                                        <label className="flex items-center gap-2 text-xs text-tokens-fg cursor-pointer">
+                                            <input type="checkbox" checked={options.gitInit} onChange={() => handleOptionToggle('gitInit')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT" />
+                                            Git Init
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Error Display */}
+                                {error && (
+                                    <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                                        {error}
                                     </div>
                                 )}
-                            </div>
-                        </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium text-tokens-muted">Description / Brief</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={2}
-                                placeholder="Optional project summary..."
-                                className="bg-tokens-panel2 border border-tokens-border rounded-lg px-4 py-2.5 text-tokens-fg focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/50 resize-y placeholder:text-tokens-muted/50"
-                            />
-                        </div>
-
-                        <div className="h-px bg-tokens-border my-2"></div>
-
-                        {/* Templates & Options */}
-                        <h3 className="text-md font-medium text-tokens-fg">Template & Options</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="flex flex-col gap-2">
-                                <label className="text-sm font-medium text-tokens-muted">Directory Template</label>
-                                <div className="flex flex-col gap-2">
-                                    {TEMPLATES.map(t => (
-                                        <label key={t.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${templateId === t.id ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT/50' : 'bg-tokens-bg border-tokens-border hover:bg-tokens-panel2'}`}>
-                                            <input
-                                                type="radio"
-                                                name="template"
-                                                checked={templateId === t.id}
-                                                onChange={() => setTemplateId(t.id)}
-                                                className="mt-1 text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT bg-tokens-bg border-tokens-border"
-                                            />
-                                            <div>
-                                                <div className="text-sm font-medium text-tokens-fg">{t.name}</div>
-                                                <div className="text-xs text-tokens-muted">{t.desc}</div>
-                                            </div>
-                                        </label>
-                                    ))}
+                                {/* Generate Button Only (live preview) */}
+                                <div className="flex gap-3 mt-4">
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        onClick={handleGenerate}
+                                        disabled={isLoading || !name.trim() || isSimulationMode}
+                                        className="flex-1 justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
+                                    >
+                                        {isLoading ? t('initiator:createProject.generating', 'Generating...') : t('initiator:createProject.generate', 'Generate Project')}
+                                    </Button>
                                 </div>
-                            </div>
 
-                            <div className="flex flex-col gap-3">
-                                <label className="text-sm font-medium text-tokens-muted">Features</label>
-
-                                <label className="flex items-center gap-3 text-sm text-tokens-fg cursor-pointer group">
-                                    <input type="checkbox" checked={options.includeMedia} onChange={() => handleOptionToggle('includeMedia')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40" />
-                                    <span className="group-hover:text-tokens-brand-DEFAULT transition-colors">Include Media Folders</span>
-                                </label>
-
-                                <label className="flex items-center gap-3 text-sm text-tokens-fg cursor-pointer group">
-                                    <input type="checkbox" checked={options.includeNotion} onChange={() => handleOptionToggle('includeNotion')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40" />
-                                    <span className="group-hover:text-tokens-brand-DEFAULT transition-colors">Include Docs / Notion</span>
-                                </label>
-
-                                <label className="flex items-center gap-3 text-sm text-tokens-fg cursor-pointer group">
-                                    <input type="checkbox" checked={options.includeLog} onChange={() => handleOptionToggle('includeLog')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40" />
-                                    <span className="group-hover:text-tokens-brand-DEFAULT transition-colors">Create Project Log Entry</span>
-                                </label>
-
-                                <label className="flex items-center gap-3 text-sm text-tokens-fg cursor-pointer group">
-                                    <input type="checkbox" checked={options.gitInit} onChange={() => handleOptionToggle('gitInit')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/40" />
-                                    <span className="group-hover:text-tokens-brand-DEFAULT transition-colors">Initialize Git Repository</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Error Display */}
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                                {error}
-                            </div>
+                                {isSimulationMode && (
+                                    <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/50 rounded px-2 py-1 text-center">
+                                        Simulation Mode - Generate disabled. Run in Electron for real scaffolding.
+                                    </div>
+                                )}
+                            </>
                         )}
 
-                        {/* Buttons */}
-                        <div className="flex gap-3 mt-4">
-                            <Button
-                                variant="secondary"
-                                size="lg"
-                                onClick={handlePreview}
-                                disabled={isLoading || !name.trim()}
-                                className="flex-1 justify-center"
-                            >
-                                {isLoading ? 'Loading...' : 'Preview'}
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                onClick={handleGenerate}
-                                disabled={isLoading || !previewResult || isSimulationMode}
-                                className="flex-1 justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
-                            >
-                                Generate Project
-                            </Button>
-                        </div>
+                        {/* Existing Project Form */}
+                        {generatorMode === 'exist' && (
+                            <div className="flex flex-col gap-6">
+                                <div className="text-sm text-tokens-muted">
+                                    Assign a workflow blueprint to an existing project folder.
+                                </div>
 
-                        {isSimulationMode && (
-                            <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/50 rounded px-2 py-1 text-center">
-                                Simulation Mode - Generate disabled. Run in Electron for real scaffolding.
+                                {folderLoadError && (
+                                    <div className="bg-amber-500/10 border border-amber-500/50 rounded-lg p-3 text-amber-400 text-sm">
+                                        <div className="font-medium mb-1">⚠️ {folderLoadError}</div>
+                                        <div className="text-xs opacity-80">
+                                            Go to Settings → Paths to configure your project root directory.
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex flex-col gap-4">
+                                    <SearchableProjectDropdown
+                                        label={<span>Project <span className="text-tokens-brand-DEFAULT">*</span></span>}
+                                        projects={unassignedProjects}
+                                        value={selectedExistingFolder}
+                                        onChange={(projectId) => setSelectedExistingFolder(projectId)}
+                                        placeholder={t('initiator:placeholders.selectProject', 'Select project...')}
+                                        validateExists={validateProjectExists}
+                                        onCleanupInvalid={async () => {
+                                            // Trigger refresh in parent to scan disk and prune zombies
+                                            await onRefresh();
+                                            // No need to setUnassignedProjects manually, 
+                                            // the useEffect will run when props.projects changes
+                                            alert({ title: t('common:alerts.refreshed', 'Refreshed'), message: t('common:alerts.projectListRefreshed', 'Project list refreshed and invalid projects removed.'), type: 'info' });
+                                        }}
+                                    />
+
+                                    <SelectDropdown
+                                        label={<span>Blueprint <span className="text-tokens-brand-DEFAULT">*</span></span>}
+                                        value={selectedBlueprint?.id || ''}
+                                        onChange={(value) => {
+                                            if (value === '') {
+                                                setSelectedCategoryId(null);
+                                                return;
+                                            }
+                                            const blueprint = blueprintData?.blueprints.find(b => b.id === value);
+                                            if (blueprint) {
+                                                setSelectedCategoryId(blueprint.categoryId);
+                                            }
+                                        }}
+                                        options={[
+                                            { value: '', label: t('initiator:placeholders.selectBlueprint', 'Select Blueprint...') },
+                                            ...(blueprintData?.blueprints
+                                                .filter(bp => blueprintData.categories.some(c => c.id === bp.categoryId))
+                                                .map(bp => ({
+                                                    value: bp.id,
+                                                    label: `${bp.name} v${bp.version} (${bp.nodes.length} steps)`
+                                                })) || [])
+                                        ]}
+                                    />
+                                </div>
+
+                                {error && (
+                                    <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="flex items-center gap-2 text-xs text-tokens-fg cursor-pointer select-none w-fit">
+                                        <input
+                                            type="checkbox"
+                                            checked={options.gitInit}
+                                            onChange={() => handleOptionToggle('gitInit')}
+                                            className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-1 focus:ring-tokens-brand-DEFAULT"
+                                        />
+                                        Git Init
+                                    </label>
+                                </div>
+
+                                <div className="flex gap-3 mt-4">
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        onClick={handleAssignBlueprint}
+                                        disabled={isLoading || !selectedExistingFolder || !selectedBlueprint}
+                                        className="flex-1 justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
+                                    >
+                                        {isLoading ? 'Assigning...' : 'Assign Blueprint'}
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
                 </Card>
             </div>
 
-            {/* RIGHT COLUMN (1/3 width) - Preview */}
+            {/* RIGHT COLUMN (1/3 width) - Live Preview */}
             <div className="lg:w-80 xl:w-96">
                 <Card title={
                     <div className="flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
-                        Preview
+                        {t('initiator:generator.livePreview', 'Live Preview')}
                     </div>
                 } className="h-fit">
-                    <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-4">
+                        {/* Folder Name Preview */}
                         <div>
-                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-1">Project Code</div>
-                            <div className="font-mono text-xl text-tokens-brand-DEFAULT">{projectCode}</div>
-                        </div>
-
-                        <div>
-                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-1">Target Path</div>
-                            <div className="font-mono text-xs text-tokens-muted break-all bg-tokens-panel2 p-2 rounded border border-tokens-border">
-                                {previewResult?.projectPath || '(click Preview to generate)'}
+                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-1">{t('initiator:generator.folderNameLabel', 'Folder Name')}</div>
+                            <div className="font-mono text-sm text-tokens-brand-DEFAULT break-all bg-tokens-panel2 p-2 rounded border border-tokens-border">
+                                {folderName || <span className="text-tokens-muted italic">{t('initiator:placeholders.projectName', 'Enter project name...')}</span>}
                             </div>
                         </div>
 
+                        {/* Folder Template Preview */}
                         <div>
-                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">Structure Preview</div>
-                            <div className="text-sm text-tokens-fg bg-tokens-panel2/50 rounded p-3 border border-tokens-border flex flex-col gap-0.5 font-mono max-h-64 overflow-y-auto">
-                                {previewResult?.plan ? (
-                                    // Sprint 20.1: Dynamic file tree from previewResult.plan
-                                    (() => {
-                                        // Build tree structure
-                                        const folders = new Set<string>();
-                                        const files: string[] = [];
-
-                                        previewResult.plan.forEach((item: { kind: string; relativePath: string }) => {
-                                            if (item.kind === 'directory') {
-                                                folders.add(item.relativePath);
-                                            } else if (item.kind === 'file') {
-                                                files.push(item.relativePath);
-                                            }
-                                        });
-
-                                        return (
-                                            <>
-                                                {Array.from(folders).sort().map(folder => (
-                                                    <div key={folder} className="text-tokens-fg">📁 {folder}</div>
-                                                ))}
-                                                {files.sort().map(file => {
-                                                    const depth = (file.match(/\//g) || []).length;
-                                                    const indent = '  '.repeat(depth);
-                                                    return (
-                                                        <div key={file} className="text-tokens-muted">
-                                                            {indent}📄 {file.split('/').pop()}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </>
-                                        );
-                                    })()
-                                ) : (
-                                    // Fallback: show static preview based on options
+                            <div className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-2">
+                                {t('initiator:generator.folderStructureLabel', 'Folder Structure')} {selectedFolderTemplate && <span className="text-tokens-brand-DEFAULT">({selectedFolderTemplate.folders.length})</span>}
+                            </div>
+                            <div className="text-sm text-tokens-fg bg-tokens-panel2/50 rounded p-3 border border-tokens-border flex flex-col gap-0.5 font-mono max-h-48 overflow-y-auto">
+                                {selectedFolderTemplate ? (
                                     <>
-                                        <div>📁 00_Admin</div>
-                                        {options.includeNotion && <div>&nbsp;&nbsp;📄 Brief.md</div>}
-                                        <div>📁 01_Work</div>
-                                        {options.includeMedia && <div>📁 02_Assets</div>}
-                                        {options.includeMedia && <div>📁 03_Render</div>}
-                                        <div>📁 99_Delivery</div>
-                                        <div>📄 project.meta.json</div>
+                                        {options.gitInit && (
+                                            <div className="text-tokens-brand-DEFAULT font-medium">📁 .git</div>
+                                        )}
+                                        <div className="text-tokens-muted">📄 project.meta.json</div>
+                                        <div className="text-tokens-muted">📄 Brief.md</div>
+                                        {selectedFolderTemplate.folders.map((folder: string, idx: number) => (
+                                            <div key={idx} className="text-tokens-fg">📁 {folder}</div>
+                                        ))}
                                     </>
+                                ) : (
+                                    <div className="text-tokens-muted italic">Loading templates...</div>
                                 )}
                             </div>
                         </div>
 
-                        {previewResult && (
+                        {/* Items count */}
+                        {selectedFolderTemplate && (
                             <div className="text-xs text-tokens-muted text-center">
-                                {previewResult.plan?.length || 0} items to create
+                                {t('initiator:generator.itemsToCreate', '{{count}} items to create', { count: selectedFolderTemplate.folders.length + 2 })}
                             </div>
                         )}
-
                     </div>
                 </Card>
             </div>
 
+            {/* Folder Template Editor Modal */}
+            {folderTemplatesData && (
+                <FolderTemplateEditorModal
+                    isOpen={showTemplateEditor}
+                    onClose={() => setShowTemplateEditor(false)}
+                    templates={folderTemplatesData}
+                    onSave={handleTemplateSave}
+                    initialSelectedId={selectedFolderTemplateId || undefined}
+                />
+            )}
+            <AlertDialogComponent />
         </div>
     );
 }
 
 // --- Main Project Hub Page Component ---
 export function ProjectHubPage() {
+    const { t } = useTranslation(['initiator', 'common']);
+    
     const [searchParams, setSearchParams] = useSearchParams();
     const tabFromUrl = searchParams.get('tab') || 'workflow';
     const activeTab = ['workflow', 'standards', 'generator'].includes(tabFromUrl) ? tabFromUrl : 'workflow';
@@ -476,8 +715,14 @@ export function ProjectHubPage() {
     const [isLoadingProjects, setIsLoadingProjects] = useState(true);
     const [projectKey, setProjectKey] = useState(0); // For auto-swap workflow
 
+    // Sprint 21: Load blueprints for robust filtering
+    const [blueprintData, setBlueprintData] = useState<BlueprintFileShape | null>(null);
+
     // Sprint 20.1: Blueprint filter state
-    const [blueprintFilter, setBlueprintFilter] = useState<string>('all'); // 'all' or categoryId
+    const [blueprintFilter, setBlueprintFilter] = useState<string>('all');
+    const [statusFilters, setStatusFilters] = useState<string[]>([]); // Sprint 6.8: Status filtering
+    const [typeFilters, setTypeFilters] = useState<string[]>([]); // Project type filtering
+
 
     // Sprint 20.1: Auto-load disk projects on mount
     useEffect(() => {
@@ -512,7 +757,36 @@ export function ProjectHubPage() {
                 setIsLoadingProjects(false);
             }
         };
+
+        // Initial load
         loadDiskProjects();
+
+        // Real-time file system watcher (Electron) with fallback to polling
+        if (window.gesu?.projects?.onChange) {
+            console.log('[ProjectHub] Using real-time file watcher');
+            const cleanup = window.gesu.projects.onChange(() => {
+                console.log('[ProjectHub] File system change detected, refreshing...');
+                loadDiskProjects();
+            });
+            return () => cleanup();
+        } else {
+            // Fallback: 5-second polling for non-Electron environments
+            console.log('[ProjectHub] Using polling fallback (5s interval)');
+            const refreshInterval = setInterval(async () => {
+                try {
+                    const importCount = await refreshFromDisk();
+                    if (importCount > 0) {
+                        console.log('[ProjectHub] Auto-refresh detected', importCount, 'new projects');
+                        const allProjects = listProjects();
+                        const diskProjects = allProjects.filter(p => p.projectPath);
+                        setProjects(diskProjects);
+                    }
+                } catch (err) {
+                    console.error('[ProjectHub] Auto-refresh failed:', err);
+                }
+            }, 5000);
+            return () => clearInterval(refreshInterval);
+        }
     }, []);
 
     const handleTabChange = (tabId: string) => {
@@ -521,63 +795,78 @@ export function ProjectHubPage() {
 
     // Sprint 20.1: Auto-swap - update projectKey to force WorkflowCanvas remount
     const handleProjectChange = useCallback((projectId: string) => {
-        setActiveProject(projectId);
-        const active = getActiveProject();
-        setActiveProjectState(active);
+        if (!projectId) {
+            // No project selected - clear active project and show empty canvas
+            clearActiveProject();
+            setActiveProjectState(null);
+        } else {
+            setActiveProject(projectId);
+            const active = getActiveProject();
+            setActiveProjectState(active);
+        }
         setProjectKey(k => k + 1); // Force workflow refresh via key change
     }, []);
 
+    // Tab definitions with translated labels (moved here to access t from useTranslation hook)
     const tabs = [
-        { id: 'workflow', label: 'Workflow', icon: <FileText size={16} /> },
-        { id: 'standards', label: 'Standards', icon: <Settings size={16} /> },
-        { id: 'generator', label: 'Generator', icon: <Zap size={16} /> }
+        { id: 'workflow', label: t('initiator:tabs.workflow', 'Workflow'), icon: <FileText size={16} /> },
+        { id: 'generator', label: t('initiator:tabs.generator', 'Generator'), icon: <Zap size={16} /> },
+        { id: 'standards', label: t('initiator:tabs.standards', 'Standards'), icon: <Settings size={16} /> }
     ];
 
-    // Sprint 20.1: Blueprint filter options - build from unique categoryIds
-    const blueprintFilterOptions = useMemo(() => {
-        const categories = new Set<string>();
-        projects.forEach(p => {
-            if (p.categoryId) categories.add(p.categoryId.toLowerCase());
-        });
+    useEffect(() => {
+        loadBlueprints().then(data => setBlueprintData(data));
+    }, [activeTab]);
 
-        const options: { value: string; label: string }[] = [
-            { value: 'all', label: 'All Projects' },
-            { value: 'none', label: 'No Blueprint' },
-        ];
-
-        // Add category options - capitalize first letter
-        Array.from(categories).sort().forEach(cat => {
-            options.push({
-                value: cat,
-                label: cat.charAt(0).toUpperCase() + cat.slice(1)
-            });
-        });
-
-        return options;
-    }, [projects]);
-
-    // Sprint 20.1: Filter projects by blueprint category
+    // Sprint 20.1: Filter projects by blueprint ID
     const filteredProjects = useMemo(() => {
-        if (blueprintFilter === 'all') return projects;
-        if (blueprintFilter === 'none') return projects.filter(p => !p.blueprintId);
-        return projects.filter(p => p.categoryId?.toLowerCase() === blueprintFilter);
-    }, [projects, blueprintFilter]);
+        let result = projects; // Start with all projects
 
-    // Sprint 20.1: Show only project name (parse from folder name or use name field)
-    const projectOptions = filteredProjects.map(p => {
-        // Extract display name: prefer stored name, or parse from folder name
-        // Format: YYMMDD_Category001_ProjectName → show "ProjectName"
-        let displayName = p.name;
-        if (p.projectPath) {
-            const folderName = p.projectPath.split(/[/\\]/).pop() || '';
-            const parts = folderName.split('_');
-            if (parts.length >= 3) {
-                // Take everything after the second underscore as the project name
-                displayName = parts.slice(2).join(' ').replace(/-/g, ' ');
-            }
+        // 1. Filter by Blueprint
+        if (blueprintFilter === 'none') {
+            result = result.filter(p => !p.blueprintId);
+        } else if (blueprintFilter !== 'all') {
+            result = result.filter(p => p.blueprintId === blueprintFilter);
         }
-        return { value: p.id, label: displayName };
-    });
+
+        // 3. Filter by Status (Sprint 6.8)
+        if (statusFilters.length > 0) {
+            result = result.filter(project => {
+                // Resolve blueprint to get total steps
+                let nodes = WORKFLOW_NODES; // Default
+                if (project.blueprintId && blueprintData) {
+                    const bp = blueprintData.blueprints.find(b => b.id === project.blueprintId);
+                    if (bp) {
+                        nodes = blueprintToWorkflowNodes(bp);
+                    }
+                }
+
+                // Get progress
+                const progress = getProgressForProject(project.id);
+
+                // Calculate stats
+                // We must merge to get accurate completion
+                const mergedNodes = mergeNodesWithProgress(nodes, progress);
+                const stats = calculateOverallProgress(mergedNodes);
+
+                // Determine status
+                let status = 'On progress';
+                if (stats.percent === 0) status = 'Ready to start';
+                else if (stats.percent === 100) status = 'Completed';
+
+                return statusFilters.includes(status);
+            });
+        }
+
+        // 4. Filter by Type
+        if (typeFilters.length > 0) {
+            result = result.filter(project => typeFilters.includes(project.type));
+        }
+
+        return result;
+    }, [projects, blueprintFilter, statusFilters, typeFilters, blueprintData]);
+
+
 
     // Sprint 20.1: Manual refresh handler
     const handleRefreshProjects = useCallback(async () => {
@@ -600,45 +889,35 @@ export function ProjectHubPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Project Hub</h1>
-                    <p className="text-tokens-muted text-sm mt-1">Manage projects from start to finish.</p>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('initiator:hub.title', 'Project Hub')}</h1>
+                    <p className="text-sm text-tokens-muted">{t('initiator:hub.subtitle', 'Manage projects from start to finish')}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Sprint 20.1: Blueprint Filter + Project Selector */}
-                    <div className="flex items-center gap-2">
-                        {/* Blueprint Filter Dropdown */}
-                        <SelectDropdown
-                            value={blueprintFilter}
-                            options={blueprintFilterOptions}
-                            onChange={setBlueprintFilter}
-                            className="min-w-[140px]"
-                        />
-
-                        {/* Project Dropdown - filtered by blueprint */}
-                        {isLoadingProjects ? (
-                            <div className="text-sm text-tokens-muted px-4">Loading...</div>
-                        ) : (
-                            <SelectDropdown
-                                value={activeProject?.id || ''}
-                                options={projectOptions.length > 0 ? projectOptions : [{ value: '', label: 'No projects...' }]}
-                                onChange={handleProjectChange}
-                                className="min-w-[200px]"
-                                disabled={projectOptions.length === 0}
+                    {/* Sprint 20.1: Blueprint Filter + Project Selector - ONLY on Workflow tab */}
+                    {activeTab === 'workflow' && (
+                        <div className="flex items-center gap-2">
+                            {/* NEW: Project Search */}
+                            <ProjectSearch
+                                projects={filteredProjects}
+                                activeProjectId={activeProject?.id}
+                                onSelect={handleProjectChange}
                             />
-                        )}
 
-                        {/* Refresh button */}
-                        <button
-                            onClick={handleRefreshProjects}
-                            disabled={isLoadingProjects}
-                            className="p-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg transition-colors disabled:opacity-50"
-                            title="Refresh projects from disk"
-                        >
-                            <RefreshCw size={16} className={isLoadingProjects ? 'animate-spin' : ''} />
-                        </button>
-                    </div>
+                            {/* NEW: Blueprint Filter Button */}
+                            <BlueprintFilter
+                                value={blueprintFilter}
+                                onChange={setBlueprintFilter}
+                                statusFilters={statusFilters}
+                                onStatusFilterChange={setStatusFilters}
+                                typeFilters={typeFilters}
+                                onTypeFilterChange={setTypeFilters}
+                                blueprintData={blueprintData}
+                            />
+
+                        </div>
+                    )}
                     <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
-                        Back
+                        {t('common:buttons.back', 'Back')}
                     </Link>
                 </div>
             </div>
@@ -653,11 +932,22 @@ export function ProjectHubPage() {
             {/* Tab Content */}
             <div className="mt-6">
                 {/* Sprint 20.1: key={projectKey} forces remount on project switch for auto-swap */}
-                {activeTab === 'workflow' && <WorkflowCanvas key={`workflow-${projectKey}`} />}
+                {activeTab === 'workflow' && (
+                    <WorkflowCanvas
+                        key={`workflow-${projectKey}`}
+                        project={activeProject || undefined}
+                    />
+                )}
 
                 {activeTab === 'standards' && <StandardsTab />}
 
-                {activeTab === 'generator' && <ProjectGeneratorForm />}
+                {activeTab === 'generator' && (
+                    <ProjectGeneratorForm
+                        onTabChange={handleTabChange}
+                        projects={projects}
+                        onRefresh={handleRefreshProjects}
+                    />
+                )}
             </div>
         </PageContainer>
     );

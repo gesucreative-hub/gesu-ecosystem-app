@@ -4,7 +4,7 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
-    darkMode: ['selector', '[data-theme="dark"]'],
+    darkMode: 'class',
     theme: {
         extend: {
             fontFamily: {
@@ -21,6 +21,13 @@ export default {
                     panel2: 'var(--panel2)',
                     border: 'var(--border)',
                     ring: 'var(--ring)',
+                    // New semantic tokens
+                    popover: 'var(--popover)',
+                    'popover-fg': 'var(--popover-fg)',
+                    success: 'var(--success)',
+                    warning: 'var(--warning)',
+                    error: 'var(--error)',
+                    'brand-light': 'var(--brand-light)',
                     brand: {
                         DEFAULT: 'var(--brand)',
                         foreground: 'var(--brand-contrast)',
@@ -63,12 +70,49 @@ export default {
                     950: '#15280b',
                 },
                 accent: {
-                    cyan: '#06b6d4',
-                    purple: '#a855f7',
+                    // Theme-aware accent colors (from CSS variables)
+                    cyan: 'var(--accent-cyan)',
+                    purple: 'var(--accent-purple)',
+                    amber: 'var(--accent-amber)',
+                    rose: 'var(--accent-rose)',
+                    // Legacy fallbacks
                     emerald: '#10b981',
-                    rose: '#f43f5e',
                     orange: '#f97316',
+                },
+                // Status colors (theme-aware)
+                status: {
+                    success: 'var(--status-success)',
+                    warning: 'var(--status-warning)',
+                    error: 'var(--status-error)',
+                    info: 'var(--status-info)',
+                },
+                // Chart/graph colors (theme-aware)
+                chart: {
+                    primary: 'var(--chart-primary)',
+                    secondary: 'var(--chart-secondary)',
+                    tertiary: 'var(--chart-tertiary)',
+                    positive: 'var(--chart-positive)',
+                    negative: 'var(--chart-negative)',
+                },
+                // Phase colors (consistent across themes)
+                phase: {
+                    1: 'var(--phase-1)',
+                    2: 'var(--phase-2)',
+                    3: 'var(--phase-3)',
+                    4: 'var(--phase-4)',
+                    5: 'var(--phase-5)',
                 }
+            },
+            // Z-index scale
+            zIndex: {
+                'behind': '-1',
+                'base': '0',
+                'sticky': '10',
+                'sidebar': '20',
+                'dropdown': '50',
+                'modal': '100',
+                'confirm': '200',
+                'toast': '9999',
             }
         },
     },

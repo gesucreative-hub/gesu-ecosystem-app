@@ -1,0 +1,178 @@
+{
+    "title": "Refokus",
+    "subtitle": "Atur ulang fokus dan kembali ke jalur",
+    "stats": {
+        "today": "Hari Ini",
+        "todayResets": "Reset Hari Ini",
+        "mostCommon": "Paling sering",
+        "total": "Total",
+        "completed": "selesai"
+    },
+    "protocols": {
+        "title": "Protokol Cepat",
+        "breathe": "Bernapas",
+        "breatheDesc": "Ambil napas dalam",
+        "stretch": "Peregangan",
+        "stretchDesc": "Peregangan tubuh cepat",
+        "water": "Air",
+        "waterDesc": "Minum air",
+        "walk": "Jalan",
+        "walkDesc": "Jalan kaki sebentar",
+        "breath": {
+            "name": "Napas",
+            "action": "Ambil 5 napas dalam perlahan (4 detik masuk, 4 detik keluar)"
+        },
+        "dump": {
+            "name": "Tuang",
+            "action": "Tulis semua yang ada di kepalamu di kertas"
+        },
+        "one": {
+            "name": "Yang Satu",
+            "action": "Lingkari SATU hal yang paling penting sekarang"
+        },
+        "reset": {
+            "name": "Reset",
+            "action": "Berdiri dan lakukan 10 putaran bahu"
+        },
+        "theWalk": {
+            "name": "Jalan",
+            "action": "Jalan kaki 2 menit di sekitar ruanganmu"
+        },
+        "anchor": {
+            "name": "Jangkar",
+            "action": "Letakkan HP-mu di ruangan lain"
+        },
+        "fear": {
+            "name": "Ketakutan",
+            "action": "Tulis: 'Aku menghindari ini karena...'"
+        },
+        "tiny": {
+            "name": "Si Kecil",
+            "action": "Lakukan HANYA 2 menit pertama dari tugas"
+        },
+        "split": {
+            "name": "Pecah",
+            "action": "Pecah tugas menjadi 3 bagian kecil"
+        },
+        "hydrate": {
+            "name": "Hidrasi",
+            "action": "Minum segelas air perlahan"
+        },
+        "gaze": {
+            "name": "Tatapan",
+            "action": "Lihat keluar jendela selama 30 detik"
+        },
+        "clarity": {
+            "name": "Kejelasan",
+            "action": "Tulis: 'Sekarang aku perlu...'"
+        }
+    },
+    "custom": {
+        "title": "Protokol Kustom",
+        "create": "Buat Protokol",
+        "noProtocols": "Belum ada protokol kustom"
+    },
+    "session": {
+        "start": "Mulai Refokus",
+        "complete": "Selesai",
+        "skip": "Lewati"
+    },
+    "insights": {
+        "title": "Wawasan Refokus",
+        "weeklyTrend": "Tren Mingguan",
+        "commonTriggers": "Pemicu Umum"
+    },
+    "analytics": {
+        "recoveryPatterns": "Pola Pemulihanmu",
+        "flowRate": "Tingkat Flow",
+        "totalResets": "Total Reset",
+        "avgResetTime": "Waktu Reset Rata-rata",
+        "topProtocol": "Protokol Terbaik",
+        "stateDistribution": "Distribusi Status",
+        "thisWeek": "Minggu Ini",
+        "whatWorks": "Yang Cocok Untukmu"
+    },
+    "states": {
+        "overwhelmed": "Kewalahan",
+        "restless": "Gelisah",
+        "avoiding": "Menghindar",
+        "foggy": "Berkabut"
+    },
+    "mentalStates": {
+        "title": "Bagaimana perasaanmu sekarang?",
+        "subtitle": "Pilih kondisi mentalmu untuk menerima protokol yang dipersonalisasi",
+        "overwhelmed": "Kewalahan",
+        "overwhelmedDesc": "Terlalu banyak hal, otak kelebihan beban",
+        "restless": "Gelisah",
+        "restlessDesc": "Tidak bisa diam, perlu bergerak",
+        "avoiding": "Menghindari",
+        "avoidingDesc": "Tahu apa yang harus dilakukan, tapi tidak melakukannya",
+        "foggy": "Berkabut",
+        "foggyDesc": "Kabut otak, tidak bisa berpikir jernih"
+    },
+    "flowState": {
+        "title": "Radar Status Flow",
+        "flowScore": "Skor Flow",
+        "flowHealth": "Kesehatan Flow",
+        "healthStatus": {
+            "excellent": "Sempurna",
+            "good": "Bagus",
+            "fair": "Cukup",
+            "needsWork": "Perlu Perbaikan"
+        },
+        "basedOn": "Berdasarkan {{completed}} dari {{total}} reset yang berhasil diselesaikan.",
+        "completionStats": "Berdasarkan {{completed}} dari {{total}} reset yang berhasil diselesaikan.",
+        "suggestion": "Kamu sering merasa {{state}}. Pertimbangkan teknik untuk mencegah ini."
+    },
+    "selection": {
+        "heading": "Bagaimana perasaanmu sekarang?",
+        "subtitle": "Pilih kondisi mentalmu untuk mendapatkan protokol yang sesuai"
+    },
+    "badges": {
+        "frequent": "Sering",
+        "topResets": "Reset Terbaik",
+        "stepPrimitives": "Primitif Langkah"
+    },
+    "protocol": {
+        "title": "Protokol Reset Mental Adaptif",
+        "startOver": "Mulai dari awal",
+        "theBreath": "Napas",
+        "theBreathAction": "Ambil 5 napas dalam perlahan (4 detik masuk, 4 detik keluar)",
+        "theDump": "Tuang",
+        "theDumpAction": "Tulis semua yang ada di kepalamu di kertas",
+        "theOne": "Yang Satu",
+        "theOneAction": "Lingkari SATU hal yang paling penting sekarang",
+        "doneNextStep": "Selesai — Langkah Berikutnya"
+    },
+    "customProtocols": {
+        "title": "Protokol Kustom",
+        "newProtocol": "Protokol Baru",
+        "protocolName": "Nama Protokol",
+        "namePlaceholder": "contoh: Peregangan",
+        "whatToDo": "Apa yang harus dilakukan",
+        "actionPlaceholder": "contoh: Berdiri dan regangkan badan selama 30 detik",
+        "duration": "Durasi",
+        "forWhichState": "Untuk kondisi mana?",
+        "saveProtocol": "Simpan Protokol",
+        "used": "Digunakan",
+        "deleteProtocol": "Hapus protokol",
+        "noProtocolsYet": "Belum ada protokol kustom",
+        "createYourOwn": "Buat aksi pemulihan sendiri"
+    },
+    "feedback": {
+        "question": "Apakah protokol ini membantumu?",
+        "yes": "Ya!",
+        "somewhat": "Agak",
+        "notReally": "Tidak terlalu",
+        "thanksMessage": "Terima kasih! Kami akan gunakan ini untuk personalisasi pengalamanmu."
+    },
+    "completion": {
+        "title": "Protokol Selesai",
+        "message": "Kamu sudah menyelesaikan semua langkah reset. Siap untuk fokus?",
+        "startFocus": "Mulai Sesi Fokus 15 Menit",
+        "maybeLater": "Nanti Saja"
+    },
+    "tooltips": {
+        "deleteProtocol": "Hapus protokol"
+    }
+}

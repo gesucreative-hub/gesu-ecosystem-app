@@ -45,8 +45,11 @@ export async function assertPathWithin(baseDir, targetPath) {
 /**
  * Builds a scaffolding plan for a new project.
  * Returns an array of operations to execute.
+ * Sprint 21.3: Added folderTemplateFolders param for blueprint-driven folder generation
+ * Sprint 23: Added projectType, clientName, briefContent, displayName for proper naming
  */
-export function buildPlan({ projectsRoot, projectName, templateId, categoryId, blueprintId, blueprintVersion }) {
+export function buildPlan({ projectsRoot, projectName, templateId, categoryId, blueprintId, blueprintVersion, folderTemplateFolders, projectType, clientName, briefContent, displayName }) {
+    // projectName is now the full folder name (with date prefix etc) from the frontend
     const sanitizedName = sanitizeProjectName(projectName);
     if (!sanitizedName) {
         throw new Error('Invalid project name');
@@ -61,9 +64,10 @@ export function buildPlan({ projectsRoot, projectName, templateId, categoryId, b
     plan.push({ kind: 'dir', relativePath: '.' });
 
     // 2. Project metadata file (including Sprint 20 blueprint fields)
+    // Sprint 23: Use displayName for the project name field
     const metaData = {
         id: projectId,
-        name: projectName,
+        name: displayName || projectName,
         createdAt: new Date().toISOString(),
         templateId,
         projectPath
@@ -73,6 +77,10 @@ export function buildPlan({ projectsRoot, projectName, templateId, categoryId, b
     if (categoryId) metaData.categoryId = categoryId;
     if (blueprintId) metaData.blueprintId = blueprintId;
     if (blueprintVersion) metaData.blueprintVersion = blueprintVersion;
+    
+    // Sprint 23: Add project type
+    if (projectType) metaData.projectType = projectType;
+    if (clientName) metaData.clientName = clientName;
 
     plan.push({
         kind: 'file',
@@ -80,31 +88,44 @@ export function buildPlan({ projectsRoot, projectName, templateId, categoryId, b
         content: JSON.stringify(metaData, null, 2)
     });
 
-    // 3. Brief.md starter content
+    // 3. Brief.md - Sprint 23: Use briefContent if provided
+    const projectDisplayName = displayName || projectName;
+    const briefMdContent = briefContent 
+        ? `# ${projectDisplayName}\n\n## Brief\n${briefContent}\n\n## Notes\nAdd your notes here.\n`
+        : `# ${projectDisplayName}\n\n## Overview\nBrief description of the project.\n\n## Goals\n- Goal 1\n- Goal 2\n\n## Notes\nAdd your notes here.\n`;
+    
     plan.push({
         kind: 'file',
         relativePath: 'Brief.md',
-        content: `# ${projectName}\n\n## Overview\nBrief description of the project.\n\n## Goals\n- Goal 1\n- Goal 2\n\n## Notes\nAdd your notes here.\n`
+        content: briefMdContent
     });
 
-    // 4. Minimal folder structure based on template
-    const commonDirs = ['Media', 'Assets', 'Notes', 'Output', 'Archive'];
+    // 4. Folder structure - Sprint 21.3: Use folderTemplateFolders if provided
+    if (folderTemplateFolders && folderTemplateFolders.length > 0) {
+        // Use blueprint-driven folder template
+        folderTemplateFolders.forEach(folderPath => {
+            plan.push({ kind: 'dir', relativePath: folderPath });
+        });
+    } else {
+        // Fallback to legacy hardcoded folders based on templateId
+        const commonDirs = ['Media', 'Assets', 'Notes', 'Output', 'Archive'];
 
-    if (templateId === 'video-production') {
-        plan.push({ kind: 'dir', relativePath: 'Footage' });
-        plan.push({ kind: 'dir', relativePath: 'Exports' });
-    } else if (templateId === 'design') {
-        plan.push({ kind: 'dir', relativePath: 'Designs' });
-        plan.push({ kind: 'dir', relativePath: 'Assets' });
-    } else if (templateId === 'writing') {
-        plan.push({ kind: 'dir', relativePath: 'Drafts' });
-        plan.push({ kind: 'dir', relativePath: 'Research' });
+        if (templateId === 'video-production') {
+            plan.push({ kind: 'dir', relativePath: 'Footage' });
+            plan.push({ kind: 'dir', relativePath: 'Exports' });
+        } else if (templateId === 'design') {
+            plan.push({ kind: 'dir', relativePath: 'Designs' });
+            plan.push({ kind: 'dir', relativePath: 'Assets' });
+        } else if (templateId === 'writing') {
+            plan.push({ kind: 'dir', relativePath: 'Drafts' });
+            plan.push({ kind: 'dir', relativePath: 'Research' });
+        }
+
+        // Add common dirs
+        commonDirs.forEach(dir => {
+            plan.push({ kind: 'dir', relativePath: dir });
+        });
     }
-
-    // Add common dirs
-    commonDirs.forEach(dir => {
-        plan.push({ kind: 'dir', relativePath: dir });
-    });
 
     return { projectPath, plan };
 }
@@ -196,6 +217,7 @@ export async function appendProjectLog({ projectsRoot, projectId, projectName, p
             templateId
         };
 
+
         const logLine = JSON.stringify(logEntry) + '\n';
 
         // Append to log file (create if doesn't exist)
@@ -207,3 +229,46 @@ export async function appendProjectLog({ projectsRoot, projectId, projectName, p
         console.error('[scaffolding] Failed to append ProjectLog:', err);
     }
 }
+
+/**
+ * Initializes a git repository in the target path.
+ * @param {string} projectPath 
+ */
+export async function initializeGitRepo(projectPath) {
+    const { spawn } = await import('node:child_process');
+    console.log('[scaffolding] Initializing git repo in:', projectPath);
+
+    return new Promise((resolve) => {
+        const child = spawn('git', ['init'], {
+            cwd: projectPath,
+            shell: process.platform === 'win32' // Required for some windows environments, but spawn is safer than exec
+        });
+
+        let output = '';
+        let error = '';
+
+        child.stdout.on('data', (d) => {
+            output += d.toString();
+        });
+
+        child.stderr.on('data', (d) => {
+            error += d.toString();
+        });
+
+        child.on('close', (code) => {
+            if (code === 0) {
+                console.log('[scaffolding] Git init success:', output.trim());
+                resolve({ success: true, message: output.trim() });
+            } else {
+                console.error('[scaffolding] Git init failed:', error.trim());
+                resolve({ success: false, error: error.trim() });
+            }
+        });
+
+        child.on('error', (err) => {
+            console.error('[scaffolding] Git init spawn error:', err);
+            resolve({ success: false, error: err.message });
+        });
+    });
+}
+

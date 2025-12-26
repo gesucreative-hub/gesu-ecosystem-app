@@ -1,5 +1,6 @@
 // Focus Timer Store - Global Pomodoro timer with phase management
 // Single instance shared across the app, survives navigation
+import { startActivitySession, endActivitySession } from '../services/activityTrackingService';
 
 export type TimerPhase = 'idle' | 'focus' | 'shortBreak' | 'longBreak';
 
@@ -26,7 +27,9 @@ export interface FocusTimerState {
     cycleCount: number; // completed focus sessions
     config: TimerConfig;
     sessionActive: boolean; // for distraction shield
-    taskContext: TaskContext | null; // NEW: linked task
+    taskContext: TaskContext | null; // linked task
+    activitySessionId: string | null; // linked activity session
+    sessionGoal: string | null; // optional user-defined goal for current session
 }
 
 const DEFAULT_CONFIG: TimerConfig = {
@@ -46,6 +49,7 @@ interface StoredState {
 
 // --- Global State ---
 let state: FocusTimerState = {
+    sessionGoal: null,
     phase: 'idle',
     remainingSeconds: 0,
     totalSeconds: 0,
@@ -54,7 +58,8 @@ let state: FocusTimerState = {
     cycleCount: 0,
     config: DEFAULT_CONFIG,
     sessionActive: false,
-    taskContext: null, // NEW
+    taskContext: null,
+    activitySessionId: null,
 };
 
 let tickInterval: number | null = null;
@@ -115,7 +120,13 @@ function getDurationForPhase(phase: TimerPhase): number {
     }
 }
 
-function transitionToPhase(phase: TimerPhase): void {
+async function transitionToPhase(phase: TimerPhase): Promise<void> {
+    // End previous activity session if exists
+    if (state.activitySessionId) {
+        await endActivitySession(state.activitySessionId);
+        state.activitySessionId = null;
+    }
+
     const duration = getDurationForPhase(phase);
     state.phase = phase;
     state.remainingSeconds = duration;
@@ -123,6 +134,15 @@ function transitionToPhase(phase: TimerPhase): void {
 
     if (phase === 'focus') {
         state.cycleCount++;
+    }
+
+    // Start new activity session for the new phase
+    if (phase === 'focus') {
+        const result = await startActivitySession('focus');
+        state.activitySessionId = result.sessionId || null;
+    } else if (phase === 'shortBreak' || phase === 'longBreak') {
+        const result = await startActivitySession('break');
+        state.activitySessionId = result.sessionId || null;
     }
 
     saveState();
@@ -136,7 +156,7 @@ function transitionToPhase(phase: TimerPhase): void {
 
 // --- Timer Tick Logic ---
 
-function tick(): void {
+async function tick(): Promise<void> {
     if (!state.isRunning || state.isPaused) return;
 
     state.remainingSeconds--;
@@ -144,7 +164,7 @@ function tick(): void {
     if (state.remainingSeconds <= 0) {
         // Phase complete - transition to next
         const nextPhase = getNextPhase();
-        transitionToPhase(nextPhase);
+        await transitionToPhase(nextPhase);
     } else {
         saveState();
     }
@@ -167,7 +187,7 @@ function stopTicking(): void {
 
 // --- Actions ---
 
-export function start(config?: Partial<TimerConfig>): void {
+export async function start(config?: Partial<TimerConfig>): Promise<void> {
     // Merge config if provided
     if (config) {
         state.config = { ...state.config, ...config };
@@ -180,7 +200,11 @@ export function start(config?: Partial<TimerConfig>): void {
     state.isPaused = false;
     state.cycleCount = 0;
     state.sessionActive = true;
-    state.taskContext = null; // Clear task context for manual start
+    state.taskContext = null;
+
+    // Start activity tracking session
+    const result = await startActivitySession('focus');
+    state.activitySessionId = result.sessionId || null;
 
     saveState();
     startTicking();
@@ -190,7 +214,7 @@ export function start(config?: Partial<TimerConfig>): void {
     requestNotificationPermission();
 }
 
-export function startWithTask(taskContext: TaskContext, config?: Partial<TimerConfig>): void {
+export async function startWithTask(taskContext: TaskContext, config?: Partial<TimerConfig>): Promise<void> {
     // Merge config if provided
     if (config) {
         state.config = { ...state.config, ...config };
@@ -203,7 +227,11 @@ export function startWithTask(taskContext: TaskContext, config?: Partial<TimerCo
     state.isPaused = false;
     state.cycleCount = 0;
     state.sessionActive = true;
-    state.taskContext = taskContext; // SET TASK CONTEXT
+    state.taskContext = taskContext;
+
+    // Start activity tracking session with task context
+    const result = await startActivitySession('focus', taskContext.taskId);
+    state.activitySessionId = result.sessionId || null;
 
     saveState();
     startTicking();
@@ -238,14 +266,21 @@ export function skip(): void {
     transitionToPhase(nextPhase);
 }
 
-export function stop(): void {
+export async function stop(): Promise<void> {
+    // End activity tracking session if active
+    if (state.activitySessionId) {
+        await endActivitySession(state.activitySessionId);
+    }
+
     state.phase = 'idle';
     state.remainingSeconds = 0;
     state.totalSeconds = 0;
     state.isRunning = false;
     state.isPaused = false;
     state.sessionActive = false;
-    state.taskContext = null; // Clear task context on stop
+    state.taskContext = null;
+    state.activitySessionId = null;
+    state.sessionGoal = null; // Clear goal on stop
 
     stopTicking();
     saveState();
@@ -257,6 +292,13 @@ export function setConfig(config: Partial<TimerConfig>): void {
     saveState();
     notifySubscribers();
 }
+
+export function setSessionGoal(goal: string | null): void {
+    state.sessionGoal = goal;
+    saveState();
+    notifySubscribers();
+}
+
 
 // --- Getters ---
 
@@ -331,7 +373,7 @@ export function setSoundCuePath(path: string | null): void {
     soundCuePath = path;
 }
 
-function playSoundCue(phase: TimerPhase): void {
+function playSoundCue(_phase: TimerPhase): void {
     // Call the hook - if user has configured a sound, play it
     if (soundCuePath) {
         try {

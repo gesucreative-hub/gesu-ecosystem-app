@@ -36,8 +36,11 @@ export function blueprintNodeToWorkflowNode(
  * Organizes nodes by phase and assigns row positions.
  */
 export function blueprintToWorkflowNodes(blueprint: WorkflowBlueprint): WorkflowNode[] {
-    // Group nodes by phase
-    const phases = ['planning', 'design', 'frontend', 'backend', 'ops'];
+    // Use blueprint's custom phases if available, otherwise fallback to default
+    const phases = blueprint.phases
+        ? blueprint.phases.map(p => p.id)
+        : ['planning', 'design', 'frontend', 'backend', 'ops'];
+
     const nodesByPhase: Record<string, BlueprintNode[]> = {};
 
     for (const phase of phases) {

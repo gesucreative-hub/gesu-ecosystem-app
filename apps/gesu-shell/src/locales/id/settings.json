@@ -1,0 +1,160 @@
+{
+    "title": "Pengaturan",
+    "subtitle": "Sesuaikan ruang kerja dan preferensimu",
+    "tabs": {
+        "general": "Umum",
+        "appearance": "Tampilan",
+        "paths": "Jalur",
+        "account": "Akun"
+    },
+    "sections": {
+        "externalTools": "Tool Eksternal",
+        "directoryPaths": "Jalur Direktori"
+    },
+    "validation": {
+        "issuesFound": "Masalah Ditemukan:"
+    },
+    "language": {
+        "title": "Bahasa",
+        "select": "Pilih Bahasa",
+        "description": "Ubah bahasa tampilan aplikasi"
+    },
+    "theme": {
+        "title": "Tema",
+        "description": "Pilih skema warna yang kamu sukai",
+        "light": "Terang",
+        "dark": "Gelap",
+        "system": "Sistem"
+    },
+    "configHealth": {
+        "title": "Kesehatan Konfigurasi",
+        "incomplete": "Konfigurasi Belum Lengkap",
+        "incomplete_desc": "Beberapa pengaturan perlu perhatian",
+        "allReady": "Semua Sistem Siap",
+        "allReady_desc": "Semua sudah dikonfigurasi dengan benar",
+        "checkingSystem": "Memeriksa Sistem...",
+        "externalTools": "Alat Eksternal",
+        "directoryPaths": "Jalur Direktori",
+        "ready": "Siap",
+        "configured": "Terkonfigurasi",
+        "noIssues": "Tidak ada masalah ditemukan",
+        "runCheck": "Jalankan Pemeriksaan Global"
+    },
+    "appearance": {
+        "title": "Tampilan",
+        "colorTheme": "Tema Warna",
+        "colorThemeDesc": "Mode terang menggunakan aksen Indigo, Mode gelap menggunakan aksen Hijau"
+    },
+    "paths": {
+        "title": "Jalur Ruang Kerja",
+        "workflowRoot": "Root Workflow",
+        "workflowRootDesc": "Jalur dasar untuk database workflowmu",
+        "projectsFolder": "Folder Proyek",
+        "projectsFolderDesc": "Folder default untuk proyek baru",
+        "backupFolder": "Folder Cadangan",
+        "backupFolderDesc": "Lokasi untuk cadangan otomatis"
+    },
+    "engines": {
+        "title": "Alat Eksternal",
+        "description": "Konfigurasi jalur ke alat eksternal yang digunakan Media Suite",
+        "ytDlp": "yt-dlp",
+        "ytDlpDesc": "Pengunduh audio/video baris perintah",
+        "ffmpeg": "FFmpeg",
+        "ffmpegDesc": "Alat pemrosesan video dan audio",
+        "imageMagick": "ImageMagick",
+        "imageMagickDesc": "Alat manipulasi gambar",
+        "libreOffice": "LibreOffice",
+        "libreOfficeDesc": "Alat konversi dokumen",
+        "installMethod": "Metode Instalasi",
+        "pathLabel": "Jalur ke executable"
+    },
+    "accent": {
+        "title": "Warna Aksen",
+        "description": "Pilih warna aksen yang kamu sukai"
+    },
+    "account": {
+        "title": "Akun",
+        "signedInAs": "Masuk sebagai",
+        "notSignedIn": "Belum masuk",
+        "signInPrompt": "Masuk untuk menyinkronkan datamu di berbagai perangkat"
+    },
+    "about": {
+        "title": "Tentang",
+        "version": "Versi",
+        "buildDate": "Tanggal Build"
+    },
+    "danger": {
+        "title": "Zona Bahaya",
+        "reset": "Atur Ulang Pengaturan",
+        "resetDesc": "Atur ulang semua pengaturan ke nilai default",
+        "resetConfirm": "Kamu yakin? Ini akan mengatur ulang semua pengaturan ke default."
+    },
+    "messages": {
+        "settingsSaved": "Pengaturan berhasil disimpan ke disk!",
+        "settingsReset": "Pengaturan telah diatur ulang ke default"
+    },
+    "engineStatus": {
+        "unknown": "Tidak Diketahui",
+        "readyConfigured": "Siap (Terkonfigurasi)",
+        "readySystem": "Siap (System PATH)",
+        "warningFallback": "Peringatan (Fallback)",
+        "missing": "Hilang",
+        "error": "Error"
+    },
+    "buttons": {
+        "check": "Periksa",
+        "showCommand": "Perintah instalasi",
+        "hideCommand": "Sembunyikan perintah"
+    },
+    "tooltips": {
+        "checkTool": "Periksa alat ini"
+    },
+    "placeholders": {
+        "enterPath": "Masukkan path absolut..."
+    },
+    "footer": {
+        "unsavedChanges": "Perubahan belum disimpan"
+    },
+    "ai": {
+        "title": "Saran AI",
+        "description": "Konfigurasi AI lokal untuk saran peningkatan blueprint",
+        "enabled": "Aktifkan Saran AI",
+        "enabledDesc": "Gunakan AI lokal untuk menyarankan perbaikan blueprint",
+        "provider": "Penyedia AI",
+        "providerDesc": "Pilih penyedia AI lokalmu",
+        "providerNone": "Tidak Ada (Nonaktif)",
+        "providerOllama": "Ollama (Lokal)",
+        "providerMock": "Mock (Pengujian)",
+        "endpoint": "Endpoint API",
+        "endpointDesc": "URL server AI lokalmu",
+        "endpointPlaceholder": "http://localhost:11434",
+        "model": "Nama Model",
+        "modelDesc": "Nama model yang digunakan",
+        "modelPlaceholder": "llama3.2",
+        "testConnection": "Tes Koneksi",
+        "testing": "Menguji...",
+        "connected": "Terhubung",
+        "connectionFailed": "Koneksi gagal",
+        "notConfigured": "AI belum dikonfigurasi",
+        "modelSetup": {
+            "title": "Pengaturan Model",
+            "needOllama": "Butuh Ollama? Unduh installer untuk Windows:",
+            "downloadOllama": "Unduh Ollama untuk Windows",
+            "installedModels": "Model Terinstal",
+            "noModels": "Belum ada model terinstal",
+            "downloadModel": "Unduh {{model}}",
+            "downloading": "Mengunduh... {{percent}}%",
+            "cancel": "Batalkan Unduhan",
+            "downloadSuccess": "Model berhasil diunduh!",
+            "downloadError": "Gagal mengunduh model",
+            "refreshModels": "Segarkan",
+            "ollamaNotRunning": "Ollama tidak berjalan",
+            "status": {
+                "pulling": "Mengambil manifest...",
+                "downloading": "Mengunduh lapisan...",
+                "verifying": "Memverifikasi...",
+                "success": "Selesai!"
+            }
+        }
+    }
+}

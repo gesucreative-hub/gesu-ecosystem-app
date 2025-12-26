@@ -1,7 +1,7 @@
 // Workflow Data Model - Static MVP Data for Project Hub
 // This file contains the swimlane phases, workflow nodes, and their connections.
 
-export type WorkflowPhase = 'planning' | 'design' | 'frontend' | 'backend' | 'ops';
+export type WorkflowPhase = 'planning' | 'execution' | 'finalize' | 'design' | 'frontend' | 'backend' | 'ops';
 
 export type NodeStatus = 'todo' | 'in-progress' | 'done';
 
@@ -16,6 +16,10 @@ export interface WorkflowNode {
     phase: WorkflowPhase;
     title: string;
     description: string;
+    /** i18n key for title (optional, falls back to title) */
+    titleKey?: string;
+    /** i18n key for description (optional, falls back to description) */
+    descKey?: string;
     status: NodeStatus;
     /** Grid position within the phase swimlane (row index) */
     row: number;
@@ -32,207 +36,180 @@ export interface WorkflowEdge {
 }
 
 // --- Phase Configuration ---
-export const WORKFLOW_PHASES: { id: WorkflowPhase; label: string; color: string }[] = [
-    { id: 'planning', label: 'Planning', color: '#6366f1' },      // Indigo
-    { id: 'design', label: 'Design', color: '#8b5cf6' },          // Purple
-    { id: 'frontend', label: 'Frontend', color: '#06b6d4' },      // Cyan
-    { id: 'backend', label: 'Backend', color: '#10b981' },        // Emerald
-    { id: 'ops', label: 'Ops & Quality', color: '#f59e0b' },      // Amber
+export const WORKFLOW_PHASES: { id: WorkflowPhase; label: string; labelKey?: string; color: string }[] = [
+    { id: 'planning', label: 'Planning', labelKey: 'initiator:workflow.phases.planning', color: '#6366f1' },
+    { id: 'design', label: 'Design', labelKey: 'initiator:workflow.phases.design', color: '#8b5cf6' },
+    { id: 'frontend', label: 'Frontend', labelKey: 'initiator:workflow.phases.frontend', color: '#06b6d4' },
+    { id: 'backend', label: 'Backend', labelKey: 'initiator:workflow.phases.backend', color: '#10b981' },
+    { id: 'ops', label: 'Ops & Quality', labelKey: 'initiator:workflow.phases.ops', color: '#f59e0b' },
 ];
 
-// --- Static Workflow Nodes (MVP) ---
+// --- Sprint 21.3 Phase 6: Default Phase Sets for Different Project Types ---
+export interface PhaseSet {
+    id: string;
+    name: string;
+    phases: { id: string; label: string; color: string }[];
+}
+
+export const DEFAULT_PHASE_SETS: PhaseSet[] = [
+    {
+        id: 'default',
+        name: 'Default',
+        phases: [
+            { id: 'planning', label: 'Planning', color: '#6366f1' },       // Indigo
+            { id: 'execution', label: 'Execution', color: '#06b6d4' },     // Cyan
+            { id: 'finalize', label: 'Finalize', color: '#10b981' },       // Emerald
+        ]
+    },
+    {
+        id: 'development',
+        name: 'Development',
+        phases: [
+            { id: 'requirements', label: 'Requirements', color: '#6366f1' },
+            { id: 'design', label: 'Design', color: '#8b5cf6' },
+            { id: 'development', label: 'Development', color: '#06b6d4' },
+            { id: 'testing', label: 'Testing', color: '#10b981' },
+            { id: 'deployment', label: 'Deployment', color: '#f59e0b' },
+        ]
+    },
+    {
+        id: 'content',
+        name: 'Content Creator',
+        phases: [
+            { id: 'idea', label: 'Idea', color: '#6366f1' },
+            { id: 'script', label: 'Script', color: '#8b5cf6' },
+            { id: 'production', label: 'Production', color: '#06b6d4' },
+            { id: 'edit', label: 'Edit', color: '#10b981' },
+            { id: 'publish', label: 'Publish', color: '#f59e0b' },
+        ]
+    },
+    {
+        id: 'admin',
+        name: 'Admin/Ops',
+        phases: [
+            { id: 'initiation', label: 'Initiation', color: '#6366f1' },
+            { id: 'planning', label: 'Planning', color: '#8b5cf6' },
+            { id: 'execution', label: 'Execution', color: '#06b6d4' },
+            { id: 'review', label: 'Review', color: '#10b981' },
+            { id: 'closure', label: 'Closure', color: '#f59e0b' },
+        ]
+    },
+];
+
+export function getPhaseSetById(id: string): PhaseSet {
+    return DEFAULT_PHASE_SETS.find(ps => ps.id === id) || DEFAULT_PHASE_SETS[0];
+}
+
+// --- Static Workflow Nodes (Simplified Default Blueprint) ---
 export const WORKFLOW_NODES: WorkflowNode[] = [
     // Planning Phase
     {
-        id: 'p1', phase: 'planning', title: 'Define Requirements',
-        description: 'Gather stakeholder input and document all project requirements',
-        status: 'done', row: 0,
+        id: 'p1', phase: 'planning', title: 'Requirements & Goals',
+        titleKey: 'initiator:workflow.steps.p1.title',
+        description: 'Define project scope, objectives, and success criteria',
+        descKey: 'initiator:workflow.steps.p1.desc',
+        status: 'todo', row: 0,
         dodChecklist: [
-            { id: 'p1-1', label: 'Stakeholder interviews completed', done: true },
-            { id: 'p1-2', label: 'Requirements document drafted', done: true },
-            { id: 'p1-3', label: 'Requirements reviewed by team', done: true },
+            { id: 'p1-1', label: 'Project goals documented', done: false },
+            { id: 'p1-2', label: 'Stakeholder needs identified', done: false },
+            { id: 'p1-3', label: 'Success metrics defined', done: false },
         ],
         tools: ['Notion', 'Google Docs']
     },
     {
-        id: 'p2', phase: 'planning', title: 'Create Wireframes',
-        description: 'Sketch low-fidelity UI mockups to visualize layout',
-        status: 'done', row: 1,
-        dodChecklist: [
-            { id: 'p2-1', label: 'Key screens wireframed', done: true },
-            { id: 'p2-2', label: 'User flow mapped out', done: true },
-            { id: 'p2-3', label: 'Wireframes reviewed with stakeholders', done: true },
-        ],
-        tools: ['Figma', 'Excalidraw']
-    },
-    {
-        id: 'p3', phase: 'planning', title: 'Technical Spec',
-        description: 'Write architecture document with tech stack and data models',
-        status: 'in-progress', row: 2,
-        dodChecklist: [
-            { id: 'p3-1', label: 'System architecture diagram created', done: true },
-            { id: 'p3-2', label: 'Tech stack decided', done: true },
-            { id: 'p3-3', label: 'Database schema designed', done: false },
-            { id: 'p3-4', label: 'API endpoints defined', done: false },
-        ],
-        tools: ['Notion', 'draw.io']
-    },
-
-    // Design Phase
-    {
-        id: 'd1', phase: 'design', title: 'Design System',
-        description: 'Create reusable design tokens, colors, typography, and component library',
-        status: 'done', row: 0,
-        dodChecklist: [
-            { id: 'd1-1', label: 'Color palette defined', done: true },
-            { id: 'd1-2', label: 'Typography scale established', done: true },
-            { id: 'd1-3', label: 'Component variants documented', done: true },
-        ],
-        tools: ['Figma', 'Tailwind CSS']
-    },
-    {
-        id: 'd2', phase: 'design', title: 'UI Mockups',
-        description: 'Design high-fidelity mockups for all main screens',
-        status: 'in-progress', row: 1,
-        dodChecklist: [
-            { id: 'd2-1', label: 'Dashboard mockup completed', done: true },
-            { id: 'd2-2', label: 'Form pages designed', done: true },
-            { id: 'd2-3', label: 'Settings page designed', done: false },
-            { id: 'd2-4', label: 'Design reviewed by stakeholders', done: false },
-        ],
-        tools: ['Figma']
-    },
-    {
-        id: 'd3', phase: 'design', title: 'Prototype',
-        description: 'Build interactive click-through prototype for user testing',
-        status: 'todo', row: 2,
-        dodChecklist: [
-            { id: 'd3-1', label: 'Primary user flow prototyped', done: false },
-            { id: 'd3-2', label: 'Interactions and transitions added', done: false },
-            { id: 'd3-3', label: 'User testing session conducted', done: false },
-        ],
-        tools: ['Figma', 'Maze']
-    },
-
-    // Frontend Phase
-    {
-        id: 'f1', phase: 'frontend', title: 'Setup Project',
-        description: 'Initialize React app with TypeScript, Tailwind, and dev tools',
-        status: 'done', row: 0,
-        dodChecklist: [
-            { id: 'f1-1', label: 'React + TypeScript initialized', done: true },
-            { id: 'f1-2', label: 'Tailwind CSS configured', done: true },
-            { id: 'f1-3', label: 'Routing setup (react-router)', done: true },
-            { id: 'f1-4', label: 'ESLint and Prettier configured', done: true },
-        ],
-        tools: ['Vite', 'pnpm']
-    },
-    {
-        id: 'f2', phase: 'frontend', title: 'Core Components',
-        description: 'Build reusable UI primitives matching the design system',
-        status: 'done', row: 1,
-        dodChecklist: [
-            { id: 'f2-1', label: 'Button component with variants', done: true },
-            { id: 'f2-2', label: 'Input and form components', done: true },
-            { id: 'f2-3', label: 'Card and layout components', done: true },
-        ],
-        tools: ['React', 'Tailwind CSS']
-    },
-    {
-        id: 'f3', phase: 'frontend', title: 'Page Implementation',
-        description: 'Implement all page views and connect components',
-        status: 'in-progress', row: 2,
-        dodChecklist: [
-            { id: 'f3-1', label: 'Dashboard page implemented', done: true },
-            { id: 'f3-2', label: 'Form pages implemented', done: true },
-            { id: 'f3-3', label: 'Settings page implemented', done: false },
-            { id: 'f3-4', label: 'Navigation working correctly', done: true },
-        ],
-        tools: ['React', 'TypeScript']
-    },
-    {
-        id: 'f4', phase: 'frontend', title: 'State Management',
-        description: 'Setup global state with Context API or state library',
-        status: 'todo', row: 3,
-        dodChecklist: [
-            { id: 'f4-1', label: 'State architecture decided', done: false },
-            { id: 'f4-2', label: 'Global context providers created', done: false },
-            { id: 'f4-3', label: 'State hooks implemented', done: false },
-        ],
-        tools: ['React Context', 'Zustand']
-    },
-
-    // Backend Phase
-    {
-        id: 'b1', phase: 'backend', title: 'API Design',
-        description: 'Define RESTful API contracts and data transfer objects',
-        status: 'done', row: 0,
-        dodChecklist: [
-            { id: 'b1-1', label: 'API endpoints documented', done: true },
-            { id: 'b1-2', label: 'Request/response schemas defined', done: true },
-            { id: 'b1-3', label: 'Authentication flow designed', done: true },
-        ],
-        tools: ['Swagger', 'Postman']
-    },
-    {
-        id: 'b2', phase: 'backend', title: 'Database Schema',
-        description: 'Design normalized database schema with relationships',
-        status: 'in-progress', row: 1,
-        dodChecklist: [
-            { id: 'b2-1', label: 'Entity-relationship diagram created', done: true },
-            { id: 'b2-2', label: 'Tables and columns defined', done: true },
-            { id: 'b2-3', label: 'Indexes and constraints added', done: false },
-            { id: 'b2-4', label: 'Migration scripts written', done: false },
-        ],
-        tools: ['PostgreSQL', 'Prisma']
-    },
-    {
-        id: 'b3', phase: 'backend', title: 'Endpoints',
-        description: 'Implement API routes with validation and error handling',
-        status: 'todo', row: 2,
-        dodChecklist: [
-            { id: 'b3-1', label: 'CRUD endpoints implemented', done: false },
-            { id: 'b3-2', label: 'Input validation added', done: false },
-            { id: 'b3-3', label: 'Error handling middleware', done: false },
-            { id: 'b3-4', label: 'API tests written', done: false },
-        ],
-        tools: ['Express', 'Joi']
-    },
-
-    // Ops & Quality Phase
-    {
-        id: 'o1', phase: 'ops', title: 'CI/CD Setup',
-        description: 'Configure automated build and deployment pipeline',
-        status: 'todo', row: 0,
-        dodChecklist: [
-            { id: 'o1-1', label: 'GitHub Actions workflow created', done: false },
-            { id: 'o1-2', label: 'Build and test pipeline working', done: false },
-            { id: 'o1-3', label: 'Automated deployment to staging', done: false },
-        ],
-        tools: ['GitHub Actions', 'Docker']
-    },
-    {
-        id: 'o2', phase: 'ops', title: 'Testing',
-        description: 'Write comprehensive unit and integration tests',
+        id: 'p2', phase: 'planning', title: 'Research & Brief',
+        titleKey: 'initiator:workflow.steps.p2.title',
+        description: 'Gather references, research, and create project brief',
+        descKey: 'initiator:workflow.steps.p2.desc',
         status: 'todo', row: 1,
         dodChecklist: [
-            { id: 'o2-1', label: 'Unit tests for core logic', done: false },
-            { id: 'o2-2', label: 'Integration tests for API', done: false },
-            { id: 'o2-3', label: 'E2E tests for critical flows', done: false },
-            { id: 'o2-4', label: 'Test coverage > 80%', done: false },
+            { id: 'p2-1', label: 'References collected', done: false },
+            { id: 'p2-2', label: 'Competitive analysis done', done: false },
+            { id: 'p2-3', label: 'Creative brief written', done: false },
         ],
-        tools: ['Vitest', 'Playwright']
+        tools: ['Pinterest', 'Notion']
     },
     {
-        id: 'o3', phase: 'ops', title: 'Documentation',
-        description: 'Create user guides and developer documentation',
+        id: 'p3', phase: 'planning', title: 'Blueprint & Roadmap',
+        titleKey: 'initiator:workflow.steps.p3.title',
+        description: 'Create execution plan and timeline',
+        descKey: 'initiator:workflow.steps.p3.desc',
         status: 'todo', row: 2,
         dodChecklist: [
-            { id: 'o3-1', label: 'README with setup instructions', done: false },
-            { id: 'o3-2', label: 'API documentation published', done: false },
-            { id: 'o3-3', label: 'User guide written', done: false },
+            { id: 'p3-1', label: 'Milestones defined', done: false },
+            { id: 'p3-2', label: 'Timeline created', done: false },
+            { id: 'p3-3', label: 'Resources allocated', done: false },
         ],
-        tools: ['Markdown', 'Docusaurus']
+        tools: ['Trello', 'Notion']
+    },
+
+    // Execution Phase
+    {
+        id: 'e1', phase: 'execution', title: 'Core Work',
+        titleKey: 'initiator:workflow.steps.e1.title',
+        description: 'Execute main deliverables and primary tasks',
+        descKey: 'initiator:workflow.steps.e1.desc',
+        status: 'todo', row: 0,
+        dodChecklist: [
+            { id: 'e1-1', label: 'Main assets created', done: false },
+            { id: 'e1-2', label: 'Primary features implemented', done: false },
+            { id: 'e1-3', label: 'Core functionality working', done: false },
+        ],
+        tools: ['Figma', 'VSCode', 'Premiere Pro']
+    },
+    {
+        id: 'e2', phase: 'execution', title: 'Quality Check',
+        titleKey: 'initiator:workflow.steps.e2.title',
+        description: 'Test, debug, and ensure quality standards',
+        descKey: 'initiator:workflow.steps.e2.desc',
+        status: 'todo', row: 1,
+        dodChecklist: [
+            { id: 'e2-1', label: 'Testing completed', done: false },
+            { id: 'e2-2', label: 'Bugs fixed', done: false },
+            { id: 'e2-3', label: 'Quality standards met', done: false },
+        ],
+        tools: ['Browser DevTools', 'Testing Tools']
+    },
+    {
+        id: 'e3', phase: 'execution', title: 'Polish & Refinement',
+        titleKey: 'initiator:workflow.steps.e3.title',
+        description: 'Fine-tune details and optimize',
+        descKey: 'initiator:workflow.steps.e3.desc',
+        status: 'todo', row: 2,
+        dodChecklist: [
+            { id: 'e3-1', label: 'Visual polish applied', done: false },
+            { id: 'e3-2', label: 'Performance optimized', done: false },
+            { id: 'e3-3', label: 'User experience refined', done: false },
+        ],
+        tools: ['Design Tools', 'Performance Tools']
+    },
+
+    // Finalize Phase
+    {
+        id: 'f1', phase: 'finalize', title: 'Review & Feedback',
+        titleKey: 'initiator:workflow.steps.f1.title',
+        description: 'Gather feedback and make final adjustments',
+        descKey: 'initiator:workflow.steps.f1.desc',
+        status: 'todo', row: 0,
+        dodChecklist: [
+            { id: 'f1-1', label: 'Stakeholder review completed', done: false },
+            { id: 'f1-2', label: 'Feedback incorporated', done: false },
+            { id: 'f1-3', label: 'Final approval received', done: false },
+        ],
+        tools: ['Email', 'Meetings']
+    },
+    {
+        id: 'f2', phase: 'finalize', title: 'Delivery & Handoff',
+        titleKey: 'initiator:workflow.steps.f2.title',
+        description: 'Package and deliver final assets',
+        descKey: 'initiator:workflow.steps.f2.desc',
+        status: 'todo', row: 1,
+        dodChecklist: [
+            { id: 'f2-1', label: 'Files organized and exported', done: false },
+            { id: 'f2-2', label: 'Documentation completed', done: false },
+            { id: 'f2-3', label: 'Project delivered to client', done: false },
+        ],
+        tools: ['Drive', 'Dropbox', 'Email']
     },
 ];
 

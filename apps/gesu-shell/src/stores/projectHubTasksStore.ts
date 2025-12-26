@@ -1,6 +1,8 @@
 // Project Hub Tasks Store - Shared state for Project Hub -> Compass integration
 // Uses localStorage for date-scoped persistence (MVP - no backend needed)
 
+import { toggleDoDItem } from './workflowProgressStore';
+
 export interface ProjectHubTask {
     id: string;
     dateKey: string;          // YYYY-MM-DD format
@@ -153,10 +155,20 @@ export function addTaskToToday(params: {
 export function toggleTaskDone(taskId: string): void {
     const dateKey = getTodayKey();
     const tasks = getTodayTasks();
+
+    // Find the task being toggled to get its stepId/dodItemId
+    const task = tasks.find(t => t.id === taskId);
+
     const updated = tasks.map(t =>
         t.id === taskId ? { ...t, done: !t.done } : t
     );
     saveTasksForDate(dateKey, updated);
+
+    // Sync with workflow DoD: toggle the matching DoD item in workflow progress
+    if (task) {
+        toggleDoDItem(task.stepId, task.dodItemId);
+    }
+
     notifySubscribers(); // Notify after mutation
 }
 
@@ -166,6 +178,48 @@ export function removeTask(taskId: string): void {
     const filtered = tasks.filter(t => t.id !== taskId);
     saveTasksForDate(dateKey, filtered);
     notifySubscribers(); // Notify after mutation
+}
+
+// Mark all today's tasks for a step as done (used when Workflow step is marked as done)
+export function markAllTasksDoneForStep(stepId: string): void {
+    const dateKey = getTodayKey();
+    const tasks = getTodayTasks();
+    const updated = tasks.map(t =>
+        t.stepId === stepId ? { ...t, done: true } : t
+    );
+    saveTasksForDate(dateKey, updated);
+    notifySubscribers();
+}
+
+// Mark all today's tasks for a step as undone (used when Workflow step is reopened)
+export function markAllTasksUndoneForStep(stepId: string): void {
+    const dateKey = getTodayKey();
+    const tasks = getTodayTasks();
+    const updated = tasks.map(t =>
+        t.stepId === stepId ? { ...t, done: false } : t
+    );
+    saveTasksForDate(dateKey, updated);
+    notifySubscribers();
+}
+
+// Toggle a specific task for a DoD item (used when individual DoD item is toggled in Workflow)
+export function toggleTaskForDoDItem(stepId: string, dodItemId: string, isDone: boolean): void {
+    const dateKey = getTodayKey();
+    const tasks = getTodayTasks();
+
+    // Find task matching stepId and dodItemId
+    const taskExists = tasks.some(t => t.stepId === stepId && t.dodItemId === dodItemId);
+
+    if (taskExists) {
+        const updated = tasks.map(t =>
+            t.stepId === stepId && t.dodItemId === dodItemId
+                ? { ...t, done: isDone }
+                : t
+        );
+        saveTasksForDate(dateKey, updated);
+        notifySubscribers();
+    }
+    // If task doesn't exist, do nothing (user hasn't sent it to Compass yet)
 }
 
 // --- Reactive Subscription Pattern ---

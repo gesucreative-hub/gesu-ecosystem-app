@@ -1,0 +1,178 @@
+{
+    "title": "Refocus",
+    "subtitle": "Reset your focus and get back on track",
+    "stats": {
+        "today": "Today",
+        "todayResets": "Today's Resets",
+        "mostCommon": "Most common",
+        "total": "Total",
+        "completed": "completed"
+    },
+    "protocols": {
+        "title": "Quick Protocols",
+        "breathe": "Breathe",
+        "breatheDesc": "Take a deep breath",
+        "stretch": "Stretch",
+        "stretchDesc": "Quick body stretch",
+        "water": "Water",
+        "waterDesc": "Drink some water",
+        "walk": "Walk",
+        "walkDesc": "Take a short walk",
+        "breath": {
+            "name": "The Breath",
+            "action": "Take 5 slow, deep breaths (4s in, 4s out)"
+        },
+        "dump": {
+            "name": "The Dump",
+            "action": "Write everything in your head on paper"
+        },
+        "one": {
+            "name": "The One",
+            "action": "Circle the ONE thing that matters most right now"
+        },
+        "reset": {
+            "name": "The Reset",
+            "action": "Stand up and do 10 shoulder rolls"
+        },
+        "theWalk": {
+            "name": "The Walk",
+            "action": "Take a 2-minute walk around your space"
+        },
+        "anchor": {
+            "name": "The Anchor",
+            "action": "Put your phone in another room"
+        },
+        "fear": {
+            "name": "The Fear",
+            "action": "Write: 'I'm avoiding this because...'"
+        },
+        "tiny": {
+            "name": "The Tiny",
+            "action": "Do ONLY the first 2 minutes of the task"
+        },
+        "split": {
+            "name": "The Split",
+            "action": "Break the task into 3 tiny pieces"
+        },
+        "hydrate": {
+            "name": "The Hydrate",
+            "action": "Drink a full glass of water slowly"
+        },
+        "gaze": {
+            "name": "The Gaze",
+            "action": "Look out a window for 30 seconds"
+        },
+        "clarity": {
+            "name": "The Clarity",
+            "action": "Write: 'Right now I need to...'"
+        }
+    },
+    "custom": {
+        "title": "Custom Protocols",
+        "create": "Create Protocol",
+        "noProtocols": "No custom protocols yet"
+    },
+    "session": {
+        "start": "Start Refocus",
+        "complete": "Complete",
+        "skip": "Skip"
+    },
+    "insights": {
+        "title": "Refocus Insights",
+        "weeklyTrend": "Weekly Trend",
+        "commonTriggers": "Common Triggers"
+    },
+    "analytics": {
+        "recoveryPatterns": "Your Recovery Patterns",
+        "flowRate": "Flow Rate",
+        "totalResets": "Total Resets",
+        "avgResetTime": "Avg Reset Time",
+        "topProtocol": "Top Protocol",
+        "stateDistribution": "State Distribution",
+        "thisWeek": "This Week",
+        "whatWorks": "What Works For You"
+    },
+    "states": {
+        "overwhelmed": "Overwhelmed",
+        "restless": "Restless",
+        "avoiding": "Avoiding",
+        "foggy": "Foggy"
+    },
+    "mentalStates": {
+        "title": "How are you feeling right now?",
+        "subtitle": "Select your current mental state to receive a personalized protocol",
+        "overwhelmed": "Overwhelmed",
+        "overwhelmedDesc": "Too many things, brain overloaded",
+        "restless": "Restless",
+        "restlessDesc": "Can't sit still, need to move",
+        "avoiding": "Avoiding",
+        "avoidingDesc": "Know what to do, but not doing it",
+        "foggy": "Foggy",
+        "foggyDesc": "Brain fog, can't think clearly"
+    },
+    "flowState": {
+        "title": "Flow State Radar",
+        "flowScore": "Flow Score",
+        "flowHealth": "Flow Health",
+        "healthStatus": {
+            "excellent": "Excellent",
+            "good": "Good",
+            "fair": "Fair",
+            "needsWork": "Needs Work"
+        },
+        "basedOn": "Based on {{completed}} of {{total}} resets completed successfully.",
+        "completionStats": "Based on {{completed}} of {{total}} resets completed successfully.",
+        "suggestion": "You often feel {{state}}. Consider techniques to prevent this."
+    },
+    "selection": {
+        "heading": "How are you feeling right now?",
+        "subtitle": "Select your current mental state to receive a personalized protocol"
+    },
+    "badges": {
+        "frequent": "Frequent",
+        "topResets": "Top Resets",
+        "stepPrimitives": "Step Primitives"
+    },
+    "protocol": {
+        "title": "Adaptive Mental Reset Protocol",
+        "startOver": "Start over",
+        "theBreath": "The Breath",
+        "theBreathAction": "Take 5 slow, deep breaths (4s in, 4s out)",
+        "theDump": "The Dump",
+        "theDumpAction": "Write everything in your head on paper",
+        "theOne": "The One",
+        "theOneAction": "Circle the ONE thing that matters most right now",
+        "doneNextStep": "Done — Next Step"
+    },
+    "customProtocols": {
+        "title": "Custom Protocols",
+        "newProtocol": "New Protocol",
+        "protocolName": "Protocol Name",
+        "namePlaceholder": "e.g., The Stretch",
+        "whatToDo": "What to do",
+        "actionPlaceholder": "e.g., Stand up and stretch for 30 seconds",
+        "duration": "Duration",
+        "forWhichState": "For which state?",
+        "saveProtocol": "Save Protocol",
+        "used": "Used",
+        "deleteProtocol": "Delete protocol",
+        "noProtocolsYet": "No custom protocols yet",
+        "createYourOwn": "Create your own recovery actions"
+    },
+    "feedback": {
+        "question": "Did this protocol help you?",
+        "yes": "Yes!",
+        "somewhat": "Somewhat",
+        "notReally": "Not really",
+        "thanksMessage": "Thanks! We'll use this to personalize your experience."
+    },
+    "completion": {
+        "title": "Protocol Complete",
+        "message": "You've completed all reset steps. Ready to focus?",
+        "startFocus": "Start 15-min Focus Session",
+        "maybeLater": "Maybe Later"
+    },
+    "tooltips": {
+        "deleteProtocol": "Delete protocol"
+    }
+}

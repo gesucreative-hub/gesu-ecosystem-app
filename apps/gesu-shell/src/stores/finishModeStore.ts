@@ -1,6 +1,8 @@
 // Finish Mode Store - Anti-planning trap guardrails
 // Helps user focus on finishing projects by constraining to 1 step + max 3 actions
 
+import { toggleDoDItem } from './workflowProgressStore';
+
 export interface FinishAction {
     id: string;
     label: string;
@@ -113,10 +115,16 @@ export function toggleAction(actionId: string): void {
     const state = loadState();
     if (!state.finishSession) return;
 
+    const { stepId } = state.finishSession;
+
     state.finishSession.actions = state.finishSession.actions.map(a =>
         a.id === actionId ? { ...a, done: !a.done } : a
     );
     saveState(state);
+
+    // Sync with workflow DoD: toggle the matching DoD item in workflow progress
+    // actionId in Finish Mode corresponds to dodItemId in Workflow
+    toggleDoDItem(stepId, actionId);
 }
 
 export function startSession(): void {
@@ -150,4 +158,41 @@ export function getAllActionsCompleted(): boolean {
     const session = getFinishSession();
     if (!session) return false;
     return session.actions.every(a => a.done);
+}
+
+// Mark all Finish Mode actions as done (used when Workflow step is marked as done)
+export function markAllActionsDone(): void {
+    const state = loadState();
+    if (!state.finishSession) return;
+
+    state.finishSession.actions = state.finishSession.actions.map(a => ({ ...a, done: true }));
+    saveState(state);
+}
+
+// Mark all Finish Mode actions as undone (used when Workflow step is reopened)
+export function markAllActionsUndone(): void {
+    const state = loadState();
+    if (!state.finishSession) return;
+
+    state.finishSession.actions = state.finishSession.actions.map(a => ({ ...a, done: false }));
+    saveState(state);
+}
+
+// Check if Finish Mode is active for a specific step
+export function isFinishModeForStep(stepId: string): boolean {
+    const session = getFinishSession();
+    if (!session) return false;
+    return session.stepId === stepId && session.dateKey === getTodayKey();
+}
+
+// Set action done state (used when Workflow DoD item is toggled - avoids circular sync)
+export function setActionDone(actionId: string, isDone: boolean): void {
+    const state = loadState();
+    if (!state.finishSession) return;
+
+    state.finishSession.actions = state.finishSession.actions.map(a =>
+        a.id === actionId ? { ...a, done: isDone } : a
+    );
+    saveState(state);
+    // Note: Does NOT sync back to workflow to avoid circular updates
 }

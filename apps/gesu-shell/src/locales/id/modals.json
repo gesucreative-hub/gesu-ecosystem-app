@@ -1,0 +1,145 @@
+{
+    "confirm": {
+        "title": "Konfirmasi",
+        "cancel": "Batal",
+        "confirm": "Konfirmasi",
+        "delete": "Hapus",
+        "yes": "Ya",
+        "no": "Tidak"
+    },
+    "alert": {
+        "success": "Berhasil",
+        "error": "Kesalahan",
+        "warning": "Peringatan",
+        "info": "Info",
+        "ok": "OK",
+        "gotIt": "Mengerti!"
+    },
+    "commandPalette": {
+        "title": "Palet Perintah",
+        "placeholder": "Ketik perintah atau cari...",
+        "noResults": "Tidak ada hasil",
+        "recentCommands": "Perintah Terbaru",
+        "proTip": "ProTip: Gunakan tombol panah untuk navigasi",
+        "allCommands": "Semua Perintah"
+    },
+    "cosmetics": {
+        "title": "Kosmetik",
+        "subtitle": "Kustomisasi hewan peliharaan dan ruang kerjamu",
+        "pets": "Hewan Peliharaan",
+        "backgrounds": "Latar Belakang",
+        "effects": "Efek",
+        "locked": "Terkunci",
+        "unlockAt": "Buka di Level",
+        "equipped": "Dipakai",
+        "equip": "Pakai",
+        "level": "Level",
+        "streak": "Streak",
+        "unlockLevel": "Level {{value}}",
+        "unlockStreak": "Streak {{value}} hari",
+        "unlockAchievement": "Pencapaian",
+        "unlockHint": "Buka kosmetik dengan naik level, menyelesaikan pencapaian, atau membangun streak!",
+        "new": "BARU",
+        "requires": "Perlu: {{requirement}}",
+        "types": {
+            "hat": "🎩 Topi",
+            "cape": "🔥 Jubah",
+            "accessory": "✨ Aks",
+            "aura": "💫 Aura",
+            "background": "🌌 Latar"
+        }
+    },
+    "templatePicker": {
+        "title": "Pilih Template",
+        "subtitle": "Mulai dengan workflow yang sudah jadi",
+        "searchPlaceholder": "Cari template...",
+        "copyAiPrompt": "Salin Prompt AI",
+        "import": "Impor",
+        "phases": "fase",
+        "steps": "langkah",
+        "cancel": "Batal",
+        "restore": "Pulihkan template",
+        "hide": "Sembunyikan template"
+    },
+    "tooltips": {
+        "addSubfolder": "Tambah subfolder",
+        "deleteFolder": "Hapus folder",
+        "closeDialog": "Tutup dialog"
+    },
+    "leaderboard": {
+        "title": "Papan Peringkat",
+        "weekly": "Mingguan",
+        "allTime": "Sepanjang Waktu",
+        "rank": "Peringkat",
+        "player": "Pemain",
+        "xp": "XP",
+        "you": "Kamu",
+        "noData": "Belum ada data papan peringkat",
+        "youSuffix": "(kamu)",
+        "levelStreak": "Level {{level}} • Streak {{streak}} hari",
+        "signInToJoin": "Masuk untuk bergabung di papan peringkat",
+        "youreCompeting": "⭐ Kamu sedang berkompetisi!",
+        "autoJoined": "Otomatis bergabung saat login"
+    },
+    "gameRules": {
+        "title": "Aturan Main",
+        "howToPlay": "Cara Bermain",
+        "xpSystem": "Sistem XP",
+        "streaks": "Streak & Kombo",
+        "levels": "Level & Hadiah",
+        "close": "Tutup",
+        "xp": {
+            "title": "Poin Pengalaman (XP)",
+            "workflowSteps": "Selesaikan langkah workflow",
+            "compassSnapshots": "Log snapshot Compass",
+            "finishMode": "Penyelesaian finish mode",
+            "dailyBonus": "Bonus aktivitas harian"
+        },
+        "streak": {
+            "title": "Streak Harian",
+            "description": "Log setidaknya satu aktivitas per hari untuk menjaga streak-mu. Melewatkan satu hari akan mereset streak ke nol!"
+        },
+        "combo": {
+            "title": "Pengganda Kombo",
+            "description": "Selesaikan tugas dengan cepat untuk membangun kombo",
+            "tier1": "2-4 tugas berturut-turut",
+            "tier2": "5-9 tugas berturut-turut",
+            "tier3": "10+ tugas berturut-turut"
+        },
+        "pet": {
+            "title": "Evolusi Pet",
+            "description": "Pet-mu berevolusi seiring naik level"
+        },
+        "leaderboard": {
+            "title": "Papan Peringkat",
+            "description": "Bersaing dengan pengguna lain! Peringkat mingguan direset setiap Senin. Dapatkan lebih banyak XP untuk naik peringkat."
+        }
+    },
+    "achievements": {
+        "title": "Pencapaian Terbuka!",
+        "newAchievement": "Pencapaian Baru",
+        "xpEarned": "XP Diperoleh"
+    },
+    "folderTemplate": {
+        "title": "Manajer Template Folder",
+        "create": "Buat Template",
+        "edit": "Edit Template",
+        "delete": "Hapus Template",
+        "name": "Nama Template",
+        "structure": "Struktur Folder",
+        "save": "Simpan Template",
+        "saveAndUse": "Simpan & Gunakan",
+        "copyAiPrompt": "Salin Prompt AI",
+        "importFile": "Impor dari File",
+        "newTemplate": "+ Template Baru",
+        "folders": {
+            "newFolder": "Folder Baru",
+            "newSubfolder": "Subfolder Baru",
+            "addFolder": "Tambah Folder",
+            "emptyState": "Belum ada folder. Klik \"Tambah Folder\" untuk membuatnya.",
+            "folderCount_one": "{{count}} folder",
+            "folderCount_other": "{{count}} folder",
+            "deleteConfirm": "Hapus \"{{name}}\" dan semua isinya?"
+        }
+    }
+}

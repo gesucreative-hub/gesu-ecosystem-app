@@ -1,6 +1,7 @@
 // Distraction Modal - Shown when user tries to navigate during active focus session
 import { Button } from '../Button';
 import { AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface DistractionModalProps {
     onPause: () => void;
@@ -9,6 +10,8 @@ interface DistractionModalProps {
 }
 
 export function DistractionModal({ onPause, onEnd, onContinue }: DistractionModalProps) {
+    const { t } = useTranslation(['focus', 'common']);
+    
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="bg-tokens-bg border border-tokens-border rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -19,8 +22,8 @@ export function DistractionModal({ onPause, onEnd, onContinue }: DistractionModa
                         <AlertCircle size={24} className="text-amber-500" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-semibold text-tokens-fg">Focus session active</h2>
-                        <p className="text-sm text-tokens-muted">What would you like to do?</p>
+                        <h2 className="text-lg font-semibold text-tokens-fg">{t('focus:distractionModal.title', 'Focus session active')}</h2>
+                        <p className="text-sm text-tokens-muted">{t('focus:distractionModal.subtitle', 'What would you like to do?')}</p>
                     </div>
                 </div>
 
@@ -32,7 +35,7 @@ export function DistractionModal({ onPause, onEnd, onContinue }: DistractionModa
                         fullWidth
                         className="justify-center"
                     >
-                        Pause timer & continue
+                        {t('focus:distractionModal.pauseAndContinue', 'Pause timer & continue')}
                     </Button>
 
                     <Button
@@ -41,7 +44,7 @@ export function DistractionModal({ onPause, onEnd, onContinue }: DistractionModa
                         fullWidth
                         className="justify-center text-red-500 hover:text-red-600"
                     >
-                        End session & continue
+                        {t('focus:distractionModal.endAndContinue', 'End session & continue')}
                     </Button>
 
                     <Button
@@ -51,13 +54,13 @@ export function DistractionModal({ onPause, onEnd, onContinue }: DistractionModa
                         className="justify-center"
                         autoFocus
                     >
-                        Continue (keep timer running)
+                        {t('focus:distractionModal.continueRunning', 'Continue (keep timer running)')}
                     </Button>
                 </div>
 
                 {/* Hint */}
                 <p className="text-xs text-tokens-muted mt-4 text-center">
-                    Press ESC or click Continue to proceed without changes
+                    {t('focus:distractionModal.hint', 'Press ESC or click Continue to proceed without changes')}
                 </p>
             </div>
         </div>

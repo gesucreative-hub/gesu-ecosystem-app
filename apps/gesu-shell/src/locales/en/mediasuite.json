@@ -1,0 +1,187 @@
+{
+    "title": "Media Suite",
+    "subtitle": "Download, convert, and process media files",
+    "tabs": {
+        "download": "Download",
+        "convert": "Convert",
+        "queue": "Queue"
+    },
+    "download": {
+        "title": "Download Media",
+        "urlPlaceholder": "Paste URL here...",
+        "format": "Format",
+        "quality": "Quality",
+        "startDownload": "Start Download",
+        "downloading": "Downloading..."
+    },
+    "convert": {
+        "title": "Convert Media",
+        "selectFile": "Select File",
+        "outputFormat": "Output Format",
+        "startConvert": "Start Convert",
+        "converting": "Converting..."
+    },
+    "queue": {
+        "title": "Job Queue",
+        "noJobs": "No jobs in queue",
+        "empty": "Queue is empty",
+        "recentJobs": "Recent Jobs",
+        "clearCompleted": "Clear Completed",
+        "cancelAll": "Cancel All",
+        "cancel": "Cancel",
+        "filters": {
+            "allJobs": "All Jobs",
+            "downloads": "Downloads",
+            "converts": "Converts"
+        }
+    },
+    "status": {
+        "pending": "Pending",
+        "queued": "Queued",
+        "running": "Running",
+        "runningProgress": "Running ({{progress}}%)",
+        "completed": "Completed",
+        "done": "Done",
+        "success": "Success",
+        "failed": "Failed",
+        "error": "Error",
+        "canceled": "Canceled"
+    },
+    "presets": {
+        "download": {
+            "musicMp3": "Music MP3",
+            "video1080p": "Video 1080p",
+            "videoBest": "Best Video"
+        },
+        "convert": {
+            "audioMp3320": "Audio MP3 – 320 kbps",
+            "audioMp3192": "Audio MP3 – 192 kbps",
+            "audioAac256": "Audio AAC – 256 kbps",
+            "audioWav48k": "Audio WAV – 48 kHz",
+            "videoMp41080p": "Video MP4 – 1080p (HQ)",
+            "videoMp4720p": "Video MP4 – 720p",
+            "videoMp4540pLite": "Video MP4 – 540p (Lite)",
+            "imagePng": "Image PNG",
+            "imageJpg90": "Image JPG (90%)",
+            "imageWebp": "Image WebP",
+            "imageIco256": "Icon ICO (256px)",
+            "videoAdvanced": "Video (Advanced)"
+        }
+    },
+    "networkProfiles": {
+        "hemat": "Hemat (Low Bandwidth)",
+        "normal": "Normal",
+        "gaspol": "Gaspol (Max Speed)"
+    },
+    "toolStatus": {
+        "readyConfigured": "Ready (Config)",
+        "readyPath": "Ready (System)",
+        "fallbackPath": "WARNING (Fallback)",
+        "missing": "MISSING",
+        "error": "ERROR",
+        "unknown": "Unknown",
+        "configLabel": "Config",
+        "usingLabel": "Using",
+        "sourceLabel": "Source",
+        "noPath": "(none)"
+    },
+    "categories": {
+        "video": "Video",
+        "audio": "Audio",
+        "image": "Image"
+    },
+    "quickDownload": {
+        "title": "Quick Download",
+        "sourceUrl": "Source URL",
+        "preset": "Preset",
+        "networkProfile": "Network Profile",
+        "outputFolder": "Output Folder",
+        "open": "Open",
+        "authentication": "Authentication",
+        "cookiesMode": "Cookies Mode",
+        "cookies": {
+            "none": "None",
+            "fromBrowser": "Cookies from Browser",
+            "file": "Cookies File"
+        },
+        "cookiesFile": "Cookies File",
+        "enableSafeThrottling": "Enable Safe Throttling",
+        "queueDownload": "Queue Download",
+        "selectCookiesFile": "Select cookies.txt file"
+    },
+    "localConverter": {
+        "title": "Local Converter",
+        "sourceFiles": "Source Files",
+        "single": "Single",
+        "batch": "Batch",
+        "mode": {
+            "simple": "Simple",
+            "advanced": "Advanced"
+        },
+        "noFileSelected": "No file selected...",
+        "browse": "Browse...",
+        "category": "Category",
+        "preset": "Preset",
+        "resolution": "Resolution",
+        "quality": "Quality",
+        "audio": "Audio",
+        "selectMultiple": "+ Select Multiple Files",
+        "queueConvertJob": "Queue Convert Job"
+    },
+    "jobQueue": {
+        "title": "Job Queue",
+        "allJobs": "All Jobs",
+        "queueIsEmpty": "Queue is empty",
+        "recentJobs": "Recent Jobs",
+        "allTypes": "All Types",
+        "refresh": "Refresh",
+        "time": "Time",
+        "type": "Type",
+        "status": "Status",
+        "preset": "Preset",
+        "network": "Network",
+        "target": "Target",
+        "details": "Details"
+    },
+    "quickTips": {
+        "title": "Quick Tips"
+    },
+    "filters": {
+        "allTypes": "All Types",
+        "downloads": "Downloads",
+        "converts": "Converts",
+        "advanced": "Advanced"
+    },
+    "tips": {
+        "workflowTarget": "Use WorkFlow DB target folder for organized downloads",
+        "gaspolProfile": "Gaspol network profile supports Indonesian music platforms",
+        "advancedConverter": "Advanced Converter",
+        "advancedConverterDesc": "allows manual control over FFmpeg CRF and Audio Bitrate."
+    },
+    "buttons": {
+        "update": "Update",
+        "updating": "Updating...",
+        "configure": "Configure",
+        "open": "Open",
+        "browse": "Browse..."
+    },
+    "engineStatus": "Engine Status",
+    "tooltips": {
+        "refreshStatus": "Refresh Status",
+        "updateYtDlp": "Update yt-dlp to latest version",
+        "browseFolder": "Browse for folder",
+        "openInExplorer": "Open folder in Explorer",
+        "cancelAll": "Cancel all running and queued jobs",
+        "cancelJob": "Cancel job"
+    },
+    "errors": {
+        "invalidUrl": "Please enter a valid URL",
+        "noFilesSelected": "No files selected for batch convert",
+        "noSourceFile": "Please select a source file",
+        "noOutputFolder": "No output folder set"
+    },
+    "messages": {
+        "filesSelected": "Selected {{count}} files"
+    },
+    "back": "Back"
+}

@@ -38,7 +38,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
                         border-tokens-border
                         focus:outline-none focus:ring-2 focus:ring-tokens-ring focus:border-tokens-brand-DEFAULT/50
                         disabled:cursor-not-allowed disabled:opacity-50
-                        ${error ? 'border-red-500 focus:ring-red-500/30' : ''}
+                        ${error ? 'border-tokens-error focus:ring-tokens-error/30' : ''}
                         ${className}
                     `}
                     {...props}
@@ -58,7 +58,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
                 </div>
             </div>
             {error && (
-                <p className="text-xs text-red-500 animate-in slide-in-from-top-1">{error}</p>
+                <p className="text-xs text-tokens-error animate-in slide-in-from-top-1">{error}</p>
             )}
         </div>
     );

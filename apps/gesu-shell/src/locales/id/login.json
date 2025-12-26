@@ -1,0 +1,58 @@
+{
+    "title": "Selamat datang kembali",
+    "welcomeBack": {
+        "title": "Selamat datang kembali!",
+        "subtitle": "Siap melanjutkan dari terakhir kali?"
+    },
+    "welcome": {
+        "title": "Selamat datang di Ekosistem Gesu",
+        "subtitle": "Perjalanan produktivitasmu dimulai di sini. Didukung oleh Gesu Creative Lab."
+    },
+    "welcomeNew": "Selamat datang di Ekosistem Gesu",
+    "subtitle": "Perjalanan produktivitasmu dimulai di sini. Didukung oleh Gesu Creative Lab.",
+    "subtitleReturning": "Siap melanjutkan dari terakhir kali?",
+    "googleSignIn": "Lanjutkan dengan Google",
+    "signingIn": "Sedang masuk...",
+    "or": "atau",
+    "tagline": {
+        "line1": "Tingkatkan level",
+        "line2": "produktivitasmu",
+        "description": "Lacak kemajuan dengan XP & level. Kustomisasi hewan fokusmu. Bersaing di papan peringkat."
+    },
+    "features": {
+        "title": "Yang termasuk",
+        "xpLevels": "XP & Level",
+        "focusPet": "Hewan Fokus",
+        "sync": "Sinkronisasi Cloud",
+        "syncDesc": "Sinkronkan data di berbagai perangkat",
+        "backup": "Cadangan Otomatis",
+        "backupDesc": "Jangan pernah kehilangan kemajuanmu",
+        "leaderboard": "Papan Peringkat",
+        "leaderboardDesc": "Bersaing dengan yang lain"
+    },
+    "testimonial": {
+        "quote": "Gesu membantuku tetap fokus dan menyelesaikan proyek tepat waktu. Kanvas workflow sangat membantu!",
+        "role": "Profesional Kreatif"
+    },
+    "guest": {
+        "warning": "Mode Tamu",
+        "warningMessage": "Kemajuan, XP, dan pencapaianmu tidak akan disimpan antar sesi.",
+        "continue": "Lanjutkan tanpa masuk",
+        "continueAnyway": "Lanjutkan saja sebagai Tamu"
+    },
+    "terms": {
+        "prefix": "Dengan masuk, kamu menyetujui",
+        "and": "dan"
+    },
+    "footer": {
+        "terms": "Ketentuan Layanan",
+        "privacy": "Kebijakan Privasi",
+        "help": "Bantuan"
+    },
+    "poweredBy": "Didukung oleh Gesu Creative Lab",
+    "errors": {
+        "popupBlocked": "Popup diblokir. Silakan izinkan popup dan coba lagi.",
+        "cancelled": "Proses masuk dibatalkan",
+        "generic": "Gagal masuk. Silakan coba lagi."
+    }
+}

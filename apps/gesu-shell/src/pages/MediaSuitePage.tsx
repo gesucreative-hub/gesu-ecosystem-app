@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGesuSettings } from '../lib/gesuSettings';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -9,6 +10,7 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Tabs } from '../components/Tabs';
 import { ToggleSwitch } from '../components/ToggleSwitch';
+import { SegmentedControl } from '../components/SegmentedControl';
 import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw, X, FolderOpen } from 'lucide-react';
 
 
@@ -70,7 +72,7 @@ const CONVERT_PRESETS: { value: ConvertPreset; label: string; category: ConvertC
 ];
 
 // Extension arrays for category detection (from PowerShell reference)
-const EXT_VIDEO = ['.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v', '.wmv', '.flv'];
+
 const EXT_AUDIO = ['.mp3', '.m4a', '.aac', '.wav', '.flac', '.ogg', '.oga', '.wma'];
 const EXT_IMAGE = ['.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff', '.gif', '.webp', '.heic', '.ico'];
 
@@ -86,7 +88,7 @@ function detectCategoryFromPath(filePath: string): ConvertCategory {
 
 // --- Helper Components ---
 
-const StatusBadge = ({ status, progress }: { status: JobStatus, progress?: number }) => {
+const StatusBadge = ({ status, progress, t }: { status: JobStatus, progress?: number, t: (key: string, options?: any) => string }) => {
     const variants: Record<JobStatus, 'neutral' | 'brand' | 'success' | 'warning' | 'error'> = {
         queued: 'neutral',
         running: 'brand',
@@ -95,17 +97,23 @@ const StatusBadge = ({ status, progress }: { status: JobStatus, progress?: numbe
         canceled: 'neutral'
     };
 
-    const labels = {
-        queued: 'Queued',
-        running: `Running ${progress ? `(${progress}%)` : ''}`,
-        success: 'Done',
-        error: 'Failed',
-        canceled: 'Canceled'
+    // Status label map - uses canonical internal status, translates only the display label
+    const getStatusLabel = (status: JobStatus, progress?: number): string => {
+        switch (status) {
+            case 'queued': return t('mediasuite:status.queued', 'Queued');
+            case 'running': return progress 
+                ? t('mediasuite:status.runningProgress', { progress, defaultValue: `Running (${progress}%)` })
+                : t('mediasuite:status.running', 'Running');
+            case 'success': return t('mediasuite:status.done', 'Done');
+            case 'error': return t('mediasuite:status.failed', 'Failed');
+            case 'canceled': return t('mediasuite:status.canceled', 'Canceled');
+            default: return status;
+        }
     };
 
     return (
         <Badge variant={variants[status]} className={status === 'running' ? 'animate-pulse' : ''}>
-            {labels[status]}
+            {getStatusLabel(status, progress)}
         </Badge>
     );
 };
@@ -161,10 +169,10 @@ function formatAdvancedOptionsSummaryFromPayload(payload: any): string {
 // Status can be: 'configured' (Green), 'path' (Yellow), 'missing' (Red)
 // Mapped from backend resolution: 'configured' | 'path' | 'missing'
 
-const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
+const ToolStatusDot = ({ name, data, t }: { name: string, data?: any, t: (key: string, options?: any) => string }) => {
     const status = data?.status || 'unknown'; // 'ready_configured' | 'ready_path' | 'fallback_path' | 'missing' | ...
 
-    // Strict Option 1 mapping
+    // Strict Option 1 mapping - colors driven by canonical status
     const colors: Record<string, string> = {
         ready_configured: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
         ready_path: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]',
@@ -174,13 +182,16 @@ const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
         error: 'bg-red-500'
     };
 
-    const displayText: Record<string, string> = {
-        ready_configured: 'Ready (Config)',
-        ready_path: 'Ready (System)',
-        fallback_path: 'WARNING (Fallback)',
-        missing: 'MISSING',
-        error: 'ERROR',
-        unknown: 'Unknown'
+    // Status label map - only display labels are translated, internal logic uses canonical status
+    const getStatusDisplayText = (status: string): string => {
+        switch (status) {
+            case 'ready_configured': return t('mediasuite:toolStatus.readyConfigured', 'Ready (Config)');
+            case 'ready_path': return t('mediasuite:toolStatus.readyPath', 'Ready (System)');
+            case 'fallback_path': return t('mediasuite:toolStatus.fallbackPath', 'WARNING (Fallback)');
+            case 'missing': return t('mediasuite:toolStatus.missing', 'MISSING');
+            case 'error': return t('mediasuite:toolStatus.error', 'ERROR');
+            default: return t('mediasuite:toolStatus.unknown', 'Unknown');
+        }
     };
 
     const displayColor = colors[status] || colors.unknown;
@@ -190,27 +201,42 @@ const ToolStatusDot = ({ name, data }: { name: string, data?: any }) => {
             <div className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${displayColor}`}></div>
             <span className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{name}</span>
             {/* Detailed Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-tokens-popover border border-tokens-border shadow-xl rounded min-w-[200px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 text-[10px] text-tokens-muted">
-                <div className="font-semibold text-tokens-fg mb-1 border-b border-tokens-border pb-1">{name}: <span className="text-xs font-mono ml-1">{displayText[status] || status}</span></div>
-                <div className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
-                    <span className="text-tokens-muted">Config:</span>
-                    <span className={`font-mono break-all ${status === 'fallback_path' ? 'text-amber-500 decoration-wavy underline' : 'text-tokens-fg'}`}>
-                        {data?.configuredPath || '(none)'}
-                        {status === 'fallback_path' && ' (Invalid)'}
-                    </span>
-
-                    <span className="text-tokens-muted">Using:</span>
-                    <span className="font-mono text-emerald-500 break-all">{data?.resolvedPath || '(none)'}</span>
-
-                    <span className="text-tokens-muted">Source:</span>
-                    <span className="text-tokens-fg">{data?.resolution}</span>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-4 py-3 bg-tokens-bg/95 backdrop-blur-sm border border-tokens-border shadow-2xl rounded-lg min-w-[220px] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
+                <div className="font-semibold text-sm text-tokens-fg mb-2 pb-2 border-b border-tokens-border/50 flex items-center justify-between">
+                    <span>{name}</span>
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${status === 'ready_configured' ? 'bg-emerald-500/20 text-emerald-400' :
+                        status === 'ready_path' ? 'bg-blue-500/20 text-blue-400' :
+                            status === 'fallback_path' ? 'bg-amber-500/20 text-amber-400' :
+                                status === 'missing' ? 'bg-red-500/20 text-red-400' :
+                                    'bg-tokens-muted/20 text-tokens-muted'
+                        }`}>{getStatusDisplayText(status)}</span>
                 </div>
+                <div className="space-y-2 text-xs">
+                    <div className="flex justify-between gap-4">
+                        <span className="text-tokens-muted">{t('mediasuite:toolStatus.configLabel', 'Config')}:</span>
+                        <span className={`font-mono text-right truncate max-w-[160px] ${status === 'fallback_path' ? 'text-amber-500' : 'text-tokens-fg'}`}>
+                            {data?.configuredPath || t('mediasuite:toolStatus.noPath', '(none)')}
+                        </span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="text-tokens-muted">{t('mediasuite:toolStatus.usingLabel', 'Using')}:</span>
+                        <span className="font-mono text-emerald-500 text-right truncate max-w-[160px]">{data?.resolvedPath || t('mediasuite:toolStatus.noPath', '(none)')}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="text-tokens-muted">{t('mediasuite:toolStatus.sourceLabel', 'Source')}:</span>
+                        <span className="text-tokens-fg">{data?.resolution}</span>
+                    </div>
+                </div>
+                {/* Arrow */}
+                <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-3 h-3 bg-tokens-bg/95 border-r border-b border-tokens-border rotate-45"></div>
             </div>
         </div>
     );
 };
 
 export function MediaSuitePage() {
+    const { t, i18n } = useTranslation(['mediasuite', 'common']);
+    const dateLocale = i18n.language === 'id' ? 'id-ID' : 'en-US';
     // State
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
     const [jobs, setJobs] = useState<Job[]>([]);
@@ -349,6 +375,10 @@ export function MediaSuitePage() {
     const [convertPreset, setConvertPreset] = useState<ConvertPreset>('video-mp4-1080p');
     const [convertMode, setConvertMode] = useState<'simple' | 'advanced'>('simple');
     const [convertCategory, setConvertCategory] = useState<ConvertCategory>('Video');
+    
+    // Multi-file Batch State
+    const [convertFiles, setConvertFiles] = useState<string[]>([]);
+    const [multiSelectMode, setMultiSelectMode] = useState(false);
 
     // Advanced Options State
     const [advRes, setAdvRes] = useState<AdvancedVideoResolution>('1080p');
@@ -437,10 +467,10 @@ export function MediaSuitePage() {
                 await window.gesu.mediaJobs.enqueue(jobPayload);
                 refreshJobs();
                 refreshHistory();
-                showToast(`${type === 'download' ? 'Download' : 'Convert'} job queued`, 'success');
+                showToast(t(type === 'download' ? 'common:alerts.downloadJobQueued' : 'common:alerts.convertJobQueued', type === 'download' ? 'Download job queued' : 'Convert job queued'), 'success');
             } catch (err) {
                 console.error(err);
-                showToast('Failed to enqueue job', 'error');
+                showToast(t('common:alerts.failedToEnqueueJob', 'Failed to enqueue job'), 'error');
             }
             return;
         }
@@ -454,13 +484,13 @@ export function MediaSuitePage() {
             updatedAt: new Date().toISOString()
         };
         setJobs(prev => [mockJob, ...prev]);
-        showToast('Job queued (Mock - No Electron)', 'success');
+        showToast(t('common:alerts.jobQueued', 'Job queued') + ' (Mock)', 'success');
     };
 
     // User Actions
     const handleQueueDownload = () => {
         if (!url.trim()) {
-            showToast("Please enter a valid URL", 'error');
+            showToast(t('common:alerts.pleaseEnterValidUrl', 'Please enter a valid URL'), 'error');
             return;
         }
         const payload = { url, preset: dlPreset, network: netProfile, target: outputTarget, outputFolder, ytDlpSettings };
@@ -470,7 +500,7 @@ export function MediaSuitePage() {
 
     const handleBrowseFile = async () => {
         if (!window.gesu?.mediaSuite?.pickSourceFile) {
-            showToast("File picker not supported in browser mode", 'error');
+            showToast(t('common:alerts.filePickerNotSupported', 'File picker not supported in browser mode'), 'error');
             return;
         }
         try {
@@ -486,13 +516,106 @@ export function MediaSuitePage() {
             }
         } catch (e) {
             console.error(e);
-            showToast("Failed to pick file", 'error');
+            showToast(t('common:alerts.failedToPickFile', 'Failed to pick file'), 'error');
         }
+    };
+
+    // Multi-file selection handler
+    const handleBrowseMultipleFiles = async () => {
+        // Check if pickMultipleFiles exists (may need to be added to Electron bridge)
+        const mediaSuite = window.gesu?.mediaSuite as any;
+        if (!mediaSuite?.pickMultipleFiles) {
+            // Fallback: use single file picker and add to existing list
+            try {
+                const path = await mediaSuite?.pickSourceFile?.();
+                if (path) {
+                    setConvertFiles(prev => [...prev, path]);
+                    // Auto-detect category from first file
+                    if (convertFiles.length === 0) {
+                        const category = detectCategoryFromPath(path);
+                        setConvertCategory(category);
+                        const firstPreset = CONVERT_PRESETS.find(p => p.category === category);
+                        if (firstPreset) setConvertPreset(firstPreset.value);
+                    }
+                    showToast(t('common:alerts.filesAdded', 'Added file ({{count}} total)', { count: convertFiles.length + 1 }), 'success');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(t('common:alerts.failedToPickFile', 'Failed to pick file'), 'error');
+            }
+            return;
+        }
+        try {
+            const paths = await mediaSuite.pickMultipleFiles();
+            if (paths && paths.length > 0) {
+                setConvertFiles(paths);
+                setMultiSelectMode(true);
+                // Auto-detect category from first file
+                const category = detectCategoryFromPath(paths[0]);
+                setConvertCategory(category);
+                const firstPreset = CONVERT_PRESETS.find(p => p.category === category);
+                if (firstPreset) setConvertPreset(firstPreset.value);
+                showToast(t('common:alerts.filesSelected', '{{count}} files selected', { count: paths.length }), 'success');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast(t('common:alerts.failedToPickFiles', 'Failed to pick files'), 'error');
+        }
+    };
+
+    // Remove file from batch selection
+    const handleRemoveFromBatch = (filePath: string) => {
+        setConvertFiles(prev => prev.filter(f => f !== filePath));
+        if (convertFiles.length <= 1) {
+            setMultiSelectMode(false);
+        }
+    };
+
+    // Clear all batch selection
+    const handleClearBatch = () => {
+        setConvertFiles([]);
+        setMultiSelectMode(false);
+    };
+
+    // Batch convert all selected files
+    const handleBatchConvert = async () => {
+        if (convertFiles.length === 0) {
+            showToast(t('common:alerts.noFilesForBatchConvert', 'No files selected for batch convert'), 'error');
+            return;
+        }
+
+        // Queue each file as a separate job
+        for (const filePath of convertFiles) {
+            const simpleName = filePath.split(/[/\\]/).pop();
+            let payload: any = {
+                kind: 'convert',
+                inputPath: filePath,
+                target: outputTarget,
+                outputFolder
+            };
+
+            if (convertMode === 'simple') {
+                payload.preset = convertPreset;
+                const engine = convertPreset.startsWith('image-') ? 'image-magick' : 'ffmpeg';
+                await enqueueJob('convert', `Conv: ${simpleName}`, engine, payload);
+            } else {
+                payload.preset = 'video-advanced';
+                payload.advancedOptions = {
+                    resolution: advRes,
+                    quality: advQuality,
+                    audio: advAudio
+                };
+                await enqueueJob('convert', `${simpleName} (Adv)`, 'ffmpeg', payload);
+            }
+        }
+
+        showToast(t('common:alerts.jobsQueued', '{{count}} job(s) queued', { count: convertFiles.length }), 'success');
+        handleClearBatch();
     };
 
     const handleQueueConvert = () => {
         if (!convertFilePath) {
-            showToast("Please select a source file", 'error');
+            showToast(t('common:alerts.pleaseSelectSourceFile', 'Please select a source file'), 'error');
             return;
         }
 
@@ -523,46 +646,46 @@ export function MediaSuitePage() {
         }
 
         setConvertFilePath('');
-        showToast('Convert job queued', 'success');
+        showToast(t('common:alerts.convertJobQueued', 'Convert job queued'), 'success');
     };
 
     // Cancel a running or queued job
     const handleCancelJob = async (jobId: string) => {
         if (!window.gesu?.mediaJobs?.cancel) {
-            showToast("Cancel not available in browser mode", 'error');
+            showToast(t('common:alerts.cancelNotAvailable', 'Cancel not available in browser mode'), 'error');
             return;
         }
         try {
             await window.gesu.mediaJobs.cancel(jobId);
             refreshJobs();
-            showToast("Job canceled", 'success');
+            showToast(t('common:alerts.jobCanceled', 'Job canceled'), 'success');
         } catch (e) {
             console.error(e);
-            showToast("Failed to cancel job", 'error');
+            showToast(t('common:alerts.failedToCancelJob', 'Failed to cancel job'), 'error');
         }
     };
 
     // Cancel all running and queued jobs
     const handleCancelAllJobs = async () => {
         if (!window.gesu?.mediaJobs?.cancelAll) {
-            showToast("Cancel All not available in browser mode", 'error');
+            showToast(t('common:alerts.cancelNotAvailable', 'Cancel All not available in browser mode'), 'error');
             return;
         }
         try {
             const count = await window.gesu.mediaJobs.cancelAll();
             refreshJobs();
             refreshHistory();
-            showToast(`Canceled ${count} job(s)`, 'success');
+            showToast(t('common:alerts.jobsCanceled', '{{count}} job(s) canceled', { count }), 'success');
         } catch (e) {
             console.error(e);
-            showToast("Failed to cancel all jobs", 'error');
+            showToast(t('common:alerts.failedToCancelAllJobs', 'Failed to cancel all jobs'), 'error');
         }
     };
 
     // Browse for output folder
     const handleBrowseOutputFolder = async () => {
         if (!window.gesu?.mediaSuite?.pickOutputFolder) {
-            showToast("Folder picker not available in browser mode", 'error');
+            showToast(t('common:alerts.folderPickerNotAvailable', 'Folder picker not available in browser mode'), 'error');
             return;
         }
         try {
@@ -572,25 +695,25 @@ export function MediaSuitePage() {
             }
         } catch (e) {
             console.error(e);
-            showToast("Failed to pick folder", 'error');
+            showToast(t('common:alerts.failedToPickFolder', 'Failed to pick folder'), 'error');
         }
     };
 
     // Open the output folder in file explorer
     const handleOpenOutputFolder = async () => {
         if (!outputFolder) {
-            showToast("No output folder set", 'error');
+            showToast(t('common:alerts.noFolderSet', 'No output folder set'), 'error');
             return;
         }
         if (!window.gesu?.shell?.openPath) {
-            showToast("Open folder not available in browser mode", 'error');
+            showToast(t('common:alerts.openFolderNotAvailable', 'Open folder not available in browser mode'), 'error');
             return;
         }
         try {
             await window.gesu.shell.openPath(outputFolder);
         } catch (e) {
             console.error(e);
-            showToast("Failed to open folder", 'error');
+            showToast(t('common:alerts.failedToOpenFolder', 'Failed to open folder'), 'error');
         }
     };
 
@@ -598,21 +721,21 @@ export function MediaSuitePage() {
     const [isUpdatingYtDlp, setIsUpdatingYtDlp] = useState(false);
     const handleUpdateYtDlp = async () => {
         if (!window.gesu?.mediaSuite?.updateYtDlp) {
-            showToast("Update not available in browser mode", 'error');
+            showToast(t('common:alerts.updateNotAvailable', 'Update not available in browser mode'), 'error');
             return;
         }
         setIsUpdatingYtDlp(true);
         try {
             const result = await window.gesu.mediaSuite.updateYtDlp();
             if (result.success) {
-                showToast(result.message || "yt-dlp updated!", 'success');
+                showToast(result.message || t('common:alerts.updateSuccess', 'yt-dlp updated!'), 'success');
                 checkTools(); // Refresh version display
             } else {
-                showToast(result.error || "Update failed", 'error');
+                showToast(result.error || t('common:alerts.updateFailed', 'Update failed'), 'error');
             }
         } catch (e) {
             console.error(e);
-            showToast("Failed to update yt-dlp", 'error');
+            showToast(t('common:alerts.failedToUpdate', 'Failed to update yt-dlp'), 'error');
         } finally {
             setIsUpdatingYtDlp(false);
         }
@@ -634,11 +757,11 @@ export function MediaSuitePage() {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">Gesu Media Suite</h1>
-                    <p className="text-tokens-muted text-sm mt-1">Universal media downloader & format converter.</p>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('mediasuite:title')}</h1>
+                    <p className="text-tokens-muted text-sm mt-1">{t('mediasuite:subtitle')}</p>
                 </div>
                 <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
-                    ← Back
+                    ← {t('common:buttons.back')}
                 </Link>
             </div>
 
@@ -646,9 +769,9 @@ export function MediaSuitePage() {
             <div className="flex justify-between items-center mb-6">
                 <Tabs
                     tabs={[
-                        { id: 'downloader', label: 'Downloader', icon: <Download size={16} /> },
-                        { id: 'converter', label: 'Converter', icon: <Zap size={16} /> },
-                        { id: 'history', label: 'Job History', icon: <HistoryIcon size={16} /> }
+                        { id: 'downloader', label: t('mediasuite:tabs.download'), icon: <Download size={16} /> },
+                        { id: 'converter', label: t('mediasuite:tabs.convert'), icon: <Zap size={16} /> },
+                        { id: 'history', label: t('mediasuite:queue.title'), icon: <HistoryIcon size={16} /> }
                     ]}
                     activeTab={activeTab}
                     onChange={(id) => { setActiveTab(id as Tab); if (id === 'history') refreshHistory(); }}
@@ -656,15 +779,15 @@ export function MediaSuitePage() {
 
                 {/* Engine Status Bar */}
                 <div className="flex bg-tokens-panel2/40 border border-tokens-border rounded-full pl-4 pr-2 py-1 gap-4 items-center backdrop-blur-sm">
-                    <span className="text-[10px] text-tokens-muted font-medium uppercase tracking-widest mr-1">Engine Status</span>
-                    <ToolStatusDot name="yt-dlp" data={toolsStatus?.ytDlp} />
-                    <ToolStatusDot name="ffmpeg" data={toolsStatus?.ffmpeg} />
-                    <ToolStatusDot name="Magick" data={toolsStatus?.magick} />
+                    <span className="text-[10px] text-tokens-muted font-medium uppercase tracking-widest mr-1">{t('settings:config.engineStatus', 'Engine Status')}</span>
+                    <ToolStatusDot name="yt-dlp" data={toolsStatus?.ytDlp} t={t} />
+                    <ToolStatusDot name="ffmpeg" data={toolsStatus?.ffmpeg} t={t} />
+                    <ToolStatusDot name="Magick" data={toolsStatus?.magick} t={t} />
                     <div className="h-3 w-px bg-tokens-border mx-1"></div>
                     <button
                         onClick={checkTools}
                         className="text-[10px] text-tokens-muted hover:text-tokens-fg transition-colors"
-                        title="Refresh Status"
+                        title={t('mediasuite:tooltips.refreshStatus', 'Refresh Status')}
                     >
                         <RefreshCcw size={12} />
                     </button>
@@ -672,12 +795,12 @@ export function MediaSuitePage() {
                         onClick={handleUpdateYtDlp}
                         disabled={isUpdatingYtDlp}
                         className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-muted hover:text-emerald-400 hover:bg-tokens-border transition-colors disabled:opacity-50"
-                        title="Update yt-dlp to latest version"
+                        title={t('mediasuite:tooltips.updateYtDlp', 'Update yt-dlp to latest version')}
                     >
-                        {isUpdatingYtDlp ? 'Updating...' : 'Update'}
+                        {isUpdatingYtDlp ? t('mediasuite:buttons.updating', 'Updating...') : t('mediasuite:buttons.update', 'Update')}
                     </button>
                     <Link to="/settings" className="px-2 py-0.5 rounded-full bg-tokens-panel2 text-[10px] text-tokens-brand-DEFAULT hover:text-tokens-brand-hover hover:bg-tokens-border transition-colors">
-                        Configure
+                        {t('common:buttons.configure', 'Configure')}
                     </Link>
                 </div>
             </div>
@@ -690,10 +813,10 @@ export function MediaSuitePage() {
 
                     {/* Downloader Form */}
                     {activeTab === 'downloader' && (
-                        <Card title="Quick Download" className="bg-tokens-panel backdrop-blur-sm shadow-lg">
+                        <Card title={t('mediasuite:quickDownload.title', 'Quick Download')} className="bg-tokens-panel backdrop-blur-sm shadow-lg">
                             <div className="flex flex-col gap-5">
                                 <Input
-                                    label="Source URL"
+                                    label={t('mediasuite:quickDownload.sourceUrl', 'Source URL')}
                                     placeholder="https://..."
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}
@@ -702,13 +825,13 @@ export function MediaSuitePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <SelectDropdown
-                                        label="Preset"
+                                        label={t('common:labels.preset', 'Preset')}
                                         value={dlPreset}
                                         onChange={(value) => setDlPreset(value as DownloadPreset)}
                                         options={DOWNLOAD_PRESETS}
                                     />
                                     <SelectDropdown
-                                        label="Network Profile"
+                                        label={t('mediasuite:quickDownload.networkProfile', 'Network Profile')}
                                         value={netProfile}
                                         onChange={(value) => setNetProfile(value as NetworkProfile)}
                                         options={NETWORK_PROFILES}
@@ -717,7 +840,7 @@ export function MediaSuitePage() {
 
                                 {/* Output Folder */}
                                 <div className="space-y-2">
-                                    <label className="text-sm text-tokens-fg font-medium">Output Folder</label>
+                                    <label className="text-sm text-tokens-fg font-medium">{t('mediasuite:quickDownload.outputFolder', 'Output Folder')}</label>
                                     <div className="flex gap-2">
                                         <div className="flex-1 min-w-0">
                                             <Input
@@ -731,7 +854,7 @@ export function MediaSuitePage() {
                                         <Button
                                             variant="outline"
                                             onClick={handleBrowseOutputFolder}
-                                            title="Browse for folder"
+                                            title={t('mediasuite:tooltips.browseFolder', 'Browse for folder')}
                                         >
                                             <FolderOpen size={16} />
                                         </Button>
@@ -739,24 +862,24 @@ export function MediaSuitePage() {
                                             variant="outline"
                                             className="text-tokens-brand-DEFAULT border-tokens-brand-DEFAULT/30 hover:bg-tokens-brand-DEFAULT/10"
                                             onClick={handleOpenOutputFolder}
-                                            title="Open folder in Explorer"
+                                            title={t('mediasuite:tooltips.openInExplorer', 'Open folder in Explorer')}
                                         >
-                                            Open
+                                            {t('common:buttons.open', 'Open')}
                                         </Button>
                                     </div>
                                 </div>
 
                                 {/*Authentication */}
                                 <div className="space-y-3 pt-4 border-t border-tokens-border">
-                                    <label className="text-sm text-tokens-fg font-medium">Authentication</label>
+                                    <label className="text-sm text-tokens-fg font-medium">{t('mediasuite:quickDownload.authentication', 'Authentication')}</label>
                                     <SelectDropdown
-                                        label="Cookies Mode"
+                                        label={t('mediasuite:quickDownload.cookiesMode', 'Cookies Mode')}
                                         value={ytDlpSettings.cookiesMode}
                                         onChange={(value) => setYtDlpSettings((prev: any) => ({ ...prev, cookiesMode: value as any }))}
                                         options={[
-                                            { value: 'none', label: 'None' },
-                                            { value: 'browser', label: 'Cookies from Browser' },
-                                            { value: 'file', label: 'Cookies File' }
+                                            { value: 'none', label: t('mediasuite:quickDownload.cookies.none', 'None') },
+                                            { value: 'browser', label: t('mediasuite:quickDownload.cookies.fromBrowser', 'Cookies from Browser') },
+                                            { value: 'file', label: t('mediasuite:quickDownload.cookies.file', 'Cookies File') }
                                         ]}
                                     />
                                     {ytDlpSettings.cookiesMode === 'browser' && (
@@ -772,19 +895,19 @@ export function MediaSuitePage() {
                                     )}
                                     {ytDlpSettings.cookiesMode === 'file' && (
                                         <div className="space-y-2">
-                                            <label className="text-sm text-tokens-muted">Cookies File</label>
+                                            <label className="text-sm text-tokens-muted">{t('mediasuite:quickDownload.cookiesFile', 'Cookies File')}</label>
                                             <div className="flex gap-2">
                                                 <Input
                                                     value={ytDlpSettings.cookiesFilePath}
                                                     readOnly
-                                                    placeholder="Select cookies.txt file"
+                                                    placeholder={t('mediasuite:quickDownload.selectCookiesFile', 'Select cookies.txt file')}
                                                     className="flex-1 font-mono text-xs"
                                                 />
                                                 <Button
                                                     variant="outline"
                                                     onClick={async () => {
                                                         if (!window.gesu?.dialog?.pickFile) {
-                                                            showToast('File picker not supported in browser mode', 'error');
+                                                            showToast(t('common:alerts.filePickerNotSupported', 'File picker not supported in browser mode'), 'error');
                                                             return;
                                                         }
                                                         try {
@@ -796,11 +919,11 @@ export function MediaSuitePage() {
                                                             }
                                                         } catch (e) {
                                                             console.error(e);
-                                                            showToast('Failed to pick file', 'error');
+                                                            showToast(t('common:alerts.failedToPickFile', 'Failed to pick file'), 'error');
                                                         }
                                                     }}
                                                 >
-                                                    Browse
+                                                    {t('common:buttons.browse', 'Browse')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -818,7 +941,7 @@ export function MediaSuitePage() {
                                             }))}
                                             className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-2 focus:ring-tokens-brand-DEFAULT"
                                         />
-                                        <label htmlFor="throttling-toggle" className="text-sm text-tokens-fg cursor-pointer">Enable Safe Throttling</label>
+                                        <label htmlFor="throttling-toggle" className="text-sm text-tokens-fg cursor-pointer">{t('mediasuite:quickDownload.enableSafeThrottling', 'Enable Safe Throttling')}</label>
                                     </div>
 
                                     {/* Throttling Fields */}
@@ -875,7 +998,7 @@ export function MediaSuitePage() {
                                     icon={<Download size={16} />}
                                     iconPosition="circle"
                                 >
-                                    {window.gesu?.mediaJobs ? 'Queue Download' : 'Queue Download (Mock)'}
+                                    {window.gesu?.mediaJobs ? t('mediasuite:quickDownload.queueDownload', 'Queue Download') : t('mediasuite:quickDownload.queueDownload', 'Queue Download') + ' (Mock)'}
                                 </Button>
                             </div>
                         </Card>
@@ -883,17 +1006,38 @@ export function MediaSuitePage() {
 
                     {/* Converter Form */}
                     {activeTab === 'converter' && (
-                        <Card title="Local Converter" className="bg-tokens-panel backdrop-blur-sm shadow-lg overflow-visible min-h-[420px]">
+                        <Card title={t('mediasuite:localConverter.title', 'Local Converter')} className="bg-tokens-panel backdrop-blur-sm shadow-lg overflow-visible min-h-[420px]">
                             <div className="flex flex-col gap-5">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-tokens-muted">Source File</label>
+                                {/* Mode Toggle: Single / Batch */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-tokens-fg">{t('mediasuite:localConverter.sourceFiles', 'Source Files')}</label>
+                                    <SegmentedControl
+                                        size="sm"
+                                        options={[
+                                            { value: 'single', label: 'Single' },
+                                            { value: 'batch', label: 'Batch' },
+                                        ]}
+                                        value={multiSelectMode ? 'batch' : 'single'}
+                                        onChange={(value) => {
+                                            if (value === 'single') {
+                                                setMultiSelectMode(false);
+                                                handleClearBatch();
+                                            } else {
+                                                setMultiSelectMode(true);
+                                            }
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Single File Mode */}
+                                {!multiSelectMode && (
                                     <div className="flex gap-2">
                                         <div className="flex-1 min-w-0">
                                             <Input
                                                 value={convertFilePath ? convertFilePath.split(/[/\\]/).pop() || '' : ''}
                                                 readOnly
                                                 fullWidth
-                                                placeholder="No file selected..."
+                                                placeholder={t('mediasuite:localConverter.noFileSelected', 'No file selected...')}
                                                 className="font-mono opacity-70 cursor-not-allowed"
                                                 title={convertFilePath || 'No file selected'}
                                             />
@@ -902,20 +1046,69 @@ export function MediaSuitePage() {
                                             variant="outline"
                                             onClick={handleBrowseFile}
                                         >
-                                            Browse...
+                                            {t('common:buttons.browse', 'Browse...')}
                                         </Button>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* Batch Mode */}
+                                {multiSelectMode && (
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleBrowseMultipleFiles}
+                                                className="flex-1"
+                                            >
+                                                {t('mediasuite:localConverter.selectMultiple', '+ Select Multiple Files')}
+                                            </Button>
+                                            {convertFiles.length > 0 && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handleClearBatch}
+                                                    className="text-red-500 hover:bg-red-500/10"
+                                                >
+                                                    {t('common:buttons.clearAll', 'Clear All')}
+                                                </Button>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Selected Files List */}
+                                        {convertFiles.length > 0 && (
+                                            <div className="bg-tokens-bg/50 rounded-lg border border-tokens-border p-2 max-h-40 overflow-y-auto space-y-1">
+                                                <div className="text-[10px] text-tokens-muted font-medium mb-1">
+                                                    {t('mediasuite:messages.filesSelected', '{{count}} files selected', { count: convertFiles.length })}
+                                                </div>
+                                                {convertFiles.map((filePath, idx) => (
+                                                    <div 
+                                                        key={idx} 
+                                                        className="flex items-center justify-between p-2 bg-tokens-panel/50 rounded border border-tokens-border/50 group hover:border-tokens-brand-DEFAULT/30"
+                                                    >
+                                                        <span className="text-xs font-mono truncate flex-1 mr-2">
+                                                            {filePath.split(/[/\\]/).pop()}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleRemoveFromBatch(filePath)}
+                                                            className="p-1 rounded hover:bg-red-500/20 text-tokens-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {/* Mode Toggle - Sliding squircle */}
                                     <ToggleSwitch
-                                        label="Mode"
+                                        label={t('common:labels.mode', 'Mode')}
                                         value={convertMode}
                                         onChange={(value) => setConvertMode(value as 'simple' | 'advanced')}
                                         options={[
-                                            { id: 'simple', label: 'Simple' },
-                                            { id: 'advanced', label: 'Advanced' }
+                                            { id: 'simple', label: t('mediasuite:localConverter.mode.simple', 'Simple') },
+                                            { id: 'advanced', label: t('mediasuite:localConverter.mode.advanced', 'Advanced') }
                                         ]}
                                     />
 
@@ -923,7 +1116,7 @@ export function MediaSuitePage() {
                                         <div className="flex gap-3">
                                             <div className="w-auto">
                                                 <SelectDropdown
-                                                    label="Category"
+                                                    label={t('common:labels.category', 'Category')}
                                                     value={convertCategory}
                                                     onChange={(value) => {
                                                         setConvertCategory(value as ConvertCategory);
@@ -932,9 +1125,9 @@ export function MediaSuitePage() {
                                                         if (firstPreset) setConvertPreset(firstPreset.value);
                                                     }}
                                                     options={[
-                                                        { value: 'Video', label: 'Video' },
-                                                        { value: 'Audio', label: 'Audio' },
-                                                        { value: 'Image', label: 'Image' }
+                                                        { value: 'Video', label: t('mediasuite:categories.video', 'Video') },
+                                                        { value: 'Audio', label: t('mediasuite:categories.audio', 'Audio') },
+                                                        { value: 'Image', label: t('mediasuite:categories.image', 'Image') }
                                                     ]}
                                                 />
                                             </div>
@@ -956,7 +1149,7 @@ export function MediaSuitePage() {
                                     <div className="flex flex-wrap gap-4 p-4 bg-tokens-panel2/50 rounded-xl border border-tokens-border">
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
                                             <SelectDropdown
-                                                label="Resolution"
+                                                label={t('mediasuite:localConverter.resolution', 'Resolution')}
                                                 value={advRes}
                                                 onChange={(value) => setAdvRes(value as AdvancedVideoResolution)}
                                                 options={[
@@ -969,7 +1162,7 @@ export function MediaSuitePage() {
                                         </div>
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
                                             <SelectDropdown
-                                                label="Quality"
+                                                label={t('mediasuite:localConverter.quality', 'Quality')}
                                                 value={advQuality}
                                                 onChange={(value) => setAdvQuality(value as AdvancedVideoQuality)}
                                                 options={[
@@ -981,7 +1174,7 @@ export function MediaSuitePage() {
                                         </div>
                                         <div className="flex flex-col gap-2 flex-1 min-w-[140px]">
                                             <SelectDropdown
-                                                label="Audio"
+                                                label={t('mediasuite:localConverter.audio', 'Audio')}
                                                 value={advAudio}
                                                 onChange={(value) => setAdvAudio(value as AdvancedAudioProfile)}
                                                 options={[
@@ -996,7 +1189,7 @@ export function MediaSuitePage() {
 
                                 {/* Output Folder */}
                                 <div className="space-y-2">
-                                    <label className="text-sm text-tokens-fg font-medium">Output Folder</label>
+                                    <label className="text-sm text-tokens-fg font-medium">{t('mediasuite:quickDownload.outputFolder', 'Output Folder')}</label>
                                     <div className="flex gap-2">
                                         <div className="flex-1 min-w-0">
                                             <Input
@@ -1010,7 +1203,7 @@ export function MediaSuitePage() {
                                         <Button
                                             variant="outline"
                                             onClick={handleBrowseOutputFolder}
-                                            title="Browse for folder"
+                                            title={t('mediasuite:tooltips.browseFolder', 'Browse for folder')}
                                         >
                                             <FolderOpen size={16} />
                                         </Button>
@@ -1018,9 +1211,9 @@ export function MediaSuitePage() {
                                             variant="outline"
                                             className="text-tokens-brand-DEFAULT border-tokens-brand-DEFAULT/30 hover:bg-tokens-brand-DEFAULT/10"
                                             onClick={handleOpenOutputFolder}
-                                            title="Open folder in Explorer"
+                                            title={t('mediasuite:tooltips.openInExplorer', 'Open folder in Explorer')}
                                         >
-                                            Open
+                                            {t('common:buttons.open', 'Open')}
                                         </Button>
                                     </div>
                                 </div>
@@ -1029,12 +1222,14 @@ export function MediaSuitePage() {
                                     variant="primary"
                                     size="lg"
                                     fullWidth
-                                    onClick={handleQueueConvert}
-                                    disabled={!convertFilePath}
+                                    onClick={multiSelectMode ? handleBatchConvert : handleQueueConvert}
+                                    disabled={multiSelectMode ? convertFiles.length === 0 : !convertFilePath}
                                     icon={<Zap size={16} />}
                                     iconPosition="circle"
                                 >
-                                    Queue Convert Job
+                                    {multiSelectMode 
+                                        ? `${t('mediasuite:localConverter.queueConvertJob', 'Queue Convert Job')} (${convertFiles.length})`
+                                        : t('mediasuite:localConverter.queueConvertJob', 'Queue Convert Job')}
                                 </Button>
                             </div>
                         </Card>
@@ -1042,19 +1237,19 @@ export function MediaSuitePage() {
 
                     {/* History View */}
                     {activeTab === 'history' && (
-                        <Card title="Recent Jobs" className="flex flex-col min-h-[420px]" headerAction={
+                        <Card title={t('mediasuite:queue.recentJobs', 'Recent Jobs')} className="flex flex-col min-h-[420px]" headerAction={
                             <div className="flex gap-2 items-center">
                                 <SelectDropdown
                                     value={historyFilter}
                                     onChange={(value) => setHistoryFilter(value as any)}
                                     options={[
-                                        { value: 'all', label: 'All Types' },
-                                        { value: 'download', label: 'Downloads' },
-                                        { value: 'convert', label: 'Converts' },
-                                        { value: 'advanced', label: 'Advanced' }
+                                        { value: 'all', label: t('mediasuite:filters.allTypes', 'All Types') },
+                                        { value: 'download', label: t('mediasuite:filters.downloads', 'Downloads') },
+                                        { value: 'convert', label: t('mediasuite:filters.converts', 'Converts') },
+                                        { value: 'advanced', label: t('mediasuite:filters.advanced', 'Advanced') }
                                     ]}
                                 />
-                                <button onClick={refreshHistory} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">Refresh</button>
+                                <button onClick={refreshHistory} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">{t('common:buttons.refresh', 'Refresh')}</button>
                             </div>
                         }>
                             {/* Scrollable table container with max height */}
@@ -1063,13 +1258,13 @@ export function MediaSuitePage() {
                                     {/* Sticky header */}
                                     <thead className="sticky top-0 bg-tokens-panel z-10">
                                         <tr className="border-b border-tokens-border text-tokens-muted text-xs uppercase tracking-wider">
-                                            <th className="p-3">Time</th>
-                                            <th className="p-3">Type</th>
-                                            <th className="p-3">Status</th>
-                                            <th className="p-3">Preset</th>
-                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">Network</th>}
-                                            <th className="p-3">Target</th>
-                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">Details</th>}
+                                            <th className="p-3">{t('mediasuite:jobQueue.time', 'Time')}</th>
+                                            <th className="p-3">{t('mediasuite:jobQueue.type', 'Type')}</th>
+                                            <th className="p-3">{t('mediasuite:jobQueue.status', 'Status')}</th>
+                                            <th className="p-3">{t('mediasuite:jobQueue.preset', 'Preset')}</th>
+                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">{t('mediasuite:jobQueue.network', 'Network')}</th>}
+                                            <th className="p-3">{t('mediasuite:jobQueue.target', 'Target')}</th>
+                                            {!(historyFilter === 'convert' || historyFilter === 'advanced') && <th className="p-3">{t('mediasuite:jobQueue.details', 'Details')}</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-tokens-border">
@@ -1078,7 +1273,7 @@ export function MediaSuitePage() {
                                                 <td colSpan={7} className="p-2">
                                                     <div className="flex flex-col items-center justify-center min-h-[280px] border-2 border-dashed border-tokens-border/50 rounded-xl bg-tokens-panel2/10">
                                                         <HistoryIcon size={32} className="text-tokens-muted/30 mb-2" />
-                                                        <span className="text-tokens-muted italic text-sm">No entry yet</span>
+                                                        <span className="text-tokens-muted italic text-sm">{t('mediasuite:queue.noEntries', 'No entry yet')}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1102,7 +1297,7 @@ export function MediaSuitePage() {
                                                 .map((job, idx) => (
                                                     <tr key={`${job.id}-${job.status}-${idx}`} className="hover:bg-tokens-panel2/50 transition-colors">
                                                         <td className="p-3 text-sm text-tokens-muted whitespace-nowrap">
-                                                            {new Date(job.timestamp).toLocaleDateString()}
+                                                            {new Date(job.timestamp).toLocaleDateString(dateLocale)}
                                                         </td>
                                                         <td className="p-3">
                                                             {(() => {
@@ -1168,25 +1363,25 @@ export function MediaSuitePage() {
 
                 {/* --- RIGHT COLUMN: QUEUE & INFO --- */}
                 <div className="flex flex-col gap-6 w-full min-w-0">
-                    <Card title="Job Queue" className="flex flex-col min-h-[420px]">
+                    <Card title={t('mediasuite:queue.title', 'Job Queue')} className="flex flex-col min-h-[420px]">
                         <div className="flex gap-2 items-center mb-4">
                             <SelectDropdown
                                 value={queueFilter}
                                 onChange={(value) => setQueueFilter(value as any)}
                                 options={[
-                                    { value: 'all', label: 'All Jobs' },
-                                    { value: 'download', label: 'Downloads' },
-                                    { value: 'convert', label: 'Converts' }
+                                    { value: 'all', label: t('mediasuite:queue.filters.allJobs', 'All Jobs') },
+                                    { value: 'download', label: t('mediasuite:queue.filters.downloads', 'Downloads') },
+                                    { value: 'convert', label: t('mediasuite:queue.filters.converts', 'Converts') }
                                 ]}
                             />
                             {jobs.some(j => j.status === 'running' || j.status === 'queued') && (
                                 <button
                                     onClick={handleCancelAllJobs}
                                     className="ml-auto px-2 py-1 rounded text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                    title="Cancel all running and queued jobs"
+                                    title={t('mediasuite:tooltips.cancelAll', 'Cancel all running and queued jobs')}
                                 >
                                     <X size={12} />
-                                    Cancel All
+                                    {t('common:buttons.cancelAll', 'Cancel All')}
                                 </button>
                             )}
                         </div>
@@ -1195,7 +1390,7 @@ export function MediaSuitePage() {
                             {jobs.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full py-8 px-4 border-2 border-dashed border-tokens-border/50 rounded-xl bg-tokens-panel2/20">
                                     <Zap size={28} className="text-tokens-muted/30 mb-2" />
-                                    <span className="text-tokens-muted italic text-sm">Queue is empty</span>
+                                    <span className="text-tokens-muted italic text-sm">{t('mediasuite:queue.empty', 'Queue is empty')}</span>
                                 </div>
                             ) : (
                                 jobs
@@ -1210,15 +1405,15 @@ export function MediaSuitePage() {
 
                                             {/* Status + Cancel Row (above progress bar) */}
                                             <div className="flex items-center justify-between mb-2">
-                                                <StatusBadge status={job.status} progress={job.progress} />
+                                                <StatusBadge status={job.status} progress={job.progress} t={t} />
                                                 {(job.status === 'running' || job.status === 'queued') && (
                                                     <button
                                                         onClick={() => handleCancelJob(job.id)}
                                                         className="px-2 py-1 rounded text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                                                        title="Cancel job"
+                                                        title={t('mediasuite:tooltips.cancelJob', 'Cancel job')}
                                                     >
                                                         <X size={12} />
-                                                        Cancel
+                                                        {t('common:buttons.cancel', 'Cancel')}
                                                     </button>
                                                 )}
                                             </div>
@@ -1264,11 +1459,11 @@ export function MediaSuitePage() {
                     </Card>
 
                     {/* Info Panel / Tips */}
-                    <Card title="Quick Tips" className="bg-tokens-panel/50 border-dashed">
+                    <Card title={t('mediasuite:quickTips.title', 'Quick Tips')} className="bg-tokens-panel/50 border-dashed">
                         <ul className="text-xs text-tokens-muted space-y-2 list-disc pl-4">
-                            <li>Use <strong>WorkFlow DB</strong> target to auto-imports into the Gesu Asset Database.</li>
-                            <li><strong>Gaspol</strong> network profile uses aria2c for maximum bandwidth (up to 16 connections).</li>
-                            <li><strong>Advanced Converter</strong> allows manual control over FFmpeg CRF and Audio Bitrate.</li>
+                            <li>{t('mediasuite:tips.workflowTarget', 'Use WorkFlow DB target folder for organized downloads')}</li>
+                            <li>{t('mediasuite:tips.gaspolProfile', 'Gaspol network profile supports Indonesian music platforms')}</li>
+                            <li><strong>{t('mediasuite:tips.advancedConverter', 'Advanced Converter')}</strong> {t('mediasuite:tips.advancedConverterDesc', 'allows manual control over FFmpeg CRF and Audio Bitrate.')}</li>
                         </ul>
                     </Card>
                 </div>

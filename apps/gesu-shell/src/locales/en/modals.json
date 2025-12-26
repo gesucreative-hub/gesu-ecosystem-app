@@ -1,0 +1,143 @@
+{
+    "confirm": {
+        "title": "Confirm",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "yes": "Yes",
+        "no": "No"
+    },
+    "alert": {
+        "success": "Success",
+        "error": "Error",
+        "warning": "Warning",
+        "info": "Info",
+        "ok": "OK",
+        "gotIt": "Got it!"
+    },
+    "commandPalette": {
+        "title": "Command Palette",
+        "placeholder": "Type a command or search...",
+        "noResults": "No results found",
+        "proTip": "ProTip: Use arrow keys to navigate",
+        "recentCommands": "Recent Commands",
+        "allCommands": "All Commands"
+    },
+    "cosmetics": {
+        "title": "Cosmetics",
+        "subtitle": "Customize your pet and workspace",
+        "pets": "Pets",
+        "backgrounds": "Backgrounds",
+        "effects": "Effects",
+        "locked": "Locked",
+        "unlockAt": "Unlock at Level",
+        "equipped": "Equipped",
+        "equip": "Equip",
+        "level": "Level",
+        "streak": "Streak",
+        "unlockLevel": "Level {{value}}",
+        "unlockStreak": "{{value}}-day streak",
+        "unlockAchievement": "Achievement",
+        "unlockHint": "Unlock cosmetics by leveling up, completing achievements, or building streaks!",
+        "new": "NEW",
+        "requires": "Requires: {{requirement}}",
+        "types": {
+            "hat": "🎩 Hats",
+            "cape": "🔥 Capes",
+            "accessory": "✨ Acc",
+            "aura": "💫 Auras",
+            "background": "🌌 BG"
+        }
+    },
+    "leaderboard": {
+        "title": "Leaderboard",
+        "weekly": "Weekly",
+        "allTime": "All Time",
+        "rank": "Rank",
+        "player": "Player",
+        "xp": "XP",
+        "you": "You",
+        "noData": "No leaderboard data yet",
+        "youSuffix": "(you)",
+        "levelStreak": "Level {{level}} • {{streak}}d streak",
+        "signInToJoin": "Sign in to join the leaderboard",
+        "youreCompeting": "⭐ You're competing!",
+        "autoJoined": "Auto-joined on login"
+    },
+    "gameRules": {
+        "title": "Game Rules",
+        "howToPlay": "How to Play",
+        "xpSystem": "XP System",
+        "streaks": "Streaks & Combos",
+        "levels": "Levels & Rewards",
+        "close": "Close",
+        "xp": {
+            "title": "Experience Points (XP)",
+            "workflowSteps": "Complete workflow steps",
+            "compassSnapshots": "Log Compass snapshots",
+            "finishMode": "Finish mode completion",
+            "dailyBonus": "Daily activity bonus"
+        },
+        "streak": {
+            "title": "Daily Streak",
+            "description": "Log at least one activity per day to maintain your streak. Missing a day resets your streak to zero!"
+        },
+        "combo": {
+            "title": "Combo Multiplier",
+            "description": "Complete tasks quickly to build a combo",
+            "tier1": "2-4 tasks in a row",
+            "tier2": "5-9 tasks in a row",
+            "tier3": "10+ tasks in a row"
+        },
+        "pet": {
+            "title": "Pet Evolution",
+            "description": "Your pet evolves as you level up"
+        },
+        "leaderboard": {
+            "title": "Leaderboard",
+            "description": "Compete with other users! Weekly rankings reset every Monday. Earn more XP to climb the ranks."
+        }
+    },
+    "achievements": {
+        "title": "Achievement Unlocked!",
+        "newAchievement": "New Achievement",
+        "xpEarned": "XP Earned"
+    },
+    "folderTemplate": {
+        "title": "Folder Template Manager",
+        "create": "Create Template",
+        "edit": "Edit Template",
+        "delete": "Delete Template",
+        "name": "Template Name",
+        "structure": "Folder Structure",
+        "save": "Save Template",
+        "saveAndUse": "Save & Use",
+        "copyAiPrompt": "Copy AI Prompt",
+        "importFile": "Import from File",
+        "newTemplate": "+ New Template",
+        "folders": {
+            "newFolder": "New Folder",
+            "newSubfolder": "New Subfolder",
+            "addFolder": "Add Folder",
+            "emptyState": "No folders yet. Click \"Add Folder\" to create one.",
+            "folderCount_one": "{{count}} folder",
+            "folderCount_other": "{{count}} folders",
+            "deleteConfirm": "Delete \"{{name}}\" and all its contents?"
+        }
+    },
+    "templatePicker": {
+        "title": "Choose Template",
+        "subtitle": "Start with a ready-made workflow",
+        "searchPlaceholder": "🔍 Search templates...",
+        "copyAiPrompt": "Copy AI Prompt",
+        "import": "Import",
+        "phases": "phases",
+        "steps": "steps",
+        "cancel": "Cancel",
+        "hide": "Hide template"
+    },
+    "tooltips": {
+        "addSubfolder": "Add subfolder",
+        "deleteFolder": "Delete folder"
+    }
+}

@@ -8,14 +8,19 @@ import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { appendJobLog, getRecentJobs } from './job-logger.js';
 import { registerSettingsHandlers, loadGlobalSettings } from './settings-store.js';
-import { buildPlan, applyPlan, appendProjectLog } from './scaffolding.js';
+import { buildPlan, applyPlan, appendProjectLog, initializeGitRepo } from './scaffolding.js';
 import { listProjects } from './projects-registry.js';
 import { appendSnapshot, listSnapshots } from './compass-snapshots.js';
 import { getBlueprints, saveBlueprints } from './workflow-blueprints.js';
+import { initDatabase, getDatabase, closeDatabase, saveDatabase, switchUserDatabase, getCurrentUserId } from './database.js';
+import { ProjectWatcher } from './project-watcher.js';
 
 // Use createRequire for CommonJS modules
 const require = createRequire(import.meta.url);
 const { initJobManager, enqueueJob, cancelJob, cancelAllJobs, getQueue } = require('./media-jobs.cjs');
+
+// ProjectWatcher instance
+let projectWatcher = null;
 
 
 const DOWNLOADS_DIR = path.join(process.cwd(), 'downloads');
@@ -74,10 +79,35 @@ function createWindow() {
 
     // Optional: Open DevTools automatically in dev
     // mainWindow.webContents.openDevTools();
+
+    return mainWindow;
 }
 
-app.whenReady().then(() => {
-    createWindow();
+app.whenReady().then(async () => {
+    // Load settings first
+    const settings = await loadGlobalSettings();
+    const workflowRoot = settings.paths?.workflowRoot || 'D:\\03. Resources\\_Gesu\'s\\WorkFlowDatabase';
+
+    // Initialize database with default user (async for sql.js)
+    try {
+        await initDatabase(null, workflowRoot); // null = default user initially
+        console.log('[Main] Database initialized for default user');
+    } catch (error) {
+        console.error('[Main] Failed to initialize database:', error);
+    }
+
+    const mainWindow = createWindow();
+
+    // Initialize ProjectWatcher with projects root from settings
+    try {
+        const settings = await loadGlobalSettings();
+        const projectsRoot = settings.paths?.projectsRoot || 'D:\\01. Projects';
+        projectWatcher = new ProjectWatcher(mainWindow, projectsRoot);
+        projectWatcher.start();
+        console.log('[Main] ProjectWatcher initialized');
+    } catch (error) {
+        console.error('[Main] Failed to initialize ProjectWatcher:', error);
+    }
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -87,6 +117,15 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+    // Stop ProjectWatcher
+    if (projectWatcher) {
+        projectWatcher.stop();
+        projectWatcher = null;
+    }
+
+    // Close database before quitting
+    closeDatabase();
+
     if (process.platform !== 'darwin') {
         app.quit();
     }
@@ -237,6 +276,19 @@ ipcMain.handle('mediaSuite:pickSourceFile', async () => {
     return filePaths[0];
 });
 
+// Multi-file selection for batch convert
+ipcMain.handle('mediaSuite:pickMultipleFiles', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+            { name: 'Media Files', extensions: ['mp4', 'mkv', 'mp3', 'wav', 'flac', 'avi', 'mov', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'] },
+            { name: 'All Files', extensions: ['*'] }
+        ]
+    });
+    if (canceled || filePaths.length === 0) return [];
+    return filePaths;
+});
+
 ipcMain.handle('mediaSuite:pickOutputFolder', async (event, defaultPath) => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
         defaultPath: defaultPath || undefined,
@@ -247,13 +299,83 @@ ipcMain.handle('mediaSuite:pickOutputFolder', async (event, defaultPath) => {
 });
 
 ipcMain.handle('shell:openPath', async (event, targetPath) => {
-    if (!targetPath) return { success: false, error: 'No path provided' };
     try {
         await shell.openPath(targetPath);
-        return { success: true };
+        return { ok: true };
     } catch (err) {
-        return { success: false, error: err.message };
+        return { ok: false, error: err.message };
     }
+});
+
+// ===== File System Handlers =====
+ipcMain.handle('fs:ensureDir', async (event, dirPath) => {
+    try {
+        await fs.promises.mkdir(dirPath, { recursive: true });
+        return { ok: true };
+    } catch (err) {
+        console.error('[fs:ensureDir]', err);
+        return { ok: false, error: err.message };
+    }
+});
+
+ipcMain.handle('fs:pathExists', async (event, targetPath) => {
+    try {
+        await fs.promises.access(targetPath);
+        return true;
+    } catch (err) {
+        return false;
+    }
+});
+
+ipcMain.handle('fs:readDir', async (event, dirPath) => {
+    try {
+        const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+        return entries.map(entry => ({
+            name: entry.name,
+            isDirectory: entry.isDirectory()
+        }));
+    } catch (err) {
+        console.error('[fs:readDir]', err);
+        throw err;
+    }
+});
+
+ipcMain.handle('fs:readFile', async (event, filePath) => {
+    try {
+        const data = await fs.promises.readFile(filePath, 'utf-8');
+        return data;
+    } catch (err) {
+        console.error('[fs:readFile]', err);
+        throw err;
+    }
+});
+
+ipcMain.handle('fs:writeFile', async (event, filePath, data) => {
+    try {
+        await fs.promises.writeFile(filePath, data, 'utf-8');
+        return { ok: true };
+    } catch (err) {
+        console.error('[fs:writeFile]', err);
+        return { ok: false, error: err.message };
+    }
+});
+
+// ===== Database Handlers =====
+ipcMain.handle('database:switchUser', async (event, userId) => {
+    try {
+        const settings = await loadGlobalSettings();
+        const workflowRoot = settings.paths?.workflowRoot || 'D:\\03. Resources\\_Gesu\'s\\WorkFlowDatabase';
+        await switchUserDatabase(userId, workflowRoot);
+        console.log('[database:switchUser] Switched to user:', userId || 'default');
+        return { ok: true };
+    } catch (err) {
+        console.error('[database:switchUser]', err);
+        return { ok: false, error: err.message };
+    }
+});
+
+ipcMain.handle('database:getCurrentUser', async () => {
+    return getCurrentUserId();
 });
 
 // Update yt-dlp
@@ -304,7 +426,7 @@ ipcMain.handle('gesu:dialog:pickFile', async (event, { defaultPath, filters }) =
 
 // --- Scaffolding Handlers ---
 
-ipcMain.handle('scaffold:preview', async (event, { projectName, templateId }) => {
+ipcMain.handle('scaffold:preview', async (event, { projectName, templateId, folderTemplateFolders }) => {
     try {
         const settings = await loadGlobalSettings();
         const projectsRoot = settings.paths?.projectsRoot;
@@ -313,7 +435,7 @@ ipcMain.handle('scaffold:preview', async (event, { projectName, templateId }) =>
             throw new Error('Projects root not configured. Please set it in Settings.');
         }
 
-        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId });
+        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId, folderTemplateFolders });
 
         return {
             ok: true,
@@ -328,7 +450,7 @@ ipcMain.handle('scaffold:preview', async (event, { projectName, templateId }) =>
     }
 });
 
-ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categoryId, blueprintId, blueprintVersion }) => {
+ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categoryId, blueprintId, blueprintVersion, folderTemplateFolders, projectType, clientName, briefContent, displayName, options }) => {
     try {
         const settings = await loadGlobalSettings();
         const projectsRoot = settings.paths?.projectsRoot;
@@ -337,7 +459,19 @@ ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categ
             throw new Error('Projects root not configured. Please set it in Settings.');
         }
 
-        const { projectPath, plan } = buildPlan({ projectsRoot, projectName, templateId, categoryId, blueprintId, blueprintVersion });
+        const { projectPath, plan } = buildPlan({ 
+            projectsRoot, 
+            projectName, 
+            templateId, 
+            categoryId, 
+            blueprintId, 
+            blueprintVersion, 
+            folderTemplateFolders,
+            projectType,
+            clientName,
+            briefContent,
+            displayName
+        });
         const result = await applyPlan({ projectsRoot, plan, projectPath });
 
         if (result.ok) {
@@ -351,6 +485,17 @@ ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categ
                     projectId = meta.id;
                 } catch (err) {
                     console.error('[scaffold:create] Failed to parse project meta:', err);
+                }
+            }
+
+            // Sprint 6.6: Initialize git repo if requested
+            if (options && options.gitInit) {
+                try {
+                    await initializeGitRepo(result.projectPath);
+                } catch (err) {
+                    console.error('[scaffold:create] Git init failed (non-fatal):', err);
+                    // Add warning to result but don't fail the whole creation
+                    result.warnings = [...(result.warnings || []), `Git init failed: ${err.message}`];
                 }
             }
 
@@ -380,6 +525,16 @@ ipcMain.handle('scaffold:create', async (event, { projectName, templateId, categ
     }
 });
 
+// Sprint 6.6: Standalone Git Init for existing projects
+ipcMain.handle('scaffold:gitInit', async (event, projectPath) => {
+    try {
+        return await initializeGitRepo(projectPath);
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+
 
 ipcMain.handle('projects:list', async () => {
     try {
@@ -405,16 +560,44 @@ ipcMain.handle('projects:list', async () => {
 
 // --- Compass Snapshots Handlers ---
 
+// Helper to get current user's workspace path
+async function getCurrentUserWorkspace() {
+    const settings = await loadGlobalSettings();
+    const workflowRoot = settings.paths?.workflowRoot;
+
+    if (!workflowRoot || workflowRoot.trim() === '') {
+        console.log('[getCurrentUserWorkspace] No workflowRoot configured');
+        return null;
+    }
+
+    // Get current user from database module
+    const userId = getCurrentUserId();
+    const userDir = userId || 'default';
+
+    console.log('[getCurrentUserWorkspace] Current user ID:', userId, '-> userDir:', userDir);
+
+    // User-specific workspace: workflowRoot/users/{userId}/
+    const userWorkspace = path.join(workflowRoot, 'users', userDir);
+
+    // Ensure directory exists
+    if (!fs.existsSync(userWorkspace)) {
+        fs.mkdirSync(userWorkspace, { recursive: true });
+        console.log('[getCurrentUserWorkspace] Created user workspace:', userWorkspace);
+    }
+
+    return userWorkspace;
+}
+
 ipcMain.handle('compass:snapshots:append', async (event, snapshot) => {
     try {
-        const settings = await loadGlobalSettings();
-        const workflowRoot = settings.paths?.workflowRoot;
+        const userWorkspace = await getCurrentUserWorkspace();
 
-        if (!workflowRoot || workflowRoot.trim() === '') {
+        if (!userWorkspace) {
             return { ok: false, error: 'Workflow root not configured. Please set it in Settings.' };
         }
 
-        const result = await appendSnapshot(workflowRoot, snapshot);
+        console.log('[compass:snapshots:append] Using user workspace:', userWorkspace);
+        const result = await appendSnapshot(userWorkspace, snapshot);
         return result;
     } catch (err) {
         return { ok: false, error: err.message };
@@ -423,18 +606,65 @@ ipcMain.handle('compass:snapshots:append', async (event, snapshot) => {
 
 ipcMain.handle('compass:snapshots:list', async (event, options) => {
     try {
-        const settings = await loadGlobalSettings();
-        const workflowRoot = settings.paths?.workflowRoot;
+        const userWorkspace = await getCurrentUserWorkspace();
 
-        if (!workflowRoot || workflowRoot.trim() === '') {
+        if (!userWorkspace) {
             return [];
         }
 
-        const snapshots = await listSnapshots(workflowRoot, options || {});
+        console.log('[compass:snapshots:list] Using user workspace:', userWorkspace);
+        const snapshots = await listSnapshots(userWorkspace, options || {});
         return snapshots;
     } catch (err) {
         console.error('[compass:snapshots:list] Error:', err);
         return [];
+    }
+});
+
+
+// --- User Settings Handlers ---
+
+ipcMain.handle('user-settings:read', async () => {
+    try {
+        const userWorkspace = await getCurrentUserWorkspace();
+
+        if (!userWorkspace) {
+            console.log('[user-settings:read] No workspace, returning defaults');
+            return null;
+        }
+
+        const settingsPath = path.join(userWorkspace, 'settings.json');
+
+        // Check if file exists
+        if (!fs.existsSync(settingsPath)) {
+            console.log('[user-settings:read] No settings file found, will use defaults');
+            return null;
+        }
+
+        const data = await fs.promises.readFile(settingsPath, 'utf-8');
+        const settings = JSON.parse(data);
+        console.log('[user-settings:read] Loaded user settings from:', settingsPath);
+        return settings;
+    } catch (err) {
+        console.error('[user-settings:read] Error:', err);
+        return null;
+    }
+});
+
+ipcMain.handle('user-settings:write', async (event, settings) => {
+    try {
+        const userWorkspace = await getCurrentUserWorkspace();
+
+        if (!userWorkspace) {
+            throw new Error('No user workspace available');
+        }
+
+        const settingsPath = path.join(userWorkspace, 'settings.json');
+        await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+        console.log('[user-settings:write] Saved user settings to:', settingsPath);
+    } catch (err) {
+        console.error('[user-settings:write] Error:', err);
+        throw err;
     }
 });
 
@@ -874,3 +1104,154 @@ async function processConvertJob(jobId, payload) {
         });
     });
 }
+
+// =============================================
+// Activity Tracking IPC Handlers (sql.js API)
+// =============================================
+
+// Start an activity session
+ipcMain.handle('activity:start-session', async (event, { type, taskId, projectId }) => {
+    try {
+        const db = getDatabase();
+        const id = randomUUID();
+        const now = new Date().toISOString();
+        const userId = 'local-user';
+
+        db.run(`
+            INSERT INTO activity_sessions (id, user_id, start_time, type, task_id, project_id)
+            VALUES ($id, $userId, $now, $type, $taskId, $projectId)
+        `, {
+            $id: id,
+            $userId: userId,
+            $now: now,
+            $type: type,
+            $taskId: taskId || null,
+            $projectId: projectId || null
+        });
+
+        saveDatabase();
+        return { ok: true, sessionId: id };
+    } catch (error) {
+        console.error('[Activity] Failed to start session:', error);
+        return { ok: false, error: error.message };
+    }
+});
+
+// End an activity session
+ipcMain.handle('activity:end-session', async (event, { sessionId }) => {
+    try {
+        const db = getDatabase();
+        const now = new Date().toISOString();
+
+        db.run(`
+            UPDATE activity_sessions 
+            SET end_time = $now
+            WHERE id = $sessionId
+        `, {
+            $now: now,
+            $sessionId: sessionId
+        });
+
+        saveDatabase();
+        return { ok: true };
+    } catch (error) {
+        console.error('[Activity] Failed to end session:', error);
+        return { ok: false, error: error.message };
+    }
+});
+
+// Get activity summary
+ipcMain.handle('activity:get-summary', async (event, { startDate, endDate }) => {
+    try {
+        const db = getDatabase();
+        const userId = 'local-user';
+
+        const stmt = db.prepare(`
+            SELECT * FROM activity_sessions
+            WHERE user_id = $userId
+            AND start_time >= $startDate
+            AND start_time <= $endDate
+            ORDER BY start_time DESC
+        `);
+        stmt.bind({
+            $userId: userId,
+            $startDate: startDate,
+            $endDate: endDate
+        });
+
+        const sessions = [];
+        while (stmt.step()) {
+            sessions.push(stmt.getAsObject());
+        }
+        stmt.free();
+
+        return { ok: true, sessions };
+    } catch (error) {
+        console.error('[Activity] Failed to get summary:', error);
+        return { ok: false, error: error.message };
+    }
+});
+
+// Record task completion
+ipcMain.handle('activity:record-task-completion', async (event, { taskId, duration }) => {
+    try {
+        const db = getDatabase();
+        const id = randomUUID();
+        const now = new Date().toISOString();
+        const userId = 'local-user';
+
+        db.run(`
+            INSERT INTO task_completions (id, user_id, task_id, completed_at, duration)
+            VALUES ($id, $userId, $taskId, $now, $duration)
+        `, {
+            $id: id,
+            $userId: userId,
+            $taskId: taskId,
+            $now: now,
+            $duration: duration || null
+        });
+
+        saveDatabase();
+        return { ok: true, completionId: id };
+    } catch (error) {
+        console.error('[Activity] Failed to record task completion:', error);
+        return { ok: false, error: error.message };
+    }
+});
+
+// Clear activity sessions (for data cleanup)
+// Accepts optional afterDate to delete sessions after a specific date
+ipcMain.handle('activity:clear-all-sessions', async (event, { afterDate } = {}) => {
+    try {
+        const db = getDatabase();
+        const userId = 'local-user';
+
+        if (afterDate) {
+            // Delete sessions after the specified date (for today/week/month options)
+            db.run(`
+                DELETE FROM activity_sessions
+                WHERE user_id = $userId AND start_time >= $afterDate
+            `, {
+                $userId: userId,
+                $afterDate: afterDate
+            });
+            console.log('[Activity] Cleared sessions after:', afterDate);
+        } else {
+            // Delete all sessions
+            db.run(`
+                DELETE FROM activity_sessions
+                WHERE user_id = $userId
+            `, {
+                $userId: userId
+            });
+            console.log('[Activity] Cleared all sessions for user:', userId);
+        }
+
+        saveDatabase();
+        return { ok: true };
+    } catch (error) {
+        console.error('[Activity] Failed to clear sessions:', error);
+        return { ok: false, error: error.message };
+    }
+});
+

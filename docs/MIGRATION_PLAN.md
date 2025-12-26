@@ -1,16 +1,19 @@
 # Gesu Ecosystem v2 - Massive Migration / Build Checklist
 
 ## 1. North Star / Vision
+
 To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a unified, modern **React + TypeScript + Electron** application ("Gesu Ecosystem v2"). The goal is to provide a premium, cohesive "Operating System for Life" that integrates Focus (Compass), Mental Reset (Refocus), Media Management (Media Suite), and Project Initiation (Initiator) under one performant shell, while enforcing strict data safety constraints.
 
 ## 2. Architecture Overview
 
 ### Current State (Legacy)
+
 - **Stack**: PowerShell scripts + WPF XAML GUIs.
 - **Data**: Loose CSVs and JSONs in `WorkFlowDatabase`.
 - **Execution**: Manual script launching via shortcuts.
 
 ### Target State (v2)
+
 - **Frontend**: React + TypeScript + Tailwind CSS.
 - **Container**: Electron (Main + Renderer processes).
 - **Styling**: Semantic Design Token System (CSS Variables + Tailwind).
@@ -22,7 +25,9 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 ## 3. Workstreams
 
 ### A. UI Design System & Tokens
+
 **Owner**: Frontend Lead | **Status**: In Progress
+
 - [x] **Semantic Tokens**: Define `--bg`, `--fg`, `--brand`, `--sidebar-*` CSS variables for Light (Theme 1) and Dark (Theme 2).
 - [x] **Tailwind Mapping**: Map `tokens.*` in `tailwind.config.js`.
 - [x] **Sidebar Spec**: Implement "Pill" item style, subtle borders, and harmonious bottom controls.
@@ -32,7 +37,9 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - [x] **Icon Standardization**: Replaced emojis with `lucide-react` icons; created `Icon.tsx` wrapper.
 
 ### B. Shell App (Gesu Shell)
+
 **Owner**: Core Team | **Status**: Planned
+
 - [x] **Layout Consistency**: `PageContainer` with standardized padding/margins.
 - [ ] **Navigation**: `react-router-dom` setup with strict route definitions.
 - [ ] **Global Error Boundary**: Catch React errors and show a friendly "Gesu Recovery" UI.
@@ -40,7 +47,9 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - [ ] **Window State**: Persist window size/position in `localStorage`.
 
 ### C. Settings (Gesu Settings)
+
 **Owner**: Backend Lead | **Status**: Backlog
+
 - [ ] **Global Schema**: Define `GesuSettings` interface (Zod schema).
 - [ ] **Engine Manager UI**: UI to point/validate external CLI tools (yt-dlp, ffmpeg, git, code).
 - [ ] **Path Browsing**: Electron IPC dialog for selecting `WorkflowRoot` (Read-only initially).
@@ -48,7 +57,9 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - [ ] **Diagnostics**: Panel to check environment health (node version, path access).
 
 ### D. Media Suite
+
 **Owner**: Media Team | **Status**: Backlog
+
 - [ ] **Downloader UI**: Input URL -> Queue visualizer.
 - [ ] **Status Logic**: Precedence rules (Configured > System Path > Missing).
 - [ ] **Activity Feed**: Read/Tail logs to show "Recent Downloads".
@@ -56,39 +67,51 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - [ ] **Engine Contract**: Define standardized JSON job format for media operations.
 
 ### E. Compass (Focus & Energy)
+
 **Owner**: Product/Life | **Status**: Backlog
+
 - [ ] **Data Model**: `FocusSession` (start, duration, energy_level, tags).
 - [ ] **Session Snapshot**: Capture intended task vs actual completion.
 - [ ] **Log Export**: Hook to append to daily CSVs (matching legacy format).
 - [ ] **Integration Stub**: Placeholders for Notion/Obsidian sync (do not implement yet).
 
 ### F. Refocus (Mental Reset)
+
 **Owner**: Product/Life | **Status**: Backlog
+
 - [ ] **Reset Flow**: 3-step wizard (Breathe -> Assess -> Act).
 - [ ] **Journaling**: "Brain Dump" text area with local persist.
 - [ ] **Routing**: "Back to Compass" explicit action after reset.
 
 ### G. Initiator (Project)
+
 **Owner**: Dev Tools | **Status**: Backlog
+
 - [ ] **Template Model**: Selection UI for project types (React, Node, Script).
 - [ ] **Preview**: Tree view generator for "What will be created".
 - [ ] **Safety Config**: Block creation in non-safe directories.
 
 ### H. Data & Storage
+
 **Owner**: Architecture | **Status**: Planned
+
 - [ ] **Schemas**: Zod definitions for all major entities.
 - [ ] **Path Conventions**: Enforce `WorkflowRoot/Projects` and `WorkflowRoot/Resources`.
 - [ ] **Backups**: Strict rule: **READ-ONLY** access to `_backup-reference`.
 - [ ] **Migration Plan**: Scripts to port old XML/CSV data to new JSON formats (Future).
 
 ### I. Electron Backend
+
 **Owner**: System | **Status**: Planned
+
 - [ ] **IPC Contract**: Typed channels (`gs:settings:read`, `gs:media:download`, etc.).
 - [ ] **FS Safety**: Wrapper around `fs` that throws if path is outside allowlist.
 - [ ] **Job Runner**: Queue system for long-running CLI tasks (yt-dlp).
 
 ### J. QA & Ops
+
 **Owner**: QA | **Status**: Continuous
+
 - [ ] **Smoke Tests**: Manual checklist for "Launch -> Nav -> Settings -> Close".
 - [ ] **Build Packaging**: Electron Builder config for Windows NSIS installer.
 - [ ] **Crash Logging**: Simple file logger for uncaught main process errors.
@@ -98,26 +121,27 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 
 ## 4. Release Train
 
-| Milestone | Goal | Scope | DoD |
-| :--- | :--- | :--- | :--- |
-| **Alpha 1** | "It Runs" | Shell, basic Nav, Settings UI (Read-only) | App opens, navigates, theme toggles, no console errors. |
-| **Alpha 2** | "Tokenized" | Full Semantic Design System, Sidebar, Buttons | Visuals match reference 100%. |
-| **Beta 1** | "Media Ready" | Media Suite (Download/Queue) | Can accept URL and "mock" download process. |
-| **v1.0** | "Migration" | All modules at MVP parity with Legacy | User can uninstall PowerShell scripts. |
+| Milestone   | Goal          | Scope                                         | DoD                                                     |
+| :---------- | :------------ | :-------------------------------------------- | :------------------------------------------------------ |
+| **Alpha 1** | "It Runs"     | Shell, basic Nav, Settings UI (Read-only)     | App opens, navigates, theme toggles, no console errors. |
+| **Alpha 2** | "Tokenized"   | Full Semantic Design System, Sidebar, Buttons | Visuals match reference 100%.                           |
+| **Beta 1**  | "Media Ready" | Media Suite (Download/Queue)                  | Can accept URL and "mock" download process.             |
+| **v1.0**    | "Migration"   | All modules at MVP parity with Legacy         | User can uninstall PowerShell scripts.                  |
 
 ---
 
 ## 5. Risk Register & Mitigations
 
-| Risk | Impact | Mitigation |
-| :--- | :--- | :--- |
-| **Data Loss** | Critical | **Strict Rule**: No delete/write outside app sandbox. `_backup-reference` is strictly READ-ONLY. |
-| **Performance** | Medium | Large log files (CSV) might lag UI. **Mitigation**: Paginated loading or virtualized lists. |
-| **Complexity** | High | Electron IPC boilerplate can get messy. **Mitigation**: Use typed IPC hooks and rigorous patterns. |
+| Risk            | Impact   | Mitigation                                                                                         |
+| :-------------- | :------- | :------------------------------------------------------------------------------------------------- |
+| **Data Loss**   | Critical | **Strict Rule**: No delete/write outside app sandbox. `_backup-reference` is strictly READ-ONLY.   |
+| **Performance** | Medium   | Large log files (CSV) might lag UI. **Mitigation**: Paginated loading or virtualized lists.        |
+| **Complexity**  | High     | Electron IPC boilerplate can get messy. **Mitigation**: Use typed IPC hooks and rigorous patterns. |
 
 ---
 
 ## 6. Definition of Done (DoD)
+
 1.  **Code**: Compiles with 0 TypeScript errors.
 2.  **Lint**: Passes `eslint` (no dead code).
 3.  **Visuals**: Verified against Theme 1/Theme 2 specs.
@@ -127,6 +151,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 ---
 
 ## 7. Sanity Test Checklist (Run before EVERY PR/Commit)
+
 - [ ] **Does the app compile?** (`npm run build` or `tsc`)
 - [ ] **Are we modifying files outside the workspace?** (MUST BE NO)
 - [ ] **Are we touching the backup folder?** (MUST BE NO)
@@ -136,14 +161,17 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 ---
 
 ## 8. Changelog
-*(Template)*
+
+_(Template)_
 
 ### [Unreleased]
+
 - Initial creation of Migration Plan.
 - Setup of basic Semantic Token System.
 
 ### [0.12.0] - Media Suite Execution Core (Sprint 14) (2025-12-16)
-- **Job Queue + State Machine**: Implemented persistent job queue with JSONL history file at workflowRoot/_Media/JobHistory.jsonl
+
+- **Job Queue + State Machine**: Implemented persistent job queue with JSONL history file at workflowRoot/\_Media/JobHistory.jsonl
 - **Executor Pool**: Max 3 concurrent jobs with FIFO queue ordering
 - **Process Spawning**: Real child process spawning for yt-dlp, ffmpeg, imagemagick, soffice
 - **Progress Reporting**: Best-effort progress parsing from stdout (yt-dlp percentage, ffmpeg time)
@@ -158,6 +186,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Status**: Implementation complete; awaiting manual QA verification
 
 ### [0.11.0] - Focus Engine Global (Sprint 13) (2025-12-16)
+
 - **Global Pomodoro Timer**: Implemented single-instance focus timer with Focus/Short Break/Long Break phases, global state management, and localStorage persistence.
 - **Timer UI**: Added FocusTimerPill (always-visible header button, expands to pill during session) and FocusTimerPanel (full controls, presets, config editor).
 - **Phase Management**: Auto-transitions between phases, cycle tracking, configurable durations (default 25/5/15 Pomodoro).
@@ -172,6 +201,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Browser Compatibility**: Fixed setInterval type from NodeJS.Timeout to number for browser/Electron renderer context.
 
 ### [0.10.2] - Settings Persistence Fix (Sprint 12) (2025-12-16)
+
 - **Settings Refresh**: Fixed Settings page to call refresh() after saving, ensuring workflowRoot and other settings persist correctly across navigation.
 - **Root Cause**: SettingsPage maintained local state that was not re-hydrated after save, causing stale values despite successful disk writes.
 - **Fix**: Added await refresh() call after saveSettings() in SettingsPage.tsx (line 347).
@@ -180,6 +210,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Status**: Sprint 12 complete; Settings persistence verified in desktop mode; Compass File-backed badge confirmed working.
 
 ### [0.10.1] - Compass Snapshots UI Integration (2025-12-16)
+
 - **Renderer Service Layer**: Created src/services/compassSnapshotsService.ts with bridge detection and localStorage fallback.
 - **CompassPage Updates**: Added Recent Snapshots section (limit 10 newest-first), wired Save Snapshot to call append + refresh.
 - **Storage Mode Badges**: Shows File-backed indicator when using bridge + workflowRoot; Simulation badge when using fallback.
@@ -187,12 +218,13 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Focus Derivation**: Focus calculated from focusAreas average (meaningful representation of multi-dimensional focus).
 - **Data Transformation**: Service layer maps between rich UI format (focusAreas object, SessionData array) and simple bridge format (energy/focus numbers, sessions string array).
 - **Newest-First Ordering**: Consistent ordering in both file-backed and localStorage fallback modes.
-- **Safety**: Desktop mode saves to workflowRoot/_Index/CompassSnapshots.jsonl; web/simulation uses localStorage; never crashes UI.
+- **Safety**: Desktop mode saves to workflowRoot/\_Index/CompassSnapshots.jsonl; web/simulation uses localStorage; never crashes UI.
 - **Status**: Sprint 11 complete; web/simulation mode live-tested, desktop mode code-verified (preload bridge + IPC handlers + backend module confirmed present and correctly wired).
 
 ### [0.10.0] - Compass File-Backed Snapshots (Backend) (2025-12-16)
+
 - **Compass Snapshots Module**: Created electron/compass-snapshots.js for append-only JSONL persistence.
-- **Storage Location**: Snapshots saved to workflowRoot/_Index/CompassSnapshots.jsonl (append-only format).
+- **Storage Location**: Snapshots saved to workflowRoot/\_Index/CompassSnapshots.jsonl (append-only format).
 - **IPC Handlers**: Added compass:snapshots:append and compass:snapshots:list in electron/main.js.
 - **Preload Bridge**: Exposed window.gesu.compassSnapshots.append/list in electron/preload.cjs.
 - **Safety**: Reused assertPathWithin pattern; BACKUP_ROOT defense maintained.
@@ -200,15 +232,17 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Status**: Backend infrastructure complete; UI integration completed in Sprint 11 (v0.10.1).
 
 ### [0.9.1] - Checklist Reconciliation (2025-12-16)
+
 - **Documentation Only**: Reconciled task.md PHASE 6 and PHASE 7 checkboxes with actual Sprint 9/10 deliverables.
 - **PHASE 6 Complete**: Ticked all items (template structures, folder generation, project.meta.json, Brief.md, ProjectLog).
 - **PHASE 7 Partial**: Ticked Native File Dialogs (completed in Sprint 8); process spawning items remain pending.
 - **No Code Changes**: This version contains documentation updates only.
 
 ### [0.9.0] - Generator Bridge + Disk Discovery + ProjectLog (2025-12-16)
+
 - **Projects Registry**: Created electron/projects-registry.js to scan disk for existing projects by detecting project.meta.json files.
 - **Disk Discovery**: Added projects:list IPC handler to return projects from projectsRoot with safe path validation.
-- **Centralized ProjectLog**: Appends creation events to projectsRoot/_Index/ProjectLog.jsonl (append-only JSONL format).
+- **Centralized ProjectLog**: Appends creation events to projectsRoot/\_Index/ProjectLog.jsonl (append-only JSONL format).
 - **Scaffold Enhanced**: Updated scaffold:create to extract projectId from meta, call appendProjectLog, and return projectId/projectName.
 - **Store Import**: Added importFromDisk and refreshFromDisk to projectStore.ts for merging disk projects (duplicate-safe).
 - **Generator Bridge**: Updated handleGenerate to automatically register created projects and set them active.
@@ -216,6 +250,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **First-Class Projects**: Generated projects now appear in Project Hub selector immediately and become active automatically.
 
 ### [0.8.0] - Generator Real Scaffolding (2025-12-16)
+
 - **Electron Scaffolding Module**: Created electron/scaffolding.js with sanitizeProjectName, assertPathWithin (allowlist + BACKUP_ROOT defense), buildPlan, and applyPlan.
 - **IPC Handlers**: Added scaffold:preview and scaffold:create to electron/main.js using projectsRoot from settings.
 - **Preload Bridge**: Exposed window.gesu.scaffold.preview/create in electron/preload.cjs.
@@ -225,12 +260,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Safety**: Strict allowlist validation (projectsRoot only), BACKUP_ROOT defense, 'wx' flag prevents overwrite, sanitized project names.
 
 ### [0.7.0] - Real I/O Foundation (2025-12-16)
+
 - **File-Backed Settings**: Updated useGesuSettings to prioritize window.gesu.settings (reads/writes Gesu.GlobalSettings.json via Electron) with localStorage fallback for web dev.
 - **Native Path Dialogs**: Confirmed window.gesu.dialog.pickFolder/pickFile already wired and functional in SettingsPage.
 - **Real Engine Status**: Validated electron/tools-check.js provides real file existence checks via IPC 'tools:check' handler.
 - **Infrastructure Complete**: All Real I/O foundation components already implemented and functional.
 
 ### [0.6.0] - Post-MVP Hardening (2025-12-15)
+
 - **Project Store**: Created projectStore.ts with Project model (id, name, createdAt, updatedAt, archived), CRUD operations, and schemaVersion.
 - **Workflow Progress Store**: Created workflowProgressStore.ts for per-project persistence of node status and DoD completion.
 - **Project Selector UI**: Added project dropdown to InitiatorPage header with create/switch capabilities.
@@ -239,6 +276,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Placeholder Removal**: Replaced "Current Project" with activeProject.name in StepDetailPanel.
 
 ### [0.5.0] - Tech Debt + UI Sanity (2025-12-16)
+
 - **Unified Engine Status**: Created engineStatusStore.ts with single source of truth, subscription model, refresh capability, and last-checked timestamp.
 - **useEngineStatus Hook**: React hook for consuming unified engine status store.
 - **Compass Snapshot Persistence**: Created compassSnapshotStore.ts with localStorage persistence, schemaVersion, and CRUD operations.
@@ -248,8 +286,9 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **UI Sanity**: Verified all modules via code review - no regressions detected.
 
 ### [0.7.0] - Sprint 15: Standards Tab v1 (Workflow Blueprints) (2025-12-17)
+
 - **Data Model**: BlueprintFileShape with categories, blueprints, nodes structure (schemaVersion: 1).
-- **Electron Persistence**: workflow-blueprints.js with get/save to _Index/WorkflowBlueprints.json.
+- **Electron Persistence**: workflow-blueprints.js with get/save to \_Index/WorkflowBlueprints.json.
 - **IPC Handlers**: workflow:blueprints:get, workflow:blueprints:save in main.js.
 - **Bridge**: workflowBlueprints.get/save exposed in preload.cjs.
 - **Service**: workflowBlueprintsService.ts with Electron detection and localStorage fallback.
@@ -261,6 +300,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Verification**: Browser QA PASSED - all acceptance criteria verified, file persistence tested.
 
 ### [0.8.0] - Sprint 16: Refocus MVP (Rescue Loop) (2025-12-17)
+
 - **State Selection**: 4-state picker (Overwhelm/Restless/Avoiding/Foggy) replacing overwhelm slider.
 - **Suggested Actions**: 1-3 hardcoded tiny actions per state (finish-first UX).
 - **15-min Rescue Focus**: Start button wired to focusTimerStore.start({ focusMinutes: 15 }).
@@ -272,6 +312,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Acceptance**: Refocus flow < 60 seconds, Lost Mode 3 prompts, no regressions verified.
 
 ### [0.8.1] - Sprint 13: Focus Guardrails (Distraction Shield + Universal Max-3 Tasks) (2025-12-17)
+
 - **In-App Distraction Shield**: Intercepts navigation attempts during active focus sessions with modal.
 - **Modal Actions**: Pause timer & continue, End session & continue, Continue (keep running) + ESC support.
 - **Universal Task Guardrail**: taskGuardrail.ts enforces max 3 active tasks across all sources.
@@ -281,6 +322,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA**: Distraction Shield PASS, Universal Guardrail PARTIAL (works but has sync timing issue).
 
 ### [0.8.2] - Sprint 17: Universal Guardrail Sync Hardening (2025-12-17)
+
 - **Reactive Subscription Pattern**: Added subscribe() to projectHubTasksStore with notifySubscribers() on all mutations.
 - **React Hook**: Created useTaskGuardrail hook for reactive task capacity updates across pages.
 - **Cross-Page Sync**: Task counts now update immediately across all pages (Project Hub, Lost Mode, Compass) without page refresh.
@@ -290,12 +332,14 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Status**: Universal guardrail now fully functional with reactive cross-page synchronization.
 
 ### [DOC] - Product/UX Audit Completed (2025-12-17)
+
 - **Audit Document**: Created `docs/PRODUCT_UX_AUDIT.md` with holistic finish-first flow evaluation.
 - **Key Findings**: Dashboard noise, Launcher redundancy, Compass slider overload, timer-task disconnect.
 - **Proposed Sprint 18**: Make Compass home, hide Launcher, reorder Compass sections (tasks above sliders).
 - **No code changes** - documentation only.
 
 ### [0.9.0] - Sprint 18: Smoothness - Navigation Alignment (2025-12-17)
+
 - **Compass as Home**: Changed index route from Dashboard to Compass for finish-first landing.
 - **Dashboard Route**: Moved Dashboard to /dashboard route (still accessible for deep links).
 - **Launcher Removed**: Removed Launcher NavItem from sidebar navigation (route still exists).
@@ -305,6 +349,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA**: All P0 acceptance criteria verified - no regressions in timer, distraction shield, canvas panning, or Media Suite.
 
 ### [0.10.0] - Sprint 20: Standards-Workflow-Generator Integration (2025-12-17)
+
 - **Project Model Extended**: Added categoryId, blueprintId, blueprintVersion, projectPath to Project interface.
 - **Generator Blueprint Assignment**: Generator now loads blueprint categories on mount, maps template to category, assigns default blueprint to new projects.
 - **Category Creation UI**: Added "+ Add" button to Standards tab for creating new categories with default blueprints.
@@ -318,6 +363,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA Status**: Verified by user - category creation, blueprint assignment, and workflow rendering all working.
 
 ### [0.10.1] - Sprint 20.1: Project Indexing & Auto-Swap (2025-12-17)
+
 - **Auto-Load Disk Projects**: Project Hub now auto-loads projects from projectsRoot on mount (no manual refresh needed).
 - **Simplified Dropdown**: Shows only project name (parsed from YYMMDD_CatXXX_Name folder format). Removed "+ New Project" option.
 - **Auto-Swap Workflow**: Switching project in dropdown automatically refreshes Workflow tab via key prop.
@@ -328,6 +374,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA Status**: Implementation complete, pending user verification.
 
 ### [0.9.1] - Sprint 19: Finish-First Compass + Task-Timer Coupling + Density (2025-12-17)
+
 - **Task-Timer Coupling**: Extended focusTimerStore with TaskContext (taskId, taskTitle, projectName, stepTitle) and startWithTask() function.
 - **Timer UI Enhancement**: FocusTimerPill now displays linked task title instead of generic "Focus" label when task context is set.
 - **Start Focus Button**: Added "Start Focus" button to each task in Project Hub Tasks list on Compass.
@@ -341,6 +388,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **QA Note**: Browser-based QA unavailable due to navigation errors. Code review confirms all acceptance criteria met. Desktop manual QA recommended.
 
 ### [0.6.3] - Sprint 14.3: YouTube Cookie Support + Safe Throttling (2025-12-17)
+
 - **Cookies Support**: Added first-class cookie configuration for yt-dlp to handle YouTube authentication.
 - **Cookie Modes**: Browser (Chrome/Edge) or File (cookies.txt via native picker).
 - **Safe Throttling**: Optional sleep intervals (min/max) and rate limiting (e.g. "2M").
@@ -349,12 +397,12 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Executor**: Dynamic ytDlpSettings injection in buildCommand, log redaction for sensitive args.
 
 ### [0.6.2] - Sprint 14.2: Cancel All + History Verification (2025-12-17)
+
 - **Cancel All UI**: Added `handleCancelAllJobs` handler in MediaSuitePage (lines 516-532).
 - **Cancel All Button**: Added button in Job Queue header that appears only when jobs are running/queued.
 - **History Persistence**: Fixed in Sprint 14.1 via `settings.paths.workflowRoot` path correction.
 - **soffice De-scoped**: Document conversion remains deferred; soffice hidden via UI filter.
 - **Verification Pending**: User must manually verify Cancel All with running jobs and history persistence across restart.
-
 
 - **Finish Mode Store**: Created finishModeStore.ts with session management, action toggling, and localStorage persistence.
 - **StepDetailPanel**: Added Finish Mode section with action selection (max 3), active indicator, and "Mulai Finish Mode" button.
@@ -363,6 +411,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Integration**: Selected actions sync to "Project Hub Tasks (Today)" on Compass.
 
 ### [0.3.0] - Settings MVP (2025-12-15)
+
 - **Global Settings Model**: Created typed GesuSettings interface with workflowRoot, projectsRoot, backupRoot, and toolPaths (yt-dlp, ffmpeg, imagemagick, libreoffice).
 - **localStorage Adapter**: Implemented settingsStore.ts with schema versioning and migration support.
 - **Settings Persistence**: Rewrote useGesuSettings hook to use localStorage instead of window.gesu bridge.
@@ -371,6 +420,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Milestone**: Global Configuration Persists achieved.
 
 ### [0.2.0] - Project Hub MVP (2025-12-15)
+
 - **Project Hub**: Renamed Initiator to Project Hub with Workflow/Generator tabs.
 - **Workflow Canvas**: Pannable canvas with 5 swimlanes, 16 fixed nodes, bezier connectors.
 - **Step Detail Panel**: Right panel with phase badge, DoD checklist, mark as done, tools chips.
@@ -380,19 +430,22 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **Milestone**: Project Hub MVP usable end-to-end achieved.
 
 ### [0.1.0] - Alpha
+
 - Skeleton setup.
 
 ### [0.10.2] - Sprint 20.2: UI Polish & Robust Dialogs (2025-12-17)
+
 - **Robust Dialogs**: Refactored `ConfirmDialog` and `AlertDialog` to use `React Portals` (`createPortal`), rendering them at `document.body` level. This permanently resolves z-index stacking context issues and parent container clipping.
 - **UI Polish**: Relocated "Focus Score" badge to the left side of the Focus Details header for better scanability.
 - **Code Quality**: Fixed unused variable lint errors in `scaffoldingService.ts` and `CompassPage.tsx`.
 - **Theme Awareness**: Updated `Button` component to strictly use `primary-700` (Light) and `secondary-300` (Dark).
 - **Files**: `ConfirmDialog.tsx`, `AlertDialog.tsx`, `CompassPage.tsx`, `scaffoldingService.ts`, `Button.tsx`.
-- **QA Status**: 
+- **QA Status**:
   - **Browser QA**: Verified "Stop Timer" dialog appears above all elements (PASS). Verified Focus Details UI layout (PASS).
   - **Desktop QA**: Verified file-backed features remain stable (PASS).
 
 ### [0.11.0] - Sprint 21: Workflow Overlay Panel + Progress Indicator (2025-12-17)
+
 - **Progress Indicator**: Added `workflowProgress.ts` utility to calculate DoD-based completion percentage. Progress bar displays at top-left of Workflow canvas showing live progress (e.g., "51% (28/55)").
 - **Overlay Side Panel**: Converted StepDetailPanel from fixed column to on-demand overlay. Panel appears on node click with blur/dim backdrop (`backdrop-blur-sm`). Click backdrop or press ESC to close.
 - **ESC Key Handler**: Added keyboard handler to close overlay panel with Escape key.
@@ -404,6 +457,7 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
   - **Desktop QA**: Verified file-backed persistence stable (PASS).
 
 ### [0.11.1] - Sprint 21.1: Workflow Horizontal View + Toggle (2025-12-17)
+
 - **View Toggle**: Added toggle button to switch between Swimlane (vertical columns) and Horizontal (phase rows) views. Default remains swimlane to preserve existing behavior. Toggle button shows view-specific icons (`LayoutGrid` for swimlane, `List` for horizontal).
 - **Horizontal View - Left Sidebar**: Implemented left sidebar (~200px) containing two sections: "PHASES" (lists all 5 phases with node counts) and "STATUS PROJECT" (displays progress percentage, progress bar, and DoD completion count).
 - **Horizontal View - Main Canvas**: Implemented horizontal phase rows layout where each phase is rendered as a horizontal row with cards flowing left-to-right. Cards display title, description, and status badges. Native horizontal scrollbar appears for long phase rows.
@@ -412,10 +466,11 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
 - **No Regressions**: Swimlane view preserved all original functionality (panning, connectors, phase headers, absolute positioning). Toggle seamlessly switches between views without state loss.
 - **Files**: `WorkflowCanvas.tsx` (major refactor - conditional rendering based on `viewMode` state).
 - **QA Status**:
-  - **Browser QA**: Verified via user manual testing with screenshots. Horizontal view matches reference UX design (PASS). Toggle functional (PASS). Overlay works in both views (PASS).  Progress accurate (PASS). No regressions to Compass/Media Suite (PASS).
+  - **Browser QA**: Verified via user manual testing with screenshots. Horizontal view matches reference UX design (PASS). Toggle functional (PASS). Overlay works in both views (PASS). Progress accurate (PASS). No regressions to Compass/Media Suite (PASS).
   - **Evidence**: User-provided screenshots show horizontal layout with sidebar, phase rows, and functioning overlay panel. See `sprint21_1_browser_qa_report.md` for full QA documentation.
 
 ### [0.11.2] - Sprint 21.2: Horizontal Workflow Refinements (2025-12-18)
+
 - **Arrow Enhancements**: Updated horizontal arrows between cards to use slight quadratic bezier curve (`Q 20 16`) instead of straight lines for visual appeal. Removed cross-lane arrows connecting phases per user request. Arrow markers properly sized (5x5) with direct connection to nodes.
 - **Canvas Panning**: Implemented middle-click drag panning using mouse event handlers (`onMouseDown`, `onMouseMove`, `onMouseUp`, `onMouseLeave`). Cursor changes to `grabbing` during pan. Scroll behavior dynamically switches between 'smooth' and 'auto'. Works alongside touchpad/wheel scrolling.
 - **Status Indicators**: Added colored status dots with labels to each card header (Done: green solid, WiP: amber with pulse animation, Todo: gray). Positioned at top-right of cards. Added Legend section in left sidebar showing all 3 status types with visual examples for quick reference.
@@ -427,3 +482,251 @@ To migrate the Gesu Ecosystem from a PowerShell/WPF script collection into a uni
   - **Browser QA**: Verified via user manual testing. Arrows curved correctly (PASS). Cross-lane arrows removed (PASS). Middle-click panning functional (PASS). Status indicators clear with legend (PASS). Striped dividers subtle (PASS). Reopen button functional for Done nodes (PASS).
   - **Evidence**: User provided annotated screenshots showing desired arrow styles and confirmed all refinements working as expected.
 
+### [0.12.0] - Sprint 21.3 Phase 1: Folder Templates Foundation (2025-12-18)
+
+- **FolderTemplate Type**: Added `FolderTemplate` interface to `workflowBlueprints.ts` with `id`, `name`, and `folders: string[]` (flat path strings). Added `FolderTemplatesFileShape` for file persistence with `schemaVersion`, `templates`, and `updatedAt`.
+- **Blueprint Extension**: Added optional `folderTemplateId?: string` field to `WorkflowBlueprint` interface. Backward compatible - existing blueprints still work.
+- **Service Layer**: Created `workflowFolderTemplatesService.ts` with same pattern as workflowBlueprintsService: Electron bridge with localStorage fallback, load/save functions, and CRUD helpers.
+- **Seeded Defaults**: 6 folder templates pre-seeded: General Creative, Brand Design Standard, ArchViz (SketchUp + D5), Web Development, App Development, Content Creator.
+- **TypeScript Declarations**: Added `folderTemplates` API to `global.d.ts` for Electron bridge support.
+- **Files**: `src/types/workflowBlueprints.ts`, `src/services/workflowFolderTemplatesService.ts` (NEW), `src/types/global.d.ts`.
+- **QA Status**: Pending UI implementation in Phase 3.
+
+### [0.12.1] - Sprint 21.3 Phase 2: Set Default Blueprint (2025-12-18)
+
+- **Default Blueprint Selector**: Added dropdown in Standards Tab category section to set default blueprint per category. When a category is selected, shows all blueprints for that category with version numbers. Selection updates `defaultBlueprintId` and marks form dirty for save.
+- **UI Enhancement**: Category buttons refactored to div containers with nested button for category name and conditional dropdown. Shows step count when collapsed, dropdown when expanded.
+- **Generator Integration**: Verified Generator already uses `selectedBlueprint` which resolves from category's `defaultBlueprintId` - changes take effect automatically when blueprints are saved.
+- **Files**: `src/pages/StandardsTab.tsx` (refactored category list UI).
+- **QA Status**: Functional - dropdown appears when category selected.
+
+### [0.12.2] - Sprint 21.3 Phase 3: Folder Templates UI (2025-12-18)
+
+- **Templates List**: Added folder templates section below Categories in Standards Tab left column. Shows all templates with folder count, click to select for editing.
+- **Create Template**: "+ Add" button opens inline form. Enter name + press Enter or click Create. Auto-generates ID, seeds with default folders.
+- **Template Editor**: When template selected, shows inline editor with: template name header, delete button (with confirm), folder path list with up/down/remove buttons, add folder button, and save button.
+- **Folder Management**: Each folder path is editable inline. ChevronUp/ChevronDown for reordering, X to remove. "Add Folder" appends new entry.
+- **Persistence**: Save Templates button appears when dirty. Saves to localStorage (web) or file (desktop via Electron bridge when wired).
+- **Files**: `src/pages/StandardsTab.tsx` (major additions - ~200 lines), imports from `workflowFolderTemplatesService.ts`.
+- **QA Status**: UI functional in browser - templates load, CRUD works, save persists to localStorage.
+
+### [0.12.3] - Sprint 21.3 Phase 4: Generator Integration (2025-12-18)
+
+- **buildPlan Enhancement**: Modified `electron/scaffolding.js` to accept `folderTemplateFolders` parameter. When provided, creates those folders instead of hardcoded template-based structures. Falls back to legacy behavior for backward compatibility.
+- **IPC Handlers**: Updated `scaffold:preview` and `scaffold:create` handlers in `main.js` to pass `folderTemplateFolders` from renderer to buildPlan.
+- **Service Interface**: Extended `IScaffoldingService` in `scaffoldingService.ts` with `folderTemplateFolders` in `preview()` and `scaffold()` method signatures.
+- **TypeScript Declarations**: Updated `global.d.ts` scaffold types to include `folderTemplateFolders?: string[]` parameter.
+- **Backward Compatible**: Existing projects without folder templates continue to use hardcoded folders based on templateId.
+- **Files**: `electron/scaffolding.js`, `electron/main.js`, `src/services/scaffoldingService.ts`, `src/types/global.d.ts`.
+- **QA Status**: Ready for integration testing - scaffolding accepts folder templates from blueprints.
+
+### [0.12.4] - Sprint 21.3 Phase 5: Real Generator Preview (2025-12-18)
+
+- **Preview Enhancement**: `handlePreview` now resolves `folderTemplateFolders` from blueprint's `folderTemplateId` and folder templates data, passes to `scaffoldingService.preview()`.
+- **Generate Enhancement**: `handleGenerate` similarly resolves and passes `folderTemplateFolders` to `scaffoldingService.scaffold()`.
+- **Fixed Folder Tree Display**: Changed `item.kind === 'directory'` to `item.kind === 'dir'` to correctly match scaffolding.js output format.
+- **No More Mockups**: Preview now shows actual folder structure that will be created, not static placeholder folders.
+- **Files**: `src/pages/InitiatorPage.tsx` (handlePreview, handleGenerate, folder tree render logic).
+- **QA Status**: Ready for manual verification - preview should show real folder templates when blueprint has folderTemplateId set.
+
+### [0.12.5] - Sprint 21.3 Phase 6: Structural Editing & Phases (2025-12-18)
+
+- **Collapsible Phases**: Phase headers in blueprint editor are now clickable to expand/collapse. Shows ChevronRight (collapsed) or ChevronDown (expanded) with step count.
+- **Bugfix**: Fixed collapse logic by tracking `collapsedPhases` instead of `expandedPhases` - prevents edge case where collapsing last phase expanded all others.
+- **Per-Blueprint Phases**: Added `WorkflowPhaseDefinition` interface and optional `phases[]` field to `WorkflowBlueprint`. Blueprints can override default phases.
+- **Default Phase Sets**: Added 4 phase sets to `workflowData.ts`: General Creative, Development, Content Creator, Admin/Ops. Each with 5 phases and appropriate colors.
+- **Add Step**: Each phase section has "+ Add Step" button. Creates new step with default values, auto-selects for editing.
+- **Delete Step**: Hover over step shows trash icon. Click shows confirmation dialog. Deletes from nodes array with version increment.
+- **Reorder Steps**: Hover over step shows up/down arrows. Swaps position in nodes array. Disabled at boundaries.
+- **Files**: `src/types/workflowBlueprints.ts`, `src/pages/workflowData.ts`, `src/pages/StandardsTab.tsx`.
+- **QA Status**: ✅ Verified - collapse/expand working correctly, add/delete/reorder steps functional.
+
+### [0.12.6] - i18n Phase 3: Stabilization + Workflow Card Localization (2025-12-22)
+
+- **Refocus Label Leak Verification**: Verified all mental state labels (Overwhelmed/Restless/Avoiding/Foggy) already use `t()` with STATE_KEY_MAP pattern. FlowStateRadar:161, CustomProtocolCreator:221, RefocusInsights:129 all correctly wrapped.
+- **Grep Verification**: Confirmed 0 direct `{config.label}`, `{state.label}`, `{segment.config.label}` renders in UI - all go through t() with fallbacks.
+- **Workflow Card i18n Implementation**: Extended `WorkflowNode` interface with optional `titleKey` and `descKey` fields for i18n support.
+- **workflowData.ts Updates**: Added titleKey/descKey to all 8 default WORKFLOW_NODES (p1-p3, e1-e3, f1-f2) with `initiator:workflow.steps.*` namespace.
+- **WORKFLOW_PHASES Updates**: Added optional `labelKey` field to phase configuration array (5 phases: planning, design, frontend, backend, ops) with `initiator:workflow.phases.*` namespace.
+- **Render Site Updates**: WorkflowCanvas.tsx and StepDetailPanel.tsx now use conditional `node.titleKey ? t(node.titleKey, node.title) : node.title` pattern for backward compatibility.
+- **Translation Keys Added**:
+  - EN/ID `initiator.json`: Added `workflow.phases{}` object (7 phase labels) and `workflow.steps{}` object (8 steps with title + desc).
+  - Fixed duplicate key lint errors by renaming old string keys to `phasesLabel` and removing legacy `planning/execution/finalize` string duplicates.
+- **Date Locale Fixes**: Fixed 2 remaining hardcoded 'en-US' references:
+  - ActivityPage.tsx:197 - formatTime() now uses dateLocale
+  - CompassPage.tsx:953 - Snapshot timestamp now uses dateLocale
+  - MediaSuitePage.tsx:228-230 - Added i18n + dateLocale variables
+- **Files Modified**: workflowData.ts, WorkflowCanvas.tsx, StepDetailPanel.tsx, RefocusPage.tsx, MediaSuitePage.tsx, ActivityPage.tsx, CompassPage.tsx, InitiatorPage.tsx, locales/en/initiator.json, locales/id/initiator.json, locales/en/refocus.json, locales/id/refocus.json.
+- **Total Impact**: 15 date locale fixes across session, 100+ translation keys added, workflow cards now fully i18n-capable.
+- **Evidence**: Static grep verification showed 0 label leaks, viewModes pattern verified correct (value='daily', label=t()).
+- **Status**: Refocus and workflow card i18n complete. Date formatting now consistently uses i18n-aware locale pattern.
+
+### [DOC] - i18n Phase 4: UI/UX Stability Audit (2025-12-22)
+
+- **Comprehensive Static Audit**: Conducted grep audit across entire codebase to identify remaining EN leaks, day/month hardcoding, and translation key leak patterns.
+- **Findings Summary**: 6 remaining EN leaks identified:
+  - Dashboard: WeeklyActivityChart.tsx:35 - Hardcoded `['Su','Mo','Tu','We','Th','Fr','Sa']` day array
+  - Compass: CompassPage.tsx:917 - "Saving to local files" hardcoded status text
+  - Activity: ActivityPage.tsx:456 - "Today's Focus (Minutes)" hardcoded chart title
+  - Templates: FolderTemplateEditorModal.tsx:167,289 - "New Template" and search placeholder hardcoded
+  - Standards: StandardsTab.tsx:922 - "New Blueprint" button hardcoded
+- **Fix Strategy**: Created implementation_plan.md with surgical fixes: replace hardcoded day array with `Intl.DateTimeFormat(dateLocale, { weekday: 'short' })` pattern, wrap all remaining strings with `t('namespace:key', 'fallback')`.
+- **Locale Keys Required**: compass.json (status.savingToFiles/simulationMode), activity.json (charts.todaysFocusMinutes), initiator.json (standards.newBlueprint), modals.json (templateEditor.searchPlaceholder).
+- **Not Addressed**: StandardsTab context menu items (grep found no hardcoded strings - likely already use t()), ActivityHeatmap month labels (already uses Intl.DateTimeFormat correctly).
+- **Guardrails Established**: 4 non-negotiable rules documented: (1) Translate labels, never identifiers, (2) Always use t() with fallbacks, (3) All dates use dateLocale pattern, (4) viewModes regression test via grep.
+- **Implementation Status**: Audit complete, implementation plan approved by user, awaiting execution.
+- **Files Created**: docs/implementation_plan.md (artifact), stability_report.md (artifact).
+
+### [0.12.7] - i18n Phase 4: UI Leak Elimination + Regression Guardrails (2025-12-22)
+
+- **Dashboard WeeklyActivityChart**: Replaced hardcoded `['Su','Mo','Tu','We','Th','Fr','Sa']` array with `Intl.DateTimeFormat(dateLocale, { weekday: 'short' })` for locale-aware day labels.
+- **Activity Page**: Localized "Today's Focus (Minutes)" chart title using `t('activity:charts.todaysFocusMinutes')` with fallback.
+- **Compass Page**: Localized storage status "Saving to local files" / "Simulation Mode" using `t('compass:status.*')` pattern.
+- **Standards Tab**: Localized "New Blueprint" button using `t('initiator:standards.newBlueprint')`.
+- **Locale Keys Added**:
+  - EN: activity.json (todaysFocusMinutes, weeklyTotal), compass.json (status section), initiator.json (standards.newBlueprint)
+  - ID: Same keys with Indonesian translations ("Fokus Hari Ini (Menit)", "Menyimpan ke file lokal", "Blueprint Baru")
+- **Automated Leak Detection**: Created `scripts/check-i18n-leaks.js` using ripgrep to detect hardcoded EN strings and translation key leaks in TSX files.
+- **Verification**: Static grep checks confirm 0 leaks for all fixed patterns (weekday arrays, "Today's Focus", "Saving to local files", "New Blueprint").
+- **Regex Patterns**: Script checks for 10 leak patterns including hardcoded EN phrases and raw translation keys (viewModes._, mentalStates._, workflow.steps.\*).
+- **Not Addressed**: StandardsTab context menu items already use `t()` (verified), ActivityHeatmap months already use Intl (verified).
+- **Files Modified**: WeeklyActivityChart.tsx, ActivityPage.tsx, CompassPage.tsx, StandardsTab.tsx, 6 locale JSON files (EN/ID for activity, compass, initiator).
+- **Files Created**: scripts/check-i18n-leaks.js, docs/UI_UX_STABILITY_QA.md.
+- **QA Status**: Implementation complete; awaiting user visual QA using checklist in UI_UX_STABILITY_QA.md.
+
+### [0.12.8] - i18n Phase 5: Blueprint Templates + Settings External Tools (2025-12-23)
+
+- **TemplatePickerModal i18n**:
+  - Replaced hardcoded `CATEGORY_LABELS` with `CATEGORY_KEYS` map pointing to locale keys
+  - Category labels now use `t(CATEGORY_KEYS[category])` → "Kreatif", "Pengembangan", "Umum"
+  - Phase/step count format uses `t('initiator:templatePicker.phaseStepCount', { phases, steps })` → "5 fase · 10 langkah"
+  - Button text localized: "Salin Prompt AI", "Tersalin!", "Impor", "Batal"
+  - Show/Hide hidden toggle: "Tampilkan Tersembunyi (N)" / "Sembunyikan"
+  - Tooltips: "Pulihkan template" / "Sembunyikan template"
+  - Empty state: "Tidak ada template cocok \"{{query}}\""
+- **Settings StatusBadge i18n**:
+  - Refactored `StatusBadge` component to accept `t` function prop
+  - Created `getStatusLabel()` helper with switch statement for all 6 status types
+  - Status labels now use `t('settings:engineStatus.*')` keys
+  - Labels: "Tidak Diketahui", "Siap (Terkonfigurasi)", "Siap (System PATH)", "Peringatan (Fallback)", "Hilang", "Error"
+- **Locale Keys Added**:
+  - EN/ID initiator.json: `templatePicker.categories.*`, `templatePicker.phaseStepCount`, `templatePicker.copied`, `templatePicker.showHidden`, `templatePicker.hideHidden`, `templatePicker.restoreTemplate`, `templatePicker.hideTemplate`, `templatePicker.noResults`
+  - EN/ID initiator.json: `blueprints.templates.*` (8 template names - preserved for future nameKey pattern)
+  - ID settings.json: `engineStatus.*` keys already present
+- **Guardrail Script**: `node scripts/check-i18n-leaks.js` passes with exit 0
+- **Browser QA**:
+  - Template Picker: Categories (KREATIF/PENGEMBANGAN/UMUM), counts (X fase · Y langkah), buttons verified ✅
+  - Settings page: Health status badges show "Tidak Diketahui" ✅
+  - Screenshots: template_picker_indonesian_1766428619732.png, settings_indonesian_1766428638147.png
+- **task.md Updated**: Ticked Blueprint Templates, Media Suite, Cosmetics Modal, Leaderboard Modal, Settings External Tools
+- **Files Modified**:
+  - TemplatePickerModal.tsx (11 i18n changes)
+  - SettingsPage.tsx (StatusBadge refactored with getStatusLabel)
+  - locales/en/initiator.json (templatePicker + blueprints sections expanded)
+  - locales/id/initiator.json (same)
+- **Not Modified**: Template names remain hardcoded in blueprintTemplates.ts (nameKey pattern deferred - would require additional render site changes)
+- **Status**: Complete. All target flows (Blueprint Templates Modal, Settings External Tools) now display Indonesian translations.
+
+### [0.12.9] - i18n Phase 6: Alerts/Toasts Localization Sweep (2025-12-23)
+
+- **MediaSuitePage**: Converted 33 `showToast()` calls from hardcoded English strings to `t('common:alerts.*')` keys with proper fallbacks and interpolation for dynamic values (count, filenames).
+- **CompassPage**: Converted 3 `alert({})` dialog calls for snapshot save success/failure messages.
+- **InitiatorPage**: Converted 2 `alert({})` calls for project creation success and project list refresh messages.
+- **TemplatePickerModal**: Converted 2 native `window.alert()` calls for invalid blueprint file and JSON parse errors.
+- **Locale Keys Added** (60+ keys in common.json EN/ID):
+  - Core: success, error, info, warning, saved, saving, updated, deleted, copied, refreshed, queued, canceled, failed
+  - Validation: invalidInput, invalidFile, noData, notAvailableInBrowser
+  - Job Operations: jobQueued, jobCanceled, jobsQueued, jobsCanceled, filesSelected, filesAdded
+  - Errors: failedWithReason, failedToEnqueueJob, failedToPickFile, failedToPickFiles, failedToPickFolder, failedToCancelJob, failedToCancelAllJobs, failedToOpenFolder, failedToUpdate
+  - Media Suite Specific: pleaseEnterValidUrl, pleaseSelectSourceFile, convertJobQueued, downloadJobQueued, noFilesForBatchConvert, filePickerNotSupported, folderPickerNotAvailable, cancelNotAvailable, updateNotAvailable, openFolderNotAvailable
+  - Project Operations: projectCreated, projectCreatedMessage, projectListRefreshed
+  - Blueprint Operations: blueprintSaved, blueprintDeleted, phaseSaved, phaseDeleted, stepSaved, stepDeleted, maxPhasesReached, maxPhasesMessage
+  - Compass: snapshotSaved, snapshotSaveFailed
+  - Import: invalidBlueprintFile, failedToParseJson
+- **Indonesian Translations**: All 60+ keys translated to Indonesian (e.g., "Tugas diantrekan", "Gagal memilih file", "Snapshot berhasil disimpan!")
+- **Interpolation Support**: Dynamic messages use {{count}}, {{reason}} vars (e.g., "{{count}} tugas diantrekan", "Gagal: {{reason}}")
+- **Files Modified**: MediaSuitePage.tsx, CompassPage.tsx, InitiatorPage.tsx, TemplatePickerModal.tsx, en/common.json, id/common.json
+- **Files Created**: docs/I18N_ALERTS_SWEEP.md (inventory, keys list, QA checklist)
+- **Status**: Complete. All 40+ alert/toast calls now use i18n with proper fallbacks.
+
+### [0.12.10] - QC Pass: Pre-New User Guides Sprint (2025-12-23)
+
+- **QC_REPORT.md**: Comprehensive quality control report covering 5 focus areas:
+  - A) UI/UX Consistency: ✅ PASS - Design tokens, button states, scrollbars consistent
+  - B) i18n Coverage: ⚠️ PARTIAL - Core flows translated, ~20 gaps in modals/data-driven content
+  - C) Backend Services: ✅ PASS - Path traversal protection, job queue resilient
+  - D) Data Persistence: ✅ PASS - localStorage with schema versioning, file persistence working
+  - E) Performance: ✅ PASS - useMemo/useCallback in all major pages
+- **RISK_REGISTER.md**: 10 identified risks with severity/likelihood/impact ratings and mitigations
+- **QA_CHECKLIST_RELEASE.md**: Step-by-step manual verification checklist (19 test areas)
+- **Architecture Documented**: 15 Electron backend modules, 18 frontend services, 10 Zustand stores
+- **Security Audit**: Path traversal protection via assertPathWithin(), BACKUP_ROOT explicitly blocked
+- **Verdict**: ⚠️ CONDITIONAL PASS - Ready for "New User Guides" sprint with i18n gaps as known issues
+
+### [0.12.11] - Sprint 23: Data-Driven i18n nameKey Pattern (2025-12-23)
+
+**Closes**: RISK_REGISTER Risk #1 (i18n data-driven leaks) + Risk #2 (Template name hardcoding)
+
+- **Type Extensions**: Added optional `nameKey?: string` property to `WorkflowBlueprint` and `FolderTemplate` interfaces in `types/workflowBlueprints.ts`
+- **Blueprint Templates** (`blueprintTemplates.ts`): Added `nameKey` to all 8 templates:
+  - `initiator:templates.archvizStandard`, `brandDesign`, `motionGraphics`, `uiuxProject`
+  - `initiator:templates.webDevelopment`, `appDevelopment`, `contentCreator`, `clientProject`
+- **Folder Templates** (`workflowFolderTemplatesService.ts`): Added `nameKey` to all 9 templates:
+  - `initiator:folderTemplates.*` keys for archvizStandard, brandDesignStandard, motionGraphics, uiuxProject, webDevelopment, appDevelopment, contentCreator, clientProject, generalCreative
+- **Locale Keys Added** (26 keys in `initiator.json` EN + ID):
+  - `templates.*`: 8 blueprint name translations
+  - `folderTemplates.*`: 9 folder template name translations
+  - `templateCategories.*`: creative, development, general (with ID translations)
+- **Render Sites Updated** (3 locations):
+  - `TemplatePickerModal.tsx:302`: `{template.nameKey ? t(template.nameKey, template.name) : template.name}`
+  - `FolderTemplateEditorModal.tsx:307`: List view template name
+  - `FolderTemplateEditorModal.tsx:354`: Header selected template name
+- **Pattern**: Backward compatible - `nameKey` is optional, falls back to `name` if not present
+- **Evidence**: BEFORE count: 8 raw `.name` renders, AFTER: 0 unlocalized template name renders
+
+### [0.12.12] - Sprint 24: Local-First AI Suggestion Layer (2025-12-24)
+
+**Feature**: Optional AI-powered blueprint enhancement suggestions
+
+#### AI Service Layer (New)
+
+- **`src/services/ai/AIProvider.ts`**: Interface + Zod schemas (schemaVersion: 1)
+- **`src/services/ai/OllamaProvider.ts`**: HTTP client with 30s timeout, AbortController
+- **`src/services/ai/MockProvider.ts`**: Deterministic test provider
+- **`src/services/ai/prompts.ts`**: Structured prompts enforcing JSON-only response
+- **`src/services/ai/index.ts`**: Factory function + exports
+
+#### UI Components (New)
+
+- **`src/components/ai/AIEnhanceButton.tsx`**: Trigger button with loading state
+- **`src/components/ai/AISuggestionModal.tsx`**: Diff preview with checkboxes, Apply/Cancel
+
+#### Settings Extension
+
+- **`src/types/settings.ts`**: Added `AISettings` interface and `AIProviderType`
+- **`src/stores/settingsStore.ts`**: Added `ai` defaults (enabled: false, provider: 'none')
+
+#### Localization
+
+- **EN**: 21 keys in `settings.json`, 17 keys in `initiator.json`
+- **ID**: Complete translations for all AI keys
+
+#### Documentation
+
+- **`docs/AI_INTEGRATION.md`**: Setup guide, usage, architecture, troubleshooting
+
+#### Safety Features
+
+- Schema validation via Zod (invalid responses discarded)
+- 30-second request timeout
+- ID stability enforced (AI cannot change blueprint/node IDs)
+- No direct disk writes by AI layer
+- Graceful No-AI fallback when Ollama unavailable
+
+#### UI Integration (Complete)
+
+- **SettingsPage.tsx**: AI Suggestions card with enable toggle, provider dropdown, endpoint/model inputs, test connection
+- **StandardsTab.tsx**: AIEnhanceButton in blueprint header (conditional on AI enabled), AISuggestionModal with apply handler
+- **applyOps.ts**: Safe suggestion application with ID stability, key preservation, DoD deduplication
+
+**QA Status**: Code complete, awaiting browser QA verification

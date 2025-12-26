@@ -1,0 +1,89 @@
+{
+    "timer": {
+        "title": "Timer Fokus",
+        "focus": "Fokus",
+        "break": "Istirahat",
+        "start": "Mulai Fokus",
+        "pause": "Jeda",
+        "resume": "Lanjut",
+        "stop": "Berhenti",
+        "reset": "Atur Ulang",
+        "skip": "Lewati",
+        "complete": "Selesai"
+    },
+    "session": {
+        "active": "Mode kerja dalam",
+        "remaining": "tersisa",
+        "elapsed": "berlalu",
+        "completed": "Sesi Selesai!",
+        "takeBreak": "Isi ulang energi",
+        "continueWork": "Lanjutkan bekerja",
+        "endSession": "Akhiri sesi?",
+        "progressSaved": "Progres kamu akan disimpan."
+    },
+    "goal": {
+        "title": "Tujuan Sesi",
+        "placeholder": "Apa yang ingin kamu capai?",
+        "set": "Tetapkan Tujuan",
+        "clear": "Hapus"
+    },
+    "distraction": {
+        "title": "Pelindung Gangguan",
+        "blocked": "Tetap fokus!",
+        "message": "Kamu punya sesi fokus aktif. Yakin ingin pergi?",
+        "stay": "Tetap Fokus",
+        "leave": "Pergi Saja"
+    },
+    "presets": {
+        "title": "Preset",
+        "hide": "Sembunyikan",
+        "custom": "Kustom",
+        "quick": "Cepat",
+        "classic": "Klasik",
+        "deep": "Dalam"
+    },
+    "break": {
+        "activities": "Aktivitas Istirahat",
+        "activity": {
+            "water": "Minum segelas air",
+            "breathe": "Ambil 5 napas dalam",
+            "lookFar": "Lihat sesuatu yang jauh",
+            "walk": "Jalan-jalan sebentar",
+            "stretch": "Regangkan bahumu",
+            "window": "Lihat keluar jendela"
+        }
+    },
+    "config": {
+        "title": "Pengaturan Timer",
+        "focusDuration": "Durasi Fokus",
+        "breakDuration": "Durasi Istirahat",
+        "longBreakDuration": "Durasi Istirahat Panjang",
+        "sessionsUntilLongBreak": "Sesi sampai istirahat panjang",
+        "minutes": "menit",
+        "apply": "Terapkan",
+        "focusMin": "Fokus (menit)",
+        "shortBreak": "Istirahat pendek",
+        "longBreak": "Istirahat panjang",
+        "autoStartNext": "Mulai otomatis sesi berikutnya",
+        "autoStartDesc": "Mulai secara otomatis"
+    },
+    "stats": {
+        "todaySessions": "Sesi Hari Ini",
+        "totalFocusTime": "Total Waktu Fokus",
+        "currentStreak": "Streak Saat Ini",
+        "completed": "Selesai",
+        "untilLongBreak": "Sampai Istirahat Panjang"
+    },
+    "hints": {
+        "openRefocus": "Buka halaman Refocus →",
+        "needRefocus": "Perlu refokus?"
+    },
+    "distractionModal": {
+        "title": "Sesi fokus aktif",
+        "subtitle": "Apa yang ingin kamu lakukan?",
+        "pauseAndContinue": "Jeda timer & lanjutkan",
+        "endAndContinue": "Akhiri sesi & lanjutkan",
+        "continueRunning": "Lanjutkan (timer terus berjalan)",
+        "hint": "Tekan ESC atau klik Lanjutkan untuk melanjutkan tanpa perubahan"
+    }
+}

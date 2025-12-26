@@ -1,0 +1,70 @@
+{
+    "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+    },
+    "focusActive": "Focus Active",
+    "quickStats": {
+        "compass": "Compass",
+        "snapshots": "snapshots",
+        "activity": "Activity",
+        "doneToday": "done today",
+        "projectHub": "Project Hub",
+        "projects": "projects"
+    },
+    "activeProject": {
+        "title": "Most recent project",
+        "openWorkflow": "Open Workflow",
+        "noProject": "No active project",
+        "noProjects": "No projects yet",
+        "createFirst": "Create your first project",
+        "mostRecent": "Most recent project"
+    },
+    "activeProjects": {
+        "title": "Active Projects",
+        "loading": "Loading...",
+        "empty": "No active projects",
+        "viewAll": "View All Projects"
+    },
+    "tooltips": {
+        "addTask": "Add Task",
+        "addProject": "Add Project"
+    },
+    "hoursActivity": {
+        "title": "Hours Activity",
+        "weekly": "Weekly",
+        "vsLastWeek": "vs last week",
+        "noData": "No activity data yet"
+    },
+    "dailySchedule": {
+        "title": "Daily Schedule",
+        "focusSession": "Focus Session",
+        "focusSessionDesc": "Start a deep work session",
+        "logEnergy": "Log Energy",
+        "logEnergyDesc": "Compass snapshot",
+        "reviewActivity": "Review Activity",
+        "reviewActivityDesc": "Check your progress"
+    },
+    "calendar": {
+        "title": "Calendar"
+    },
+    "tasksDue": {
+        "title": "Assignments",
+        "noTasks": "No tasks for today",
+        "startTimer": "Start Timer",
+        "addTasks": "Add tasks from Project Hub →"
+    },
+    "taskStatus": {
+        "completed": "Completed",
+        "inProgress": "In progress",
+        "upcoming": "Upcoming"
+    },
+    "task": "Task",
+    "focusPill": {
+        "focusing": "Focusing",
+        "break": "Break",
+        "longBreak": "Long Break",
+        "idle": "Idle"
+    }
+}

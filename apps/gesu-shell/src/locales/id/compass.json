@@ -1,0 +1,109 @@
+{
+    "title": "Kompas Gesu",
+    "subtitle": "Kalibrasi harian & integritas fokus.",
+    "energyLevel": {
+        "title": "Tingkat Energi",
+        "low": "Rendah",
+        "medium": "Sedang",
+        "high": "Tinggi"
+    },
+    "energyCalibration": {
+        "title": "Kalibrasi Energi",
+        "howDoYouFeel": "Bagaimana perasaanmu?",
+        "exhausted": "Kelelahan",
+        "neutral": "Netral",
+        "energized": "Berenergi",
+        "inferred": "Diperkirakan"
+    },
+    "contextNote": {
+        "label": "Catatan Konteks (Opsional)",
+        "placeholder": "contoh: 'Kurang tidur', 'Baru selesai olahraga', 'Merasa terdistraksi'..."
+    },
+    "focusBalance": {
+        "title": "Keseimbangan Fokus",
+        "avg": "Rata-rata",
+        "adjustValues": "Atur Nilai"
+    },
+    "focusAreas": {
+        "title": "Area Fokus",
+        "money": "Keuangan",
+        "creative": "Kreatif",
+        "relations": "Relasi",
+        "learning": "Belajar",
+        "content": "Konten",
+        "selfCare": "Perawatan Diri"
+    },
+    "snapshot": {
+        "title": "Simpan Snapshot",
+        "recordDesc": "Catat Energi ({{energy}}) & Fokus ({{focus}})",
+        "log": "Catat Snapshot",
+        "logging": "Mencatat...",
+        "delete": "Hapus",
+        "deleteConfirm": "Hapus snapshot ini?",
+        "noSnapshots": "Belum ada snapshot",
+        "recentHistory": "Riwayat Terbaru"
+    },
+    "insights": {
+        "burnoutRisk": "Risiko Burnout",
+        "flowState": "Flow State Terdeteksi"
+    },
+    "status": {
+        "savingToFiles": "Menyimpan ke file lokal",
+        "simulationMode": "Mode Simulasi"
+    },
+    "finishMode": {
+        "title": "Mode Selesai",
+        "description": "Fokus menyelesaikan tugas yang ada",
+        "active": "Mode Selesai Aktif",
+        "activate": "Aktifkan Mode Selesai",
+        "deactivate": "Nonaktifkan Mode Selesai",
+        "stepCompleted": "Langkah Selesai",
+        "todaysFocus": "Fokus Hari Ini"
+    },
+    "metrics": {
+        "energyLevel": "Tingkat Energi",
+        "focusScore": "Skor Fokus",
+        "focusBalance": "Keseimbangan Fokus"
+    },
+    "clearData": {
+        "title": "Hapus Data",
+        "todayOnly": "Hari ini saja",
+        "todayOnlyDesc": "Sesi dari hari ini",
+        "last7Days": "7 hari terakhir",
+        "last7DaysDesc": "Sesi dari minggu ini",
+        "last30Days": "30 hari terakhir",
+        "last30DaysDesc": "Sesi dari bulan ini",
+        "allData": "Semua data",
+        "allDataDesc": "Hapus semuanya",
+        "deleteSnapshotsTitle": "Hapus {{count}} snapshot?",
+        "deleteSnapshotsMessage": "Ini akan menghapus semua snapshot dari {{label}} secara permanen.",
+        "noSnapshots": "Tidak ada snapshot untuk dihapus pada periode ini.",
+        "snapshotsDeleted": "{{count}} snapshot dihapus."
+    },
+    "tasks": {
+        "title": "Tugas Hari Ini",
+        "noTasks": "Tidak ada tugas untuk hari ini",
+        "addTask": "Tambah tugas dari Hub Proyek",
+        "allDone": "Semua tugas selesai!",
+        "allDoneDesc": "Kerja bagus menyelesaikan daftar tugasmu hari ini.",
+        "findMoreWork": "Cari pekerjaan lain",
+        "remaining": "Tersisa"
+    },
+    "history": {
+        "title": "Riwayat",
+        "today": "Hari ini",
+        "yesterday": "Kemarin",
+        "lastWeek": "Minggu Lalu",
+        "older": "Lebih Lama",
+        "focusScore": "Skor Fokus"
+    },
+    "notes": {
+        "placeholder": "Tambahkan catatan (opsional)..."
+    },
+    "tooltips": {
+        "clearHistory": "Hapus riwayat",
+        "removeTask": "Hapus tugas",
+        "remove": "Hapus",
+        "deleteSnapshot": "Hapus snapshot"
+    }
+}

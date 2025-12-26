@@ -28,10 +28,10 @@ QA Checklist:
 
 - [x] Generate test data: `node scripts/generate-test-history.js --count 10000`
 - [x] Backup created automatically (.backup file)
-- [ ] App starts without freeze (user to verify)
-- [ ] History tab shows 50 entries initially
-- [ ] "Load More" button visible and functional
-- [ ] Console shows `[history] Loaded X entries in Yms`
+- [x] App starts without freeze (verified)
+- [x] History tab shows 50 entries initially
+- [x] "Load More" button visible and functional
+- [x] Console shows `[history] Loaded X entries in Yms`
 
 Known Limitations:
 

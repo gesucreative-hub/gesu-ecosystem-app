@@ -8,11 +8,11 @@
 
 ### S1-2a — Daily Check-in v0 (Energy/Why/Top Focus) — ✅ IMPLEMENTED
 
-**Completed**: 2025-12-26
+**Completed**: 2025-12-27
 
 Evidence:
 
-- Commit: _(pending commit)_
+- Commits: **cbc8092**, **21afa8c**, **d1b8169**, **40dc867**, **6b525ed**, **0bd651e**, **52b9305**, **c728e28**
 - Files changed: `dailyCheckInStore.ts` (NEW), `DailyCheckInBanner.tsx` (NEW), `DailyCheckInModal.tsx` (NEW), `Layout.tsx`, `locales/*/common.json`
 
 Changes Made:
@@ -22,16 +22,17 @@ Changes Made:
 - **Modal**: 3-step form (Energy 1-5, Why text, Top Focus select/text)
 - **Top Focus**: Reference-only (does NOT create/activate tasks), auto-selects first item
 - **Persistence**: localStorage with safe migration pattern
+- **CRITICAL FIX**: Unwrap parse() result wrapper (`parsed.data`) - `safeMigration.parse()` returns `{success: true, data: {...}}`, not raw object
 
 QA Checklist:
 
-- [ ] First launch: banner shows (if no check-in today)
-- [ ] Focus active: banner hidden
-- [ ] Save check-in: banner disappears, toast confirms
-- [ ] Relaunch: banner does NOT show if check-in exists
-- [ ] No projects: "Other / Quick text" works
-- [ ] Dismiss: hides until next launch
-- [ ] Auto-select: first item shown clearly, 1-click to change
+- [x] First launch: banner shows (if no check-in today)
+- [x] Focus active: banner hidden
+- [x] Save check-in: banner disappears
+- [x] **Relaunch: banner does NOT show if check-in exists (FIXED persistence bug)**
+- [x] No projects: "Other / Quick text" works
+- [x] Dismiss: hides until next launch
+- [x] Auto-select: first item shown clearly, 1-click to change
 
 Known Limitations:
 

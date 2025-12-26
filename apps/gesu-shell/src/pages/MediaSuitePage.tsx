@@ -241,6 +241,10 @@ export function MediaSuitePage() {
     const [activeTab, setActiveTab] = useState<Tab>('downloader');
     const [jobs, setJobs] = useState<Job[]>([]);
     const [historyJobs, setHistoryJobs] = useState<MediaSuiteJob[]>([]);
+    const [historyHasMore, setHistoryHasMore] = useState(true);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyOffset, setHistoryOffset] = useState(0);
+    const PAGE_SIZE = 50;
     const [queueFilter, setQueueFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
     const [historyFilter, setHistoryFilter] = useState<'all' | 'download' | 'convert' | 'advanced'>('all');
 
@@ -412,12 +416,54 @@ export function MediaSuitePage() {
         }
     };
 
-    const refreshHistory = async () => {
-        // Use NEW mediaJobs API which includes history from JSONL
+    const refreshHistory = async (reset = true) => {
+        const startTime = performance.now();
+        
+        // Use NEW paginated mediaJobs API
+        if (window.gesu?.mediaJobs?.getHistory) {
+            setHistoryLoading(true);
+            const newOffset = reset ? 0 : historyOffset;
+            
+            try {
+                const { entries, hasMore } = await window.gesu.mediaJobs.getHistory(PAGE_SIZE, newOffset);
+                
+                // Map history to MediaSuiteJob format
+                const mappedHistory: MediaSuiteJob[] = entries.map((j: any) => ({
+                    id: j.id,
+                    type: j.kind as 'download' | 'convert',
+                    url: j.kind === 'download' ? j.input : undefined,
+                    inputPath: j.kind === 'convert' ? j.input : undefined,
+                    preset: j.options?.preset || 'unknown',
+                    network: j.options?.network || 'normal',
+                    target: j.options?.target || 'shell',
+                    outputPath: j.output,
+                    status: j.status === 'error' ? 'failed' : j.status as any,
+                    timestamp: j.completedAt || j.createdAt,
+                    errorMessage: j.errorMessage,
+                }));
+                
+                if (reset) {
+                    setHistoryJobs(mappedHistory);
+                    setHistoryOffset(PAGE_SIZE);
+                } else {
+                    setHistoryJobs(prev => [...prev, ...mappedHistory]);
+                    setHistoryOffset(newOffset + PAGE_SIZE);
+                }
+                
+                setHistoryHasMore(hasMore);
+                console.log(`[history] Loaded ${mappedHistory.length} entries in ${(performance.now() - startTime).toFixed(0)}ms (hasMore=${hasMore})`);
+            } catch (err) {
+                console.error('Failed to fetch history:', err);
+            } finally {
+                setHistoryLoading(false);
+            }
+            return;
+        }
+        
+        // Fallback to legacy list() API (returns max 50)
         if (window.gesu?.mediaJobs) {
             try {
                 const data = await window.gesu.mediaJobs.list();
-                // Map history to MediaSuiteJob format
                 const mappedHistory: MediaSuiteJob[] = data.history.map((j: any) => ({
                     id: j.id,
                     type: j.kind as 'download' | 'convert',
@@ -426,23 +472,25 @@ export function MediaSuitePage() {
                     preset: j.options?.preset || 'unknown',
                     network: j.options?.network || 'normal',
                     target: j.options?.target || 'shell',
-                    outputPath: j.output, // Full output folder path
+                    outputPath: j.output,
                     status: j.status === 'error' ? 'failed' : j.status as any,
                     timestamp: j.completedAt || j.createdAt,
                     errorMessage: j.errorMessage,
                 }));
                 setHistoryJobs(mappedHistory);
+                setHistoryHasMore(false); // Legacy API has no pagination
             } catch (err) {
                 console.error('Failed to fetch history from mediaJobs:', err);
             }
             return;
         }
 
-        // Fallback to legacy API
+        // Fallback to legacy mediaSuite API
         if (!window.gesu?.mediaSuite) return;
         try {
             const history = await window.gesu.mediaSuite.getRecentJobs();
             setHistoryJobs(history);
+            setHistoryHasMore(false);
         } catch (err) {
             console.error('Failed to fetch history:', err);
         }
@@ -1357,6 +1405,28 @@ export function MediaSuitePage() {
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            {/* Load More Button */}
+                            {historyHasMore && historyJobs.length > 0 && (
+                                <div className="flex justify-center pt-4 pb-2 border-t border-tokens-border/50 mt-2">
+                                    <button
+                                        onClick={() => refreshHistory(false)}
+                                        disabled={historyLoading}
+                                        className="px-4 py-2 text-sm rounded-lg bg-tokens-panel2 border border-tokens-border hover:bg-tokens-brand-DEFAULT/10 hover:border-tokens-brand-DEFAULT/30 text-tokens-fg disabled:opacity-50 disabled:cursor-wait transition-colors flex items-center gap-2"
+                                    >
+                                        {historyLoading ? (
+                                            <>
+                                                <span className="animate-spin">⏳</span>
+                                                {t('common:buttons.loading', 'Loading...')}
+                                            </>
+                                        ) : (
+                                            <>
+                                                📜 {t('mediasuite:history.loadMore', 'Load More')} ({historyJobs.length}+)
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
                         </Card>
                     )}
                 </div>

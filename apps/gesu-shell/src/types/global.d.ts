@@ -163,6 +163,7 @@ declare global {
                 list: () => Promise<{ queue: any[]; history: any[] }>;
                 cancel: (jobId: string) => Promise<boolean>;
                 cancelAll: () => Promise<number>;
+                getHistory: (limit: number, offset: number) => Promise<{ entries: any[]; total: number | null; hasMore: boolean }>;
                 onProgress: (callback: (data: { jobId: string; progress: number | null; logLine: string }) => void) => () => void;
                 onComplete: (callback: (data: { jobId: string; status: string; errorMessage?: string }) => void) => () => void;
                 onUpdate: (callback: (job: any) => void) => () => void;

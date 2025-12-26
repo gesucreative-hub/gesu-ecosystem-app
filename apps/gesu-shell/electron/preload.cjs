@@ -47,6 +47,7 @@ contextBridge.exposeInMainWorld('gesu', {
         list: () => ipcRenderer.invoke('media:job:list'),
         cancel: (jobId) => ipcRenderer.invoke('media:job:cancel', jobId),
         cancelAll: () => ipcRenderer.invoke('media:job:cancelAll'),
+        getHistory: (limit, offset) => ipcRenderer.invoke('media:job:history', { limit, offset }),
         onProgress: (callback) => {
             const subscription = (event, data) => callback(data);
             ipcRenderer.on('media:job:progress', subscription);

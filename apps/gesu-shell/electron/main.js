@@ -17,7 +17,7 @@ import { ProjectWatcher } from './project-watcher.js';
 
 // Use createRequire for CommonJS modules
 const require = createRequire(import.meta.url);
-const { initJobManager, enqueueJob, cancelJob, cancelAllJobs, getQueue } = require('./media-jobs.cjs');
+const { initJobManager, enqueueJob, cancelJob, cancelAllJobs, getQueue, getRecentHistory } = require('./media-jobs.cjs');
 
 // ProjectWatcher instance
 let projectWatcher = null;
@@ -194,6 +194,11 @@ ipcMain.handle('media:job:cancel', async (event, jobId) => {
 ipcMain.handle('media:job:cancelAll', async () => {
     await ensureMediaJobsInit();
     return cancelAllJobs();
+});
+
+ipcMain.handle('media:job:history', async (event, { limit = 50, offset = 0 }) => {
+    await ensureMediaJobsInit();
+    return getRecentHistory(limit, offset);
 });
 
 // --- Job System (Legacy In-Memory Skeleton) ---

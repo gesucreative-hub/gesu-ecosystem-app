@@ -3,8 +3,42 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S0 — Stabilize / Trust Fixes**
-- Active item: **None (S0-1 completed)**
-- Next: **S0-2 — Media job history pagination/performance**
+- Active item: **S0-2 — Media job history pagination/performance** ✅ IMPLEMENTED
+- Next: **S0-3 — (TBD based on backlog triage)**
+
+### S0-2 — Media job history pagination/performance — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-26
+
+Evidence:
+
+- Commit: _(pending commit)_
+- Files changed: `media-jobs.cjs`, `main.js`, `preload.cjs`, `global.d.ts`, `MediaSuitePage.tsx`
+- Test script: `scripts/generate-test-history.js`
+
+Changes Made:
+
+- **Backend**: Added `getRecentHistory(limit, offset)` with reverse JSONL reader (reads from end of file)
+- **Startup optimization**: `loadHistory()` now scans only 2000 recent entries for active jobs (not full file)
+- **IPC**: Added `media:job:history` handler with pagination params
+- **UI**: Added Load More button in History tab with loading state
+- **Test harness**: Generator script creates 10k entries with automatic backup
+
+QA Checklist:
+
+- [x] Generate test data: `node scripts/generate-test-history.js --count 10000`
+- [x] Backup created automatically (.backup file)
+- [ ] App starts without freeze (user to verify)
+- [ ] History tab shows 50 entries initially
+- [ ] "Load More" button visible and functional
+- [ ] Console shows `[history] Loaded X entries in Yms`
+
+Known Limitations:
+
+- `total` is null (unknown without full file scan) - by design for performance
+- Edge case: extremely large files (>100k entries) may still be slow on lookup
+
+---
 
 ### S0-1 — Safe migrations (backup + no reset on unknown schema) — ✅ DONE
 

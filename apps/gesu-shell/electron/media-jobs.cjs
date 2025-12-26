@@ -63,7 +63,8 @@ function reinitWithRoot(workflowRoot) {
 }
 
 /**
- * Load job history from JSONL file
+ * Load only ACTIVE jobs (queued/running) from history file
+ * Uses reverse-read pattern for efficiency - active jobs are likely near end
  */
 function loadHistory() {
     if (!historyFilePath || !fs.existsSync(historyFilePath)) {
@@ -71,22 +72,117 @@ function loadHistory() {
     }
 
     try {
-        const content = fs.readFileSync(historyFilePath, 'utf-8');
-        const lines = content.trim().split('\n').filter(line => line.length > 0);
-
-        lines.forEach(line => {
-            try {
-                const job = JSON.parse(line);
+        // Use getRecentHistory with a 2000 entry cap to find active jobs
+        const ACTIVE_SCAN_CAP = 2000;
+        const { entries } = getRecentHistory(ACTIVE_SCAN_CAP, 0);
+        
+        let activeCount = 0;
+        entries.forEach(job => {
+            if (job.status === 'queued' || job.status === 'running') {
                 jobs.set(job.id, job);
-            } catch (parseError) {
-                console.error('[media-jobs] Failed to parse history line:', parseError);
+                activeCount++;
             }
         });
 
-        console.log(`[media-jobs] Loaded ${lines.length} jobs from history`);
+        console.log(`[media-jobs] Scanned ${entries.length} recent entries, loaded ${activeCount} active jobs`);
     } catch (error) {
         console.error('[media-jobs] Failed to load history:', error);
     }
+}
+
+/**
+ * Read recent history entries using reverse line reading (paginated)
+ * Reads from end of file for recent-first display without loading entire file
+ * @param {number} limit - Number of entries to return
+ * @param {number} offset - Number of entries to skip (from most recent)
+ * @returns {{entries: Object[], total: number|null, hasMore: boolean}}
+ */
+function getRecentHistory(limit = 50, offset = 0) {
+    if (!historyFilePath || !fs.existsSync(historyFilePath)) {
+        return { entries: [], total: null, hasMore: false };
+    }
+
+    const stats = fs.statSync(historyFilePath);
+    if (stats.size === 0) {
+        return { entries: [], total: null, hasMore: false };
+    }
+
+    const DEBUG_PERF = process.env.GESU_DEBUG_PERF === '1';
+    const startTime = DEBUG_PERF ? Date.now() : 0;
+
+    // Read limit+1 to detect hasMore without full scan
+    const targetCount = offset + limit + 1;
+    const CHUNK_SIZE = 64 * 1024; // 64KB chunks
+    
+    let fd;
+    try {
+        fd = fs.openSync(historyFilePath, 'r');
+    } catch (e) {
+        console.error('[media-jobs] Failed to open history file:', e);
+        return { entries: [], total: null, hasMore: false };
+    }
+
+    let buffer = '';
+    let lines = [];
+    let position = stats.size;
+
+    try {
+        // Read backwards until we have enough lines (or hit start of file)
+        while (position > 0 && lines.length < targetCount) {
+            const readSize = Math.min(CHUNK_SIZE, position);
+            position -= readSize;
+
+            const chunk = Buffer.alloc(readSize);
+            fs.readSync(fd, chunk, 0, readSize, position);
+            buffer = chunk.toString('utf-8') + buffer;
+
+            // Split on newlines (handle both CRLF and LF)
+            const parts = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+            buffer = parts[0]; // Incomplete line kept for next iteration
+
+            // Parse complete lines from end to start
+            for (let i = parts.length - 1; i > 0; i--) {
+                const trimmedLine = parts[i].trim();
+                if (trimmedLine) {
+                    try {
+                        const job = JSON.parse(trimmedLine);
+                        if (job && job.id) {
+                            lines.push(job);
+                            if (lines.length >= targetCount) break;
+                        }
+                    } catch {
+                        // Skip corrupted/partial lines silently
+                    }
+                }
+            }
+        }
+
+        // Handle leftover buffer (first line of file)
+        if (buffer.trim() && lines.length < targetCount) {
+            try {
+                const job = JSON.parse(buffer.trim());
+                if (job && job.id) {
+                    lines.push(job);
+                }
+            } catch {
+                // Skip corrupted first line
+            }
+        }
+    } finally {
+        fs.closeSync(fd);
+    }
+
+    // Apply offset and limit
+    const hasMore = lines.length > offset + limit;
+    const entries = lines.slice(offset, offset + limit);
+    // total is unknown without full scan - return null to indicate this
+    const total = null;
+
+    if (DEBUG_PERF) {
+        console.log(`[perf] getRecentHistory(${limit}, ${offset}): ${Date.now() - startTime}ms, returned ${entries.length} entries, hasMore=${hasMore}`);
+    }
+
+    return { entries, total, hasMore };
 }
 
 /**
@@ -638,21 +734,26 @@ function cancelAllJobs() {
 
 /**
  * Get queue and history
+ * LEGACY COMPATIBILITY: Returns { queue, history } where history uses paginated reader
  * @returns {{queue: Object[], history: Object[]}} - Queue and history
  */
 function getQueue() {
+    // Queue: from in-memory Map (only active jobs are kept in Map)
     const allJobs = Array.from(jobs.values());
 
     const queue = allJobs
         .filter(j => j.status === 'running' || j.status === 'queued')
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    const history = allJobs
+    // History: use paginated reader (keeps legacy contract of returning 50 entries)
+    const { entries: history } = getRecentHistory(50, 0);
+    
+    // Filter history to only completed jobs and sort by completedAt
+    const filteredHistory = history
         .filter(j => j.status === 'success' || j.status === 'error' || j.status === 'canceled')
-        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
-        .slice(0, 50); // Last 50 history items
+        .sort((a, b) => new Date(b.completedAt || b.createdAt) - new Date(a.completedAt || a.createdAt));
 
-    return { queue, history };
+    return { queue, history: filteredHistory };
 }
 
 module.exports = {
@@ -661,4 +762,5 @@ module.exports = {
     cancelJob,
     cancelAllJobs,
     getQueue,
+    getRecentHistory,
 };

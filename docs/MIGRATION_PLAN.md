@@ -3,8 +3,8 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-2a — Daily Check-in v0** ✅ IMPLEMENTED
-- Next: **S1-2b — Activate First / Focus First workflow (TBD)**
+- Active item: **S1-2a — Daily Check-in v0** ✅ IMPLEMENTED (2025-12-27)
+- Next: **S1-2b — Activate First / Focus First workflow** 📋 TBD
 
 ### S1-2a — Daily Check-in v0 (Energy/Why/Top Focus) — ✅ IMPLEMENTED
 
@@ -37,8 +37,29 @@ QA Checklist:
 Known Limitations:
 
 - No analytics/trends in v0
-- No "View past check-ins" UI
+- No "View past check-in" UI
 - Midnight rollover requires navigation/reload
+
+---
+
+### S1-2b — Activate First / Focus First Workflow — 📋 NEXT (TBD)
+
+**Scope** (Placeholder - NOT YET IMPLEMENTED):
+
+- **"Activate First" Button**: When user creates/selects a project in Project Hub, show prominent "Activate as Today's Focus" action
+- **Auto-populate Check-in**: If daily check-in hasn't happened yet, pre-fill "Top Focus" with activated project/task
+- **One-click Flow**: User can go from "new project" → "activated" → "check-in done" → "timer started" in <30 seconds
+- **Task Context Coupling**: Activated task automatically links to timer (extends existing task-timer coupling from S0.9.1)
+
+**Definition of Done** (Acceptance Criteria):
+
+- [ ] Project Hub shows "Set as Today's Focus" button for each project
+- [ ] Clicking button updates daily check-in store (if no check-in exists, prompts modal with pre-filled Top Focus)
+- [ ] If check-in exists, shows confirmation + updates Top Focus field
+- [ ] "Start Focus" button on Compass correctly links to activated project context
+- [ ] Manual QA: Create project → Activate → Verify appears in Compass "Top Focus" → Start timer → Verify pill shows project name
+
+**Rationale**: Reduces friction between planning (Project Hub) and execution (Compass + Timer). Enforces "decide once, execute immediately" pattern.
 
 ---
 
@@ -56,10 +77,13 @@ Changes Made:
 - **Config**: Created `config/guardrails.ts` with MAX_ACTIVE_ITEMS=3 constant + route policies
 - **WIP Limit**: projectHubTasksStore now imports from shared config
 - **Distraction Shield**: DistractionGuard now checks route policy (blocked/allowed/prompt)
-- **Route Policies**:
-  - BLOCKED: `/`, `/dashboard`, `/launcher`, `/activity`, `/media-suite`, `/initiator`
-  - ALLOWED: `/compass`, `/refocus`, `/refocus/lost`, `/login`
-  - PROMPT: `/settings`, unknown routes
+- **Route Policies** (during active focus session):
+  - **BLOCKED**: `/`, `/dashboard`, `/launcher`, `/activity`, `/media-suite`, `/initiator`
+    - **Rationale for /dashboard**: Dashboard is review/analytics UI; during focus, user should execute in `/compass`, not review metrics
+  - **ALLOWED**: `/compass`, `/refocus`, `/refocus/lost`, `/login`
+    - **Rationale**: Compass is execution UI, Refocus is rescue flow, both support active focus work
+  - **PROMPT**: `/settings`, unknown routes
+    - **Rationale**: Settings may be needed mid-focus (e.g., adjust timer config); prompt gives user choice to pause/end/continue
 - **UI**: BlockedRouteToast shows when blocked route attempted
 
 QA Checklist:

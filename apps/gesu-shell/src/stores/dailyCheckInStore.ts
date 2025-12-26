@@ -102,7 +102,15 @@ function notifySubscribers(): void {
 
 export function getTodayCheckIn(): DailyCheckIn | null {
     const todayKey = getTodayKey();
-    return state.checkIns.find(c => c.date === todayKey) || null;
+    console.log('[dailyCheckInStore] getTodayCheckIn:', { 
+        todayKey, 
+        checkInsCount: state.checkIns.length,
+        checkInDates: state.checkIns.map(c => c.date),
+        state: state 
+    });
+    const result = state.checkIns.find(c => c.date === todayKey) || null;
+    console.log('[dailyCheckInStore] Found check-in:', result !== null);
+    return result;
 }
 
 export function getCheckInByDate(date: string): DailyCheckIn | null {

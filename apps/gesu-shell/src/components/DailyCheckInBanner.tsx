@@ -32,13 +32,7 @@ export function DailyCheckInBanner() {
         // Subscribe to check-in updates
         const unsubCheckIn = subscribe(checkShouldShow);
 
-        // Also check periodically (for focus timer state changes)
-        const interval = setInterval(checkShouldShow, 1000);
-
-        return () => {
-            unsubCheckIn();
-            clearInterval(interval);
-        };
+        return unsubCheckIn;
     }, [dismissed]);
 
     const handleDismiss = () => {

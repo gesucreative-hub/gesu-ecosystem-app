@@ -144,6 +144,42 @@ export function saveCheckIn(data: Omit<DailyCheckIn, 'id' | 'createdAt'>): Daily
     return checkIn;
 }
 
+/**
+ * Update today's check-in topFocus without requiring full check-in flow
+ * If no check-in exists, creates minimal one with neutral defaults
+ * S1-2b: Focus First workflow
+ */
+export function updateTodayTopFocus(
+    type: 'project' | 'task' | 'text',
+    refId?: string,
+    text?: string
+): DailyCheckIn {
+    const todayKey = getTodayKey();
+    const existing = getTodayCheckIn();
+    
+    if (existing) {
+        // Update existing check-in's topFocus
+        return saveCheckIn({
+            date: todayKey,
+            energy: existing.energy,
+            why: existing.why,
+            topFocusType: type,
+            topFocusRefId: refId,
+            topFocusText: text,
+        });
+    } else {
+        // Create minimal check-in with neutral defaults
+        return saveCheckIn({
+            date: todayKey,
+            energy: 3, // neutral default (scale 1-5)
+            why: '',
+            topFocusType: type,
+            topFocusRefId: refId,
+            topFocusText: text,
+        });
+    }
+}
+
 export function subscribe(callback: () => void): () => void {
     subscribers.add(callback);
     return () => subscribers.delete(callback);
@@ -152,3 +188,4 @@ export function subscribe(callback: () => void): () => void {
 export function getState(): DailyCheckInStoreState {
     return { ...state };
 }
+

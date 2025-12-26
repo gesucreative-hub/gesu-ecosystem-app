@@ -105,5 +105,30 @@
         "removeTask": "Hapus tugas",
         "remove": "Hapus",
         "deleteSnapshot": "Hapus snapshot"
+    },
+    "focusFirst": {
+        "title": "Fokus Dulu",
+        "collapsed": "Mulai sesi fokus dengan cepat",
+        "step1": "Fokus Hari Ini",
+        "step1Desc": "Apa yang akan kamu kerjakan?",
+        "step2": "Langkah Kecil",
+        "step2Desc": "Apa aksi pertama 5 menitmu?",
+        "step2Placeholder": "contoh: Buka dokumen dan baca paragraf pertama",
+        "startFocus": "Mulai Fokus",
+        "starting": "Memulai...",
+        "selectProject": "Pilih proyek...",
+        "selectTask": "Pilih tugas...",
+        "orTypeManually": "Atau ketik manual",
+        "typeManually": "Ketik apa yang akan kamu fokuskan...",
+        "change": "Ubah",
+        "noProjects": "Tidak ada proyek aktif",
+        "noTasks": "Tidak ada tugas hari ini",
+        "wipAtLimit": "3/3 tugas aktif",
+        "wipAtLimitDesc": "Pilih tugas aktif atau selesaikan satu dulu",
+        "focusActive": "Fokus Aktif",
+        "focusActiveDesc": "Timer sedang berjalan",
+        "switchFocus": "Ganti Fokus",
+        "fromCheckIn": "Dari check-in hari ini"
     }
 }
+

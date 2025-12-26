@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket } from 'lucide-react';
 import { calculateInferredEnergy, getEnergyColorClass } from '../utils/inferredEnergy';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -39,7 +39,10 @@ import {
     getStorageMode,
     CompassSnapshotListItem,
 } from '../services/compassSnapshotsService';
-import { startWithTask, isSessionActive as isTimerActive } from '../stores/focusTimerStore';
+import { startWithTask, isSessionActive as isTimerActive, getState as getTimerState } from '../stores/focusTimerStore';
+import { getTodayCheckIn, updateTodayTopFocus } from '../stores/dailyCheckInStore';
+import { listProjects } from '../stores/projectStore';
+import { getRemainingSlots } from '../utils/taskGuardrail';
 
 // --- Types & Interfaces ---
 
@@ -126,6 +129,101 @@ export function CompassPage() {
         const interval = setInterval(loadTasks, 5000);
         return () => clearInterval(interval);
     }, []);
+
+    // --- S1-2b: Focus First State ---
+    const [focusFirstMode, setFocusFirstMode] = useState<'select' | 'text'>('select');
+    const [selectedFocusType, setSelectedFocusType] = useState<'project' | 'task' | 'text'>('text');
+    const [selectedRefId, setSelectedRefId] = useState<string>('');
+    const [selectedText, setSelectedText] = useState<string>('');
+    const [microStep, setMicroStep] = useState<string>(''); // Resets every session
+    const [focusFirstLoading, setFocusFirstLoading] = useState(false);
+
+    // Get check-in and project data for Focus First
+    const todayCheckIn = useMemo(() => getTodayCheckIn(), [projectHubTasks]); // Refresh when tasks change
+    const activeProjects = useMemo(() => listProjects(), []);
+    const timerActive = isTimerActive();
+    const timerState = getTimerState();
+    const remainingSlots = getRemainingSlots();
+    const wipAtLimit = remainingSlots === 0;
+
+    // Initialize FocusFirst selection from today's check-in
+    useEffect(() => {
+        if (todayCheckIn) {
+            setSelectedFocusType(todayCheckIn.topFocusType);
+            setSelectedRefId(todayCheckIn.topFocusRefId || '');
+            setSelectedText(todayCheckIn.topFocusText || '');
+            setFocusFirstMode(todayCheckIn.topFocusType === 'text' ? 'text' : 'select');
+        }
+    }, [todayCheckIn]);
+
+    // Resolve display label for current focus selection
+    const getFocusDisplayLabel = useCallback((): string => {
+        if (selectedFocusType === 'text') {
+            return selectedText || t('compass:focusFirst.typeManually');
+        }
+        if (selectedFocusType === 'project' && selectedRefId) {
+            const project = activeProjects.find(p => p.id === selectedRefId);
+            return project?.name || selectedRefId;
+        }
+        if (selectedFocusType === 'task' && selectedRefId) {
+            const task = projectHubTasks.find(t => t.id === selectedRefId);
+            return task?.title || selectedRefId;
+        }
+        return '';
+    }, [selectedFocusType, selectedRefId, selectedText, activeProjects, projectHubTasks, t]);
+
+    // Check if user can start focus (WIP enforcement)
+    const canStartFocus = useCallback((): boolean => {
+        // If timer already active, user can always switch
+        if (timerActive) return true;
+        // If WIP at limit, can only start on existing active task
+        if (wipAtLimit) {
+            return selectedFocusType === 'task' && projectHubTasks.some(t => t.id === selectedRefId && !t.done);
+        }
+        // Has valid focus selection
+        return (selectedFocusType === 'text' && selectedText.trim().length > 0) ||
+               (selectedFocusType !== 'text' && selectedRefId.length > 0);
+    }, [timerActive, wipAtLimit, selectedFocusType, selectedRefId, selectedText, projectHubTasks]);
+
+    // Handle starting focus
+    const handleStartFocusFirst = useCallback(async () => {
+        if (!canStartFocus()) return;
+        setFocusFirstLoading(true);
+
+        try {
+            // Build TaskContext
+            const displayLabel = getFocusDisplayLabel();
+            const taskContext = {
+                taskId: selectedRefId || `focus-${Date.now()}`,
+                taskTitle: displayLabel,
+                projectName: selectedFocusType === 'project' 
+                    ? activeProjects.find(p => p.id === selectedRefId)?.name 
+                    : selectedFocusType === 'task' 
+                        ? projectHubTasks.find(t => t.id === selectedRefId)?.projectName
+                        : undefined,
+            };
+
+            // Start timer with context and sessionGoal (micro-step)
+            await startWithTask(taskContext, { focusMinutes: 25 });
+
+            // Update daily check-in topFocus if user made a change
+            if (!todayCheckIn || 
+                todayCheckIn.topFocusType !== selectedFocusType ||
+                todayCheckIn.topFocusRefId !== selectedRefId ||
+                todayCheckIn.topFocusText !== selectedText) {
+                updateTodayTopFocus(
+                    selectedFocusType,
+                    selectedFocusType !== 'text' ? selectedRefId : undefined,
+                    selectedFocusType === 'text' ? selectedText : undefined
+                );
+            }
+
+            // Reset micro-step for next session
+            setMicroStep('');
+        } finally {
+            setFocusFirstLoading(false);
+        }
+    }, [canStartFocus, getFocusDisplayLabel, selectedFocusType, selectedRefId, selectedText, activeProjects, projectHubTasks, todayCheckIn]);
 
     // Inferred Energy - calculated from activity data (depends on projectHubTasks)
     const inferredEnergy = useMemo(() => calculateInferredEnergy(), [projectHubTasks]);
@@ -428,6 +526,166 @@ export function CompassPage() {
 
                     {/* LEFT COLUMN (Main Action & Inputs) - Spans 7 cols */}
                     <div className="lg:col-span-7 space-y-6">
+
+                        {/* S1-2b: Focus First Card */}
+                        <Card
+                            title={
+                                <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2">
+                                        <Rocket size={18} className="text-tokens-brand-DEFAULT" />
+                                        <span>{t('compass:focusFirst.title')}</span>
+                                    </div>
+                                    {timerActive && (
+                                        <Badge variant="success" className="animate-pulse">
+                                            {t('compass:focusFirst.focusActive')}
+                                        </Badge>
+                                    )}
+                                    {wipAtLimit && !timerActive && (
+                                        <Badge variant="warning">
+                                            {t('compass:focusFirst.wipAtLimit')}
+                                        </Badge>
+                                    )}
+                                    {todayCheckIn && !timerActive && !wipAtLimit && (
+                                        <Badge variant="neutral" className="text-xs">
+                                            {t('compass:focusFirst.fromCheckIn')}
+                                        </Badge>
+                                    )}
+                                </div>
+                            }
+                            className={timerActive ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-tokens-brand-DEFAULT/30'}
+                        >
+                            <div className="space-y-4">
+                                {/* Timer Active State */}
+                                {timerActive && timerState.taskContext && (
+                                    <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-lg">
+                                        <p className="text-xs text-tokens-muted mb-1">{t('compass:focusFirst.focusActiveDesc')}</p>
+                                        <p className="text-lg font-medium text-tokens-fg">{timerState.taskContext.taskTitle}</p>
+                                        {timerState.taskContext.projectName && (
+                                            <p className="text-xs text-tokens-muted">{timerState.taskContext.projectName}</p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Step 1: Today's Focus */}
+                                {!timerActive && (
+                                    <>
+                                        <div>
+                                            <label className="text-xs font-bold text-tokens-muted uppercase tracking-wider mb-2 block">
+                                                {t('compass:focusFirst.step1')}
+                                            </label>
+                                            
+                                            {/* Mode selector: Select vs Text */}
+                                            <div className="flex gap-2 mb-2">
+                                                <button
+                                                    onClick={() => { setFocusFirstMode('select'); setSelectedFocusType('project'); }}
+                                                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                                                        focusFirstMode === 'select' 
+                                                            ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT text-tokens-brand-DEFAULT' 
+                                                            : 'bg-tokens-bg border-tokens-border text-tokens-muted hover:bg-tokens-panel2'
+                                                    }`}
+                                                >
+                                                    {t('compass:focusFirst.selectProject')}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setFocusFirstMode('text'); setSelectedFocusType('text'); }}
+                                                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                                                        focusFirstMode === 'text' 
+                                                            ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT text-tokens-brand-DEFAULT' 
+                                                            : 'bg-tokens-bg border-tokens-border text-tokens-muted hover:bg-tokens-panel2'
+                                                    }`}
+                                                >
+                                                    {t('compass:focusFirst.orTypeManually')}
+                                                </button>
+                                            </div>
+
+                                            {/* Select mode: Project or Task dropdown */}
+                                            {focusFirstMode === 'select' && (
+                                                <div className="space-y-2">
+                                                    {/* Project selection */}
+                                                    <select
+                                                        value={selectedFocusType === 'project' ? selectedRefId : ''}
+                                                        onChange={(e) => {
+                                                            setSelectedFocusType('project');
+                                                            setSelectedRefId(e.target.value);
+                                                        }}
+                                                        className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg"
+                                                    >
+                                                        <option value="">{t('compass:focusFirst.selectProject')}</option>
+                                                        {activeProjects.map(p => (
+                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+
+                                                    {/* Task selection (for WIP limit case) */}
+                                                    {projectHubTasks.filter(t => !t.done).length > 0 && (
+                                                        <select
+                                                            value={selectedFocusType === 'task' ? selectedRefId : ''}
+                                                            onChange={(e) => {
+                                                                setSelectedFocusType('task');
+                                                                setSelectedRefId(e.target.value);
+                                                            }}
+                                                            className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg"
+                                                        >
+                                                            <option value="">{t('compass:focusFirst.selectTask')}</option>
+                                                            {projectHubTasks.filter(t => !t.done).map(task => (
+                                                                <option key={task.id} value={task.id}>{task.title}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Text mode: Free text input */}
+                                            {focusFirstMode === 'text' && (
+                                                <input
+                                                    type="text"
+                                                    value={selectedText}
+                                                    onChange={(e) => setSelectedText(e.target.value)}
+                                                    placeholder={t('compass:focusFirst.typeManually')}
+                                                    className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50"
+                                                />
+                                            )}
+                                        </div>
+
+                                        {/* Step 2: Micro-step (Quick Win) */}
+                                        <div>
+                                            <label className="text-xs font-bold text-tokens-muted uppercase tracking-wider mb-2 block">
+                                                {t('compass:focusFirst.step2')} <span className="font-normal">(optional)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={microStep}
+                                                onChange={(e) => setMicroStep(e.target.value)}
+                                                placeholder={t('compass:focusFirst.step2Placeholder')}
+                                                className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50"
+                                            />
+                                        </div>
+
+                                        {/* WIP Warning */}
+                                        {wipAtLimit && selectedFocusType !== 'task' && (
+                                            <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-lg">
+                                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                    <strong>{t('compass:focusFirst.wipAtLimit')}:</strong> {t('compass:focusFirst.wipAtLimitDesc')}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Step 3: Start Focus Button */}
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            fullWidth
+                                            onClick={handleStartFocusFirst}
+                                            disabled={!canStartFocus() || focusFirstLoading}
+                                            icon={<Play size={18} />}
+                                            className="!py-3"
+                                        >
+                                            {focusFirstLoading ? t('compass:focusFirst.starting') : t('compass:focusFirst.startFocus')}
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </Card>
 
                         {/* Finish Mode Card - Priority */}
                         {finishSession && (

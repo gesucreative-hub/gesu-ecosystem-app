@@ -105,5 +105,30 @@
         "removeTask": "Remove task",
         "remove": "Remove",
         "deleteSnapshot": "Delete snapshot"
+    },
+    "focusFirst": {
+        "title": "Focus First",
+        "collapsed": "Quick-start your focus session",
+        "step1": "Today's Focus",
+        "step1Desc": "What will you work on?",
+        "step2": "Quick Win",
+        "step2Desc": "What's your first 5-min action?",
+        "step2Placeholder": "e.g., Open the doc and read first paragraph",
+        "startFocus": "Start Focus",
+        "starting": "Starting...",
+        "selectProject": "Select a project...",
+        "selectTask": "Select a task...",
+        "orTypeManually": "Or type manually",
+        "typeManually": "Type what you'll focus on...",
+        "change": "Change",
+        "noProjects": "No active projects",
+        "noTasks": "No tasks for today",
+        "wipAtLimit": "3/3 tasks active",
+        "wipAtLimitDesc": "Select an active task or complete one first",
+        "focusActive": "Focus Active",
+        "focusActiveDesc": "Timer is running",
+        "switchFocus": "Switch Focus",
+        "fromCheckIn": "From today's check-in"
     }
 }
+

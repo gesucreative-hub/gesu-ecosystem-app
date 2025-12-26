@@ -3,8 +3,40 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-2c — Project Hub "Set as Today's Focus" button** ✅ IMPLEMENTED (2025-12-27)
+- Active item: **S1-3a — Prevent Focus Guardrail Bypass via Ctrl+K** ✅ IMPLEMENTED (2025-12-27)
 - Next: **S1-3 — Focus Session Completion / Reflection** 📋 BACKLOG
+
+### S1-3a — Prevent Focus Guardrail Bypass via Ctrl+K — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-27
+
+Evidence:
+
+- Commit: **3cc240e** — "S1-3a: block ctrl+k navigation to distraction routes during focus"
+- Files changed: `CommandPaletteModal.tsx` (+154 lines, -101 lines)
+
+Changes Made:
+
+- **targetPath Field**: Added `targetPath?: string` to `SearchResult` interface for explicit route tracking
+- **Reactive focusActive**: Store subscription to `focusTimerStore` for reactive state updates
+- **Filtering Logic**: Blocked routes (dashboard, initiator, media-suite) filtered from results when `focusActive=true`
+- **Execution Guard**: Last-line defense checks `getRoutePolicy(targetPath)`, cancels navigation if blocked
+- **BlockedRouteToast**: Reused existing toast component for consistent feedback
+- **Focus-Safe Whitelist**: Compass, Refocus, Settings remain accessible during focus
+
+QA Checklist:
+
+- [x] TypeScript compilation passes
+- [x] Blocked routes filtered when focus active (Dashboard, Project Hub, Media Suite)
+- [x] Allowed routes visible when focus active (Compass, Refocus)
+- [x] Prompt routes proceed normally (Settings → DistractionGuard handles)
+- [x] All results visible when NO focus active
+- [x] Execution guard blocks navigation and shows toast
+- [x] focusActive reactive (updates when timer starts/stops)
+
+**Rationale**: Closes guardrail bypass vector. Command Palette now enforces same route policy as Link-based navigation.
+
+---
 
 ### S1-2c — Project Hub "Set as Today's Focus" — ✅ IMPLEMENTED
 

@@ -41,16 +41,48 @@ interface StoredSettings extends GesuSettings {
 
 // --- Storage Adapter ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
 export function loadSettings(): GesuSettings {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = readRaw(STORAGE_KEY);
         if (!raw) return { ...DEFAULT_SETTINGS };
 
-        const parsed: StoredSettings = JSON.parse(raw);
+        const parseResult = parse<StoredSettings>(raw);
 
-        // Schema migration: reset if incompatible version
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn(`Settings schema mismatch (found v${parsed.schemaVersion}, expected v${CURRENT_SCHEMA_VERSION}). Resetting to defaults.`);
+        if (!parseResult.success) {
+            // CORRUPT: backup + warning, DO NOT reset localStorage
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+                .catch(err => console.error('[settingsStore] Backup failed:', err));
+            console.warn('[settingsStore] Parse failed, data preserved. Using defaults.');
+            return { ...DEFAULT_SETTINGS };
+        }
+
+        const parsed = parseResult.data!;
+        const version = detectVersion(parsed);
+
+        // Schema migration: preserve on version mismatch
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[settingsStore] Backup failed:', err));
+            console.warn(`[settingsStore] Schema v${version} mismatch. Data preserved, using defaults.`);
             return { ...DEFAULT_SETTINGS };
         }
 

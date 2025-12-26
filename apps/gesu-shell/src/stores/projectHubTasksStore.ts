@@ -36,6 +36,14 @@ function generateId(): string {
 
 // --- Storage Operations (with schemaVersion) ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
 interface StoredTasksState {
     schemaVersion: number;
     tasks: ProjectHubTask[];
@@ -44,27 +52,57 @@ interface StoredTasksState {
 const CURRENT_SCHEMA_VERSION = 1;
 
 function loadState(): StoredTasksState {
+    const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+    
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+        const raw = readRaw(STORAGE_KEY);
+        if (!raw) return defaultState;
 
-        const parsed = JSON.parse(raw);
+        const parseResult = parse<StoredTasksState | ProjectHubTask[]>(raw);
+        
+        if (!parseResult.success) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+                .catch(err => console.error('[projectHubTasksStore] Backup failed:', err));
+            console.warn('[projectHubTasksStore] Parse failed, data preserved. NOT resetting.');
+            return defaultState;
+        }
+
+        const parsed = parseResult.data!;
 
         // Handle legacy format (array without schema wrapper)
         if (Array.isArray(parsed)) {
-            console.log('Migrating projectHubTasksStore to schemaVersion 1');
+            console.log('[projectHubTasksStore] Migrating legacy array to schemaVersion 1');
+            // Create backup before migration
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'pre-migration', fromVersion: 0, toVersion: 1 })
+                .catch(err => console.error('[projectHubTasksStore] Pre-migration backup failed:', err));
             return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: parsed };
         }
 
+        const version = detectVersion(parsed);
+
         // Handle new format with schemaVersion
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn('ProjectHubTasks schema mismatch. Resetting.');
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[projectHubTasksStore] Backup failed:', err));
+            console.warn(`[projectHubTasksStore] Schema v${version} not current. Data preserved, NOT resetting.`);
+            return defaultState;
         }
 
         return parsed;
-    } catch {
-        return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
+    } catch (err) {
+        console.error('[projectHubTasksStore] Unexpected error:', err);
+        return defaultState;
     }
 }
 

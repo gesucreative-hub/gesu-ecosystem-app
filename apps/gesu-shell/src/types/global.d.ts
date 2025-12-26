@@ -199,6 +199,12 @@ declare global {
                 read: () => Promise<any>;
                 write: (settings: any) => Promise<void>;
             };
+            schemaBackups?: {
+                getPath: () => Promise<string>;
+                create: (payload: { storeKey: string; rawData: string; meta?: object }) => Promise<{ ok: boolean; backupPath?: string; filename?: string; error?: string }>;
+                list: (payload: { storeKey: string }) => Promise<Array<{ filename: string; timestamp: number; path: string }>>;
+                read: (payload: { filename: string }) => Promise<{ ok: boolean; backup?: { storeKey: string; timestamp: number; meta: object; rawData: string }; error?: string }>;
+            };
         };
     }
 }

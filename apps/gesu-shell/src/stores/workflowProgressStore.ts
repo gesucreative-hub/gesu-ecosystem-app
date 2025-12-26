@@ -25,23 +25,59 @@ const CURRENT_SCHEMA_VERSION = 1;
 
 // --- Storage ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
 function loadState(): WorkflowProgressState {
+    const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, progressByProject: {} };
+    
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = readRaw(STORAGE_KEY);
         if (!raw) {
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, progressByProject: {} };
+            return defaultState;
         }
 
-        const parsed: WorkflowProgressState = JSON.parse(raw);
+        const parseResult = parse<WorkflowProgressState>(raw);
+        
+        if (!parseResult.success) {
+            // CORRUPT: backup + warning, DO NOT reset localStorage
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+                .catch(err => console.error('[workflowProgressStore] Backup failed:', err));
+            console.warn('[workflowProgressStore] Parse failed, data preserved. NOT resetting.');
+            return defaultState;
+        }
 
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn('Workflow progress schema mismatch. Resetting.');
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, progressByProject: {} };
+        const parsed = parseResult.data!;
+        const version = detectVersion(parsed);
+
+        // FUTURE_VERSION or unknown: DO NOT reset, preserve data
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[workflowProgressStore] Backup failed:', err));
+            console.warn(`[workflowProgressStore] Schema v${version} not current. Data preserved, NOT resetting.`);
+            return defaultState;
         }
 
         return parsed;
-    } catch {
-        return { schemaVersion: CURRENT_SCHEMA_VERSION, progressByProject: {} };
+    } catch (err) {
+        console.error('[workflowProgressStore] Unexpected error:', err);
+        return defaultState;
     }
 }
 

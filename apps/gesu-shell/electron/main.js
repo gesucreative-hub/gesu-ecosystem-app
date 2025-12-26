@@ -706,6 +706,138 @@ ipcMain.handle('workflow:blueprints:save', async (event, data) => {
 });
 
 
+// --- Schema Backups Handlers (S0-1: Safe Migrations) ---
+
+const SCHEMA_BACKUPS_DIR = 'schema-backups';
+const MAX_BACKUPS_PER_STORE = 10;
+
+/**
+ * Get the schema backups directory path under userData
+ */
+function getSchemaBackupsDir() {
+    return path.join(app.getPath('userData'), SCHEMA_BACKUPS_DIR);
+}
+
+ipcMain.handle('schemaBackups:getPath', async () => {
+    return getSchemaBackupsDir();
+});
+
+ipcMain.handle('schemaBackups:create', async (event, { storeKey, rawData, meta }) => {
+    try {
+        const backupsDir = getSchemaBackupsDir();
+        
+        // Ensure directory exists
+        if (!fs.existsSync(backupsDir)) {
+            fs.mkdirSync(backupsDir, { recursive: true });
+        }
+        
+        const timestamp = Date.now();
+        const filename = `${storeKey}-${timestamp}.json`;
+        const backupPath = path.join(backupsDir, filename);
+        
+        // Create backup payload
+        const backupPayload = {
+            storeKey,
+            timestamp,
+            meta: meta || {},
+            rawData
+        };
+        
+        await fs.promises.writeFile(backupPath, JSON.stringify(backupPayload, null, 2), 'utf-8');
+        console.log(`[schemaBackups:create] Created backup: ${filename}`);
+        
+        // Enforce retention: keep only last MAX_BACKUPS_PER_STORE per store
+        await enforceBackupRetention(storeKey);
+        
+        return { ok: true, backupPath, filename };
+    } catch (err) {
+        console.error('[schemaBackups:create] Error:', err);
+        return { ok: false, error: err.message };
+    }
+});
+
+ipcMain.handle('schemaBackups:list', async (event, { storeKey }) => {
+    try {
+        const backupsDir = getSchemaBackupsDir();
+        
+        if (!fs.existsSync(backupsDir)) {
+            return [];
+        }
+        
+        const files = await fs.promises.readdir(backupsDir);
+        const storeBackups = files
+            .filter(f => f.startsWith(`${storeKey}-`) && f.endsWith('.json'))
+            .map(f => {
+                const match = f.match(/-(\d+)\.json$/);
+                return {
+                    filename: f,
+                    timestamp: match ? parseInt(match[1], 10) : 0,
+                    path: path.join(backupsDir, f)
+                };
+            })
+            .sort((a, b) => b.timestamp - a.timestamp); // Newest first
+        
+        return storeBackups;
+    } catch (err) {
+        console.error('[schemaBackups:list] Error:', err);
+        return [];
+    }
+});
+
+ipcMain.handle('schemaBackups:read', async (event, { filename }) => {
+    try {
+        const backupsDir = getSchemaBackupsDir();
+        const backupPath = path.join(backupsDir, filename);
+        
+        if (!fs.existsSync(backupPath)) {
+            return { ok: false, error: 'Backup not found' };
+        }
+        
+        const data = await fs.promises.readFile(backupPath, 'utf-8');
+        const parsed = JSON.parse(data);
+        return { ok: true, backup: parsed };
+    } catch (err) {
+        console.error('[schemaBackups:read] Error:', err);
+        return { ok: false, error: err.message };
+    }
+});
+
+/**
+ * Enforce retention policy: keep only last MAX_BACKUPS_PER_STORE backups per store
+ */
+async function enforceBackupRetention(storeKey) {
+    try {
+        const backupsDir = getSchemaBackupsDir();
+        
+        if (!fs.existsSync(backupsDir)) return;
+        
+        const files = await fs.promises.readdir(backupsDir);
+        const storeBackups = files
+            .filter(f => f.startsWith(`${storeKey}-`) && f.endsWith('.json'))
+            .map(f => {
+                const match = f.match(/-(\d+)\.json$/);
+                return {
+                    filename: f,
+                    timestamp: match ? parseInt(match[1], 10) : 0
+                };
+            })
+            .sort((a, b) => b.timestamp - a.timestamp); // Newest first
+        
+        // Delete oldest backups beyond limit
+        if (storeBackups.length > MAX_BACKUPS_PER_STORE) {
+            const toDelete = storeBackups.slice(MAX_BACKUPS_PER_STORE);
+            for (const backup of toDelete) {
+                const backupPath = path.join(backupsDir, backup.filename);
+                await fs.promises.unlink(backupPath);
+                console.log(`[schemaBackups] Deleted old backup: ${backup.filename}`);
+            }
+        }
+    } catch (err) {
+        console.error('[schemaBackups] Retention cleanup error:', err);
+    }
+}
+
+
 // Re-add helpers removed during replacement block optimization
 function buildPresetArgs(preset, downloadsDir) {
     const outputTemplate = path.join(downloadsDir, '%(title)s.%(ext)s');

@@ -96,5 +96,11 @@ contextBridge.exposeInMainWorld('gesu', {
         read: () => ipcRenderer.invoke('user-settings:read'),
         write: (settings) => ipcRenderer.invoke('user-settings:write', settings),
     },
+    schemaBackups: {
+        getPath: () => ipcRenderer.invoke('schemaBackups:getPath'),
+        create: (payload) => ipcRenderer.invoke('schemaBackups:create', payload),
+        list: (payload) => ipcRenderer.invoke('schemaBackups:list', payload),
+        read: (payload) => ipcRenderer.invoke('schemaBackups:read', payload),
+    },
 });
 

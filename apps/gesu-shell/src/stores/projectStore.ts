@@ -82,30 +82,90 @@ function migrateProjectsV1ToV2(projects: Project[]): Project[] {
 
 // --- Storage ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
+// Async-safe: backups are fire-and-forget with error logging
+
+/**
+ * Safe loadState with backup-before-migration and no-reset on unknown version.
+ * Note: Backup creation is async but we don't block the UI - backups happen in background.
+ */
 function loadState(): ProjectStoreState {
+    const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
+    
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = readRaw(STORAGE_KEY);
         if (!raw) {
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
+            return defaultState;
         }
 
-        const parsed = JSON.parse(raw) as ProjectStoreState;
+        const parseResult = parse<ProjectStoreState>(raw);
+        
+        if (!parseResult.success) {
+            // CORRUPT: Create backup (async, don't block), register warning, return default
+            // DO NOT write back or modify the original key
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => {
+                    registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined);
+                })
+                .catch(err => console.error('[projectStore] Backup failed:', err));
+            
+            console.warn('[projectStore] Parse failed, data preserved in backup. NOT resetting.');
+            return defaultState;
+        }
 
-        // Handle schema migration
-        if (parsed.schemaVersion === 1) {
+        const parsed = parseResult.data!;
+        const version = detectVersion(parsed);
+
+        // Handle schema migration v1 -> v2
+        if (version === 1) {
             console.log('[projectStore] Migrating from schema v1 to v2...');
+            
+            // Create backup BEFORE migration (async, but we proceed with migration)
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: 'pre-migration', 
+                fromVersion: 1, 
+                toVersion: 2 
+            }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
+            
             parsed.projects = migrateProjectsV1ToV2(parsed.projects);
             parsed.schemaVersion = 2;
             saveState(parsed);
             console.log('[projectStore] Migration complete!');
-        } else if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn('[projectStore] Unknown schema version, resetting.');
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
+            return parsed;
+        }
+        
+        // FUTURE_VERSION or unknown: DO NOT reset, preserve data
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            // Create backup (async), register warning, return default for UI
+            // CRITICAL: DO NOT write back or modify localStorage
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[projectStore] Backup failed:', err));
+            
+            console.warn(`[projectStore] Schema v${version} not current (v${CURRENT_SCHEMA_VERSION}). Data preserved, NOT resetting.`);
+            return defaultState;
         }
 
         return parsed;
-    } catch {
-        return { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
+    } catch (err) {
+        console.error('[projectStore] Unexpected error:', err);
+        return defaultState;
     }
 }
 

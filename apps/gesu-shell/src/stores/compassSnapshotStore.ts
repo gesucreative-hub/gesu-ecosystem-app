@@ -45,21 +45,55 @@ function generateId(): string {
 
 // --- Storage ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
 function loadState(): CompassSnapshotState {
+    const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, snapshots: [] };
+    
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { schemaVersion: CURRENT_SCHEMA_VERSION, snapshots: [] };
+        const raw = readRaw(STORAGE_KEY);
+        if (!raw) return defaultState;
 
-        const parsed: CompassSnapshotState = JSON.parse(raw);
+        const parseResult = parse<CompassSnapshotState>(raw);
+        
+        if (!parseResult.success) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+                .catch(err => console.error('[compassSnapshotStore] Backup failed:', err));
+            console.warn('[compassSnapshotStore] Parse failed, data preserved. NOT resetting.');
+            return defaultState;
+        }
 
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn('Compass snapshot schema mismatch. Resetting.');
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, snapshots: [] };
+        const parsed = parseResult.data!;
+        const version = detectVersion(parsed);
+
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[compassSnapshotStore] Backup failed:', err));
+            console.warn(`[compassSnapshotStore] Schema v${version} not current. Data preserved, NOT resetting.`);
+            return defaultState;
         }
 
         return parsed;
-    } catch {
-        return { schemaVersion: CURRENT_SCHEMA_VERSION, snapshots: [] };
+    } catch (err) {
+        console.error('[compassSnapshotStore] Unexpected error:', err);
+        return defaultState;
     }
 }
 

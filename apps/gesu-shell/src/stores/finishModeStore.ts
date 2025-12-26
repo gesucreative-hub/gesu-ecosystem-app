@@ -45,22 +45,55 @@ function generateId(): string {
 
 // --- Storage Operations ---
 
+import {
+    readRaw,
+    parse,
+    detectVersion,
+    createBackupSnapshot,
+    registerSchemaWarning
+} from '../services/persistence/safeMigration';
+
 function loadState(): FinishModeState {
+    const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, finishSession: null };
+    
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { schemaVersion: CURRENT_SCHEMA_VERSION, finishSession: null };
+        const raw = readRaw(STORAGE_KEY);
+        if (!raw) return defaultState;
 
-        const parsed: FinishModeState = JSON.parse(raw);
+        const parseResult = parse<FinishModeState>(raw);
 
-        // Schema migration: reset if incompatible
-        if (parsed.schemaVersion !== CURRENT_SCHEMA_VERSION) {
-            console.warn(`Finish Mode schema mismatch. Resetting.`);
-            return { schemaVersion: CURRENT_SCHEMA_VERSION, finishSession: null };
+        if (!parseResult.success) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+                .catch(err => console.error('[finishModeStore] Backup failed:', err));
+            console.warn('[finishModeStore] Parse failed, data preserved. NOT resetting.');
+            return defaultState;
+        }
+
+        const parsed = parseResult.data!;
+        const version = detectVersion(parsed);
+
+        if (version !== CURRENT_SCHEMA_VERSION) {
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
+                fromVersion: version || undefined 
+            })
+                .then(filename => {
+                    registerSchemaWarning(
+                        STORAGE_KEY, 
+                        version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
+                        filename || undefined
+                    );
+                })
+                .catch(err => console.error('[finishModeStore] Backup failed:', err));
+            console.warn(`[finishModeStore] Schema v${version} mismatch. Data preserved, NOT resetting.`);
+            return defaultState;
         }
 
         return parsed;
-    } catch {
-        return { schemaVersion: CURRENT_SCHEMA_VERSION, finishSession: null };
+    } catch (err) {
+        console.error('[finishModeStore] Unexpected error:', err);
+        return defaultState;
     }
 }
 

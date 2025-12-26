@@ -730,3 +730,80 @@ _(Template)_
 - **applyOps.ts**: Safe suggestion application with ID stability, key preservation, DoD deduplication
 
 **QA Status**: Code complete, awaiting browser QA verification
+
+---
+
+## 9. Sprint Roadmap (Post-Phase 1)
+
+### Sprint S0: Stabilize / Trust Fixes
+
+#### S0-1: Safe Migrations (backup + no reset on unknown schema) ✅
+
+**Completed**: 2024-12-26
+
+**Summary**: Implemented backup-before-migration for all versioned persisted stores. Application no longer performs destructive reset when encountering unknown or newer schema versions.
+
+**Changes Made**:
+
+1. **New Module**: `src/services/persistence/safeMigration.ts`
+   - `safeLoad<T>()` - Safe load with backup/warning on FUTURE_VERSION/CORRUPT
+   - `createBackupSnapshot()` - FS-primary (Electron userData), localStorage fallback
+   - Warning registry with React subscription support
+   - Backup retention policy (10 per store)
+
+2. **IPC Handlers**: `electron/main.js`
+   - `schemaBackups:getPath` - Get backup directory path
+   - `schemaBackups:create` - Create backup with metadata
+   - `schemaBackups:list` - List backups for a store
+   - `schemaBackups:read` - Read backup contents
+
+3. **Stores Integrated** (6 total):
+   - `projectStore.ts` (HIGH risk - v1→v2 migration)
+   - `workflowProgressStore.ts` (HIGH risk)
+   - `settingsStore.ts` (HIGH risk)
+   - `compassSnapshotStore.ts` (MED risk)
+   - `finishModeStore.ts` (MED risk)
+   - `projectHubTasksStore.ts` (MED risk - legacy array migration)
+
+4. **UI Component**: `src/components/SchemaWarningBanner.tsx`
+   - Non-blocking amber banner for schema warnings
+   - Shows affected stores, backup filenames, help text
+
+**Behavior Changes**:
+
+| Scenario                | Before                    | After                                         |
+| ----------------------- | ------------------------- | --------------------------------------------- |
+| FUTURE_VERSION detected | Reset to empty, data lost | Backup created, data preserved, warning shown |
+| CORRUPT payload         | Reset to empty            | Backup of raw created, warning shown          |
+| Migration needed        | Direct overwrite          | Backup BEFORE migrate, then migrate           |
+
+**QA Checklist**:
+
+- [ ] Set `schemaVersion: 999` in `gesu-projects` → verify backup created, no data loss
+- [ ] Set invalid JSON in `gesu-projects` → verify backup exists, warning shown
+- [ ] Run v1→v2 project migration → verify backup created before migration
+
+#### S0-2: Job History Pagination/Perf (future)
+
+- **Risk**: Large job history has no pagination
+- **DoD**: `getRecentJobs()` paginated, virtualized list in UI
+
+---
+
+### Sprint S1: Guardrails (future)
+
+#### S1-1: MAX_ACTIVE_TASKS Constant
+
+- Central constant defined and enforced in all task sources
+
+#### S1-2: Distraction Shield Hardening
+
+- Block navigation during focus, confirmation modal
+
+---
+
+### Sprint S2+: Feature Development (future)
+
+- Persona Split
+- Business Toolkit
+- Website Integration Boundary

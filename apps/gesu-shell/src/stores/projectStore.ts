@@ -96,7 +96,7 @@ import {
  * Safe loadState with backup-before-migration and no-reset on unknown version.
  * Note: Backup creation is async but we don't block the UI - backups happen in background.
  */
-function loadState(): ProjectStoreState {
+export function loadState(): ProjectStoreState {
     const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
     
     try {

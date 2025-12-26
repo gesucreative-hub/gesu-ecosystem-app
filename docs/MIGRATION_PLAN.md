@@ -3,8 +3,45 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-2b — Activate First / Focus First workflow** ✅ IMPLEMENTED (2025-12-27)
-- Next: **S1-2c — Project Hub "Set as Today's Focus" button** 📋 BACKLOG
+- Active item: **S1-2c — Project Hub "Set as Today's Focus" button** ✅ IMPLEMENTED (2025-12-27)
+- Next: **S1-3 — Focus Session Completion / Reflection** 📋 BACKLOG
+
+### S1-2c — Project Hub "Set as Today's Focus" — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-27
+
+Evidence:
+
+- Commit: **16035fe** — "S1-2c: project hub set today's focus + wip surface audit"
+- Files changed: `dailyCheckInStore.ts` (+12 lines), `ProjectSearch.tsx` (+30 lines), `locales/*/common.json`
+
+Changes Made:
+
+- **isComplete Field**: Added `isComplete?: boolean` to DailyCheckIn interface to distinguish full check-ins from focus-only updates
+- **Set Focus Button**: Hover-visible Target icon button on each project row in ProjectSearch
+- **focusActive Guard**: Button hidden when focus timer is active (belt-and-suspenders)
+- **Toast Message**: Shows "Focus Updated - Today's focus set to [Name]" on click
+- **updateTodayTopFocus**: Preserves existing isComplete value when updating focus
+
+WIP Surface Audit:
+
+- [x] LostModePage: Enforced via `canAddTask()`
+- [x] StepDetailPanel: Enforced via `canAddTask()`
+- [x] CompassPage Focus First: Enforced via `getRemainingSlots()`
+- [x] Finish Mode: Inherent WIP counting (session counts as 1 task)
+
+QA Checklist:
+
+- [x] TypeScript compilation passes
+- [x] Set Focus button appears on hover in ProjectSearch
+- [x] Button hidden when focusActive
+- [x] Toast shows on click
+- [x] isComplete=false for minimal check-ins from Project Hub
+- [ ] E2E test pending (blocked by Simulation Mode in browser)
+
+**Rationale**: Extends focus activation from Compass to Project Hub. Preference-only update, does NOT create tasks.
+
+---
 
 ### S1-2a — Daily Check-in v0 (Energy/Why/Top Focus) — ✅ IMPLEMENTED
 

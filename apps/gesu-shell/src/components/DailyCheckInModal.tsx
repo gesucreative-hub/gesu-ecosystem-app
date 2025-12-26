@@ -11,7 +11,7 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { Textarea } from './Textarea';
 import { saveCheckIn } from '../stores/dailyCheckInStore';
-import { getState as getProjectState } from '../stores/projectStore';
+import { getActiveProjects } from '../stores/projectStore';
 import { getTodayTasks } from '../stores/projectHubTasksStore';
 
 interface DailyCheckInModalProps {
@@ -29,7 +29,7 @@ export function DailyCheckInModal({ onClose }: DailyCheckInModalProps) {
     const [showTextInput, setShowTextInput] = useState(false);
 
     // Load projects and tasks
-    const projects = getProjectState().projects.filter((p: { archived?: boolean }) => !p.archived).slice(0, 5);
+    const projects = getActiveProjects().slice(0, 5);
     const tasks = getTodayTasks().filter(t => !t.done).slice(0, 5);
 
     // Auto-select first item if exists

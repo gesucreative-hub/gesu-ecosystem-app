@@ -72,14 +72,17 @@ function loadState(): DailyCheckInStoreState {
     }
 
     const detectedVersion = detectVersion(parsed);
-    if (detectedVersion > CURRENT_SCHEMA_VERSION) {
+    if (detectedVersion !== null && detectedVersion > CURRENT_SCHEMA_VERSION) {
         registerSchemaWarning(STORAGE_KEY, 'FUTURE_VERSION');
         createBackupSnapshot(STORAGE_KEY, raw);
         return defaultState;
     }
 
     // No migration needed for v1
-    return parsed as DailyCheckInStoreState;
+    if (typeof parsed === 'object' && parsed !== null && 'schemaVersion' in parsed && 'checkIns' in parsed) {
+        return parsed as DailyCheckInStoreState;
+    }
+    return defaultState;
 }
 
 function saveState(state: DailyCheckInStoreState): void {

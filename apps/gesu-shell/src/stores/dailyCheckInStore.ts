@@ -13,6 +13,7 @@ export interface DailyCheckIn {
     topFocusRefId?: string;         // project.id or task.id (reference only, not activation)
     topFocusText?: string;          // free text fallback
     createdAt: string;              // ISO timestamp
+    isComplete?: boolean;           // S1-2c: true if user completed full check-in flow, false if only focus set
 }
 
 interface DailyCheckInStoreState {
@@ -148,6 +149,7 @@ export function saveCheckIn(data: Omit<DailyCheckIn, 'id' | 'createdAt'>): Daily
  * Update today's check-in topFocus without requiring full check-in flow
  * If no check-in exists, creates minimal one with neutral defaults
  * S1-2b: Focus First workflow
+ * S1-2c: Does NOT mark isComplete=true (only full check-in flow does)
  */
 export function updateTodayTopFocus(
     type: 'project' | 'task' | 'text',
@@ -158,7 +160,7 @@ export function updateTodayTopFocus(
     const existing = getTodayCheckIn();
     
     if (existing) {
-        // Update existing check-in's topFocus
+        // Update existing check-in's topFocus, preserve isComplete status
         return saveCheckIn({
             date: todayKey,
             energy: existing.energy,
@@ -166,9 +168,11 @@ export function updateTodayTopFocus(
             topFocusType: type,
             topFocusRefId: refId,
             topFocusText: text,
+            isComplete: existing.isComplete, // Preserve existing completion status
         });
     } else {
         // Create minimal check-in with neutral defaults
+        // isComplete=false because user hasn't done full check-in
         return saveCheckIn({
             date: todayKey,
             energy: 3, // neutral default (scale 1-5)
@@ -176,6 +180,7 @@ export function updateTodayTopFocus(
             topFocusType: type,
             topFocusRefId: refId,
             topFocusText: text,
+            isComplete: false, // S1-2c: Not a complete check-in, just focus preference
         });
     }
 }

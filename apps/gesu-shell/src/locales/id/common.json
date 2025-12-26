@@ -87,7 +87,9 @@
         "duplicate": "Duplikat",
         "rename": "Ganti nama",
         "exportJson": "Ekspor JSON",
-        "addFromTemplates": "Tambah dari template"
+        "addFromTemplates": "Tambah dari template",
+        "setAsFocus": "Jadikan fokus hari ini",
+        "goToCompass": "Ke Kompas"
     },
     "status": {
         "loading": "Memuat...",
@@ -227,6 +229,8 @@
         "snapshotSaveFailed": "Gagal menyimpan snapshot",
         "invalidBlueprintFile": "File blueprint tidak valid. Harus berisi \"name\" dan array \"nodes\".",
         "failedToParseJson": "Gagal memparse file JSON. Periksa formatnya.",
-        "projectListRefreshed": "Daftar proyek disegarkan dan proyek tidak valid dihapus."
+        "projectListRefreshed": "Daftar proyek disegarkan dan proyek tidak valid dihapus.",
+        "focusUpdated": "Fokus Diperbarui",
+        "focusUpdatedMessage": "Fokus hari ini diatur ke {{name}}"
     }
 }

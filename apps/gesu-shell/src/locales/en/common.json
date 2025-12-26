@@ -87,7 +87,9 @@
         "duplicate": "Duplicate",
         "rename": "Rename",
         "exportJson": "Export JSON",
-        "addFromTemplates": "Add from templates"
+        "addFromTemplates": "Add from templates",
+        "setAsFocus": "Set as today's focus",
+        "goToCompass": "Go to Compass"
     },
     "status": {
         "loading": "Loading...",
@@ -227,6 +229,8 @@
         "snapshotSaveFailed": "Failed to save snapshot",
         "invalidBlueprintFile": "Invalid blueprint file. Must contain \"name\" and \"nodes\" array.",
         "failedToParseJson": "Failed to parse JSON file. Please check the format.",
-        "projectListRefreshed": "Project list refreshed and invalid projects removed."
+        "projectListRefreshed": "Project list refreshed and invalid projects removed.",
+        "focusUpdated": "Focus Updated",
+        "focusUpdatedMessage": "Today's focus set to {{name}}"
     }
 }

@@ -1,8 +1,10 @@
-import { Search, Folder, X } from 'lucide-react';
+import { Search, Folder, X, Target } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { Project } from '../stores/projectStore';
 import { useTranslation } from 'react-i18next';
-
+import { updateTodayTopFocus } from '../stores/dailyCheckInStore';
+import { isSessionActive } from '../stores/focusTimerStore';
+import { useAlertDialog } from './AlertDialog';
 interface ProjectSearchProps {
     projects: Project[];
     activeProjectId?: string | null;
@@ -11,12 +13,16 @@ interface ProjectSearchProps {
     className?: string;
 }
 
-export function ProjectSearch({ projects, activeProjectId, onSelect, onClear, className = '' }: ProjectSearchProps) {
+export function ProjectSearch({ projects, activeProjectId, onSelect, onClear: _onClear, className = '' }: ProjectSearchProps) {
     const { t } = useTranslation(['common']); // Added useTranslation hook
+    const { alert, AlertDialogComponent } = useAlertDialog();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    
+    // S1-2c: Check if focus timer is active (belt-and-suspenders guard)
+    const focusActive = isSessionActive();
 
     // Helper to format display name
     const getDisplayName = (p: Project) => {
@@ -90,6 +96,21 @@ export function ProjectSearch({ projects, activeProjectId, onSelect, onClear, cl
         inputRef.current?.focus();
     };
 
+    // S1-2c: Set as Today's Focus handler
+    const handleSetFocus = (e: React.MouseEvent, project: Project) => {
+        e.stopPropagation(); // Don't trigger project selection
+        
+        // Update daily check-in with project as focus
+        updateTodayTopFocus('project', project.id, undefined);
+        
+        // Show toast
+        alert({
+            title: t('common:alerts.focusUpdated'),
+            message: t('common:alerts.focusUpdatedMessage', { name: getDisplayName(project) }),
+            type: 'success'
+        });
+    };
+
     return (
         <div className={`relative ${className}`} ref={containerRef}>
             <div className="relative">
@@ -125,13 +146,16 @@ export function ProjectSearch({ projects, activeProjectId, onSelect, onClear, cl
                     <div className="max-h-[300px] overflow-y-auto p-1">
                         {results.length > 0 ? (
                             results.map(project => (
-                                <button
+                                <div
                                     key={project.id}
-                                    onClick={() => handleSelect(project.id)}
                                     className={`
-                                        w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-left group
+                                        w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-left group cursor-pointer
                                         ${project.id === activeProjectId ? 'bg-tokens-brand-DEFAULT/10' : 'hover:bg-tokens-panel2'}
                                     `}
+                                    onClick={() => handleSelect(project.id)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSelect(project.id)}
                                 >
                                     <div className={`
                                         p-1.5 rounded-md 
@@ -149,7 +173,19 @@ export function ProjectSearch({ projects, activeProjectId, onSelect, onClear, cl
                                             </div>
                                         )}
                                     </div>
-                                </button>
+                                    
+                                    {/* S1-2c: Set Focus button - hover visible only, hidden when focusActive */}
+                                    {!focusActive && (
+                                        <button
+                                            onClick={(e) => handleSetFocus(e, project)}
+                                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 rounded-md bg-tokens-panel2 hover:bg-tokens-brand-DEFAULT/20 text-tokens-muted hover:text-tokens-brand-DEFAULT transition-all"
+                                            title={t('common:buttons.setAsFocus')}
+                                            aria-label={t('common:buttons.setAsFocus')}
+                                        >
+                                            <Target size={14} />
+                                        </button>
+                                    )}
+                                </div>
                             ))
                         ) : (
                             <div className="px-4 py-8 text-center text-tokens-muted text-sm">
@@ -159,6 +195,8 @@ export function ProjectSearch({ projects, activeProjectId, onSelect, onClear, cl
                     </div>
                 </div>
             )}
+            
+            <AlertDialogComponent />
         </div>
     );
 }

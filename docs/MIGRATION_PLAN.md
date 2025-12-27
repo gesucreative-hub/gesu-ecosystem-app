@@ -249,7 +249,7 @@ i18n Coverage:
 
 Evidence:
 
-- Commit: **[to be filled]** — "S3-1: add next action to tasks (Compass thin slice)"
+- Commit: **cfeb6ee** — "S3-1: add next action to tasks (Compass thin slice)"
 - Files changed:
   - `apps/gesu-shell/src/stores/projectHubTasksStore.ts` (+12 lines)
   - `apps/gesu-shell/src/pages/CompassPage.tsx` (+20 lines)

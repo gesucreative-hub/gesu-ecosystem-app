@@ -148,15 +148,27 @@ QA Checklist:
 
 ---
 
-### S2-4 — Cross-Persona Guardrails — 📋 BACKLOG
+### S2-4 — Cross-Persona Guardrails — ✅ IMPLEMENTED
 
-**Scope**: Global WIP enforcement, block switch during focus
+**Completed**: 2025-12-27
 
-**DoD**:
+Evidence:
 
-- [ ] `canAddTask()` counts tasks from both personas
-- [ ] Persona switch blocked during `focusActive=true`
-- [ ] Toast on blocked switch attempt
+- Commit: **[to be filled]** — "S2-4: cross-persona guardrails (global WIP + block switch during focus)"
+- Files: `personaStore.ts` (focus guard in setActivePersona), `Layout.tsx` (PersonaBlockedToast with auto-dismiss)
+
+Changes Made:
+
+- **Focus guard in personaStore**: `setActivePersona()` now checks `isSessionActive()` and returns false if blocked
+- **PersonaBlockedToast**: Inline toast with auto-dismiss (3s) when persona switch blocked during focus
+- **Global WIP**: Verified that `canAddMoreTasksToday()` already counts ALL tasks regardless of persona (no filter by persona in `getTodayTasks`)
+
+QA Checklist:
+
+- [x] `canAddTask()` counts tasks from both personas (global WIP MAX 3)
+- [x] Persona switch blocked during `focusActive=true`
+- [x] Toast shown on blocked switch attempt (auto-dismisses after 3s)
+- [x] No regression: nav works, focus timer flow unchanged
 
 ---
 

@@ -21,7 +21,7 @@ See: [docs/PERSONA_SPLIT_ARCHITECTURE.md](./PERSONA_SPLIT_ARCHITECTURE.md)
 Evidence:
 
 - File: `docs/PERSONA_SPLIT_ARCHITECTURE.md`
-- Commit: **(this commit)**
+- Commit: **e43b202** — "Docs: add S2-0 persona split architecture"
 
 **Scope**: Architecture definition only, NO application code changes
 
@@ -116,7 +116,7 @@ Evidence:
 
 Evidence:
 
-- Commit: **(pending)** — "S1-3b: make daily check-in prompt reliable"
+- Commit: **de91abe** — "S1-3b: make daily check-in prompt reliable"
 - Files changed: `DailyCheckInBanner.tsx` (+22 lines, -3 lines)
 
 Changes Made:

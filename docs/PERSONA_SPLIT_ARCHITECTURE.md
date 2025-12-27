@@ -227,11 +227,13 @@ interface PersonaState {
 
 **Route Policies Remain**:
 
-| Route                                      | Policy    |
-| ------------------------------------------ | --------- |
-| `/dashboard`, `/initiator`, `/media-suite` | `blocked` |
-| `/compass`, `/refocus`, `/refocus/lost`    | `allowed` |
-| `/settings`, `/activity`                   | `prompt`  |
+| Route                                                   | Policy    |
+| ------------------------------------------------------- | --------- |
+| `/dashboard`, `/initiator`, `/media-suite`, `/activity` | `blocked` |
+| `/compass`, `/refocus`, `/refocus/lost`                 | `allowed` |
+| `/settings`                                             | `prompt`  |
+
+**Note**: Route policies are sourced from guardrails config/MIGRATION_PLAN; changes require a dedicated guardrails sprint.
 
 ### 5.3) Persona Switch During Focus: BLOCKED
 

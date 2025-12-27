@@ -118,16 +118,33 @@ QA Checklist:
 
 ---
 
-### S2-3 — UI Separation — 📋 BACKLOG
+### S2-3 — UI Separation — ✅ IMPLEMENTED
 
-**Scope**: Sidebar filtering, landing routing, persona toggle
+**Completed**: 2025-12-27
 
-**DoD**:
+Evidence:
 
-- [ ] Sidebar filters routes by `activePersona`
-- [ ] Root `/` redirects to persona landing
-- [ ] Persona toggle in sidebar/header
-- [ ] Dashboard respects active persona
+- Commits: **08ca261**, **5b66f06**, **[to be filled]** — "S2-3: wire active persona into UI filtering + redirect"
+- Files: `usePersona.ts` (created), `Layout.tsx` (persona toggle + nav filtering + redirect), `InitiatorPage.tsx` (persona filter), `App.tsx` (landing redirect), i18n keys
+
+Changes Made:
+
+- **usePersona hook**: React hook for personaStore subscription/reactive updates
+- **PersonaToggle**: Segmented control in sidebar (Personal/Business), focus protection via `isSessionActive()`
+- **Nav filtering**: Conditional rendering (Personal: Compass/Activity/Refocus, Business: Initiator, Shared: Dashboard/Media Suite)
+- **Landing redirect**: `/` → `/compass` (personal) or `/initiator` (business)
+- **Auto-redirect**: Persona switch redirects incompatible routes (e.g., Business + `/compass` → `/initiator`)
+- **i18n**: Added `persona.personal`/`persona.business` (EN + ID)
+
+QA Checklist:
+
+- [x] Sidebar filters routes by activePersona
+- [x] Root `/` redirects to persona landing
+- [x] Persona toggle in sidebar
+- [x] Nav visibility correct for both personas
+- [x] Auto-redirect on persona switch
+- [x] Focus protection (toggle blocked during `isSessionActive===true`)
+- [x] No regression: nav works, routing works
 
 ---
 

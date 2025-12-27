@@ -95,7 +95,7 @@ QA Checklist:
 
 Evidence:
 
-- Commit: **(this commit)** — "S2-2: add personaStore + localStorage persistence"
+- Commit: **14c5e19** — "S2-2: add personaStore + localStorage persistence"
 - Files: `personaStore.ts` (created, ~100 lines)
 
 Changes Made:

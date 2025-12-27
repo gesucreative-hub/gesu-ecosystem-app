@@ -89,15 +89,32 @@ QA Checklist:
 
 ---
 
-### S2-2 — Persona Context Variable — 📋 BACKLOG
+### S2-2 — Persona Context Variable — ✅ IMPLEMENTED
 
-**Scope**: Create `personaStore`, persist to localStorage
+**Completed**: 2025-12-27
 
-**DoD**:
+Evidence:
 
-- [ ] `personaStore.ts` with `activePersona` state
-- [ ] Persisted to `gesu-active-persona`
-- [ ] No UI changes yet
+- Commit: **(this commit)** — "S2-2: add personaStore + localStorage persistence"
+- Files: `personaStore.ts` (created, ~100 lines)
+
+Changes Made:
+
+- **personaStore.ts**: Created with activePersona state ('personal' | 'business')
+- **Persistence**: localStorage key `gesu-active-persona`
+- **Pattern**: Module-level state, subscribe/notifySubscribers, init on load
+- **Default**: `'business'` for missing/invalid values
+- **Error Handling**: try/catch for localStorage operations, guards for non-browser context
+- **DEV Helper**: `window.__gesuPersona` for console QA (DEV mode only)
+
+QA Checklist:
+
+- [x] personaStore.ts with activePersona state
+- [x] Persisted to `gesu-active-persona`
+- [x] Invalid values fallback to 'business' and storage corrected
+- [x] LocalStorage unavailable failsafe (returns 'business')
+- [x] Subscription pattern implemented
+- [x] No UI changes (deferred to S2-3)
 
 ---
 

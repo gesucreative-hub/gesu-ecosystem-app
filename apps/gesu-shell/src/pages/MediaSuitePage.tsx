@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGesuSettings } from '../lib/gesuSettings';
@@ -1297,7 +1297,7 @@ export function MediaSuitePage() {
                                         { value: 'advanced', label: t('mediasuite:filters.advanced', 'Advanced') }
                                     ]}
                                 />
-                                <button onClick={refreshHistory} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">{t('common:buttons.refresh', 'Refresh')}</button>
+                                <button onClick={() => refreshHistory()} className="text-xs text-tokens-brand-DEFAULT hover:text-tokens-brand-hover ml-2">{t('common:buttons.refresh', 'Refresh')}</button>
                             </div>
                         }>
                             {/* Scrollable table container with max height */}

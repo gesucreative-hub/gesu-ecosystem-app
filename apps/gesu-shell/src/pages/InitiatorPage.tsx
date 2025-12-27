@@ -707,7 +707,7 @@ export function ProjectHubPage() {
     // Project state
     const [activeProject, setActiveProjectState] = useState<Project | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
-    const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+    const [, setIsLoadingProjects] = useState(true);
     const [projectKey, setProjectKey] = useState(0); // For auto-swap workflow
 
     // Sprint 21: Load blueprints for robust filtering

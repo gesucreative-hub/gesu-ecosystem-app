@@ -3,7 +3,7 @@ import { useAlertDialog } from '../components/AlertDialog';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Check, CheckCircle2, Target } from 'lucide-react';
-import { WorkflowNode, WORKFLOW_PHASES, WorkflowPhase } from './workflowData';
+import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
 import { Button } from '../components/Button';
 import {
     isDodItemAlreadySentToday,

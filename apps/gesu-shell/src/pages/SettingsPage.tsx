@@ -303,7 +303,6 @@ export function SettingsPage() {
     // Open Ollama download page
     const openOllamaDownloadPage = () => {
         const url = 'https://ollama.ai/download';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const electronWindow = window as any;
         if (electronWindow.electron?.shell?.openExternal) {
             electronWindow.electron.shell.openExternal(url);
@@ -401,7 +400,6 @@ export function SettingsPage() {
             setAlertDialog({ isOpen: true, title: 'Error', message: 'Dialog API not available.', type: 'error' });
             return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const currentPath = (settings[section] as any)[key];
         const result = await window.gesu.dialog.pickFolder(currentPath);
         if (result) {

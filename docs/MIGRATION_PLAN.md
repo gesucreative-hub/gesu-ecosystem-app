@@ -2,9 +2,113 @@
 
 ## Current Status (Single Source of Truth)
 
-- Current Sprint: **S1 — Guardrails**
-- Active item: **S1-3b — Fix Daily Check-in Prompt Reliability** ✅ IMPLEMENTED (2025-12-27)
-- Next: **S1-3 — Focus Session Completion / Reflection** 📋 BACKLOG
+- Current Sprint: **S2 — Persona Split**
+- Active item: **S2-0 — Persona Split Architecture** ✅ DONE (2025-12-27)
+- Next: **S2-1 — Data Tagging** 📋 BACKLOG
+
+---
+
+## S2 — Persona Split
+
+### Architecture Reference
+
+See: [docs/PERSONA_SPLIT_ARCHITECTURE.md](./PERSONA_SPLIT_ARCHITECTURE.md)
+
+### S2-0 — Persona Split Architecture — ✅ DONE
+
+**Completed**: 2025-12-27
+
+Evidence:
+
+- File: `docs/PERSONA_SPLIT_ARCHITECTURE.md`
+- Commit: **(this commit)**
+
+**Scope**: Architecture definition only, NO application code changes
+
+**Key Decisions Documented**:
+
+| ID  | Decision                                               |
+| --- | ------------------------------------------------------ |
+| D1  | WIP limit is GLOBAL MAX 3 (not per-persona)            |
+| D2  | Use `activePersona` context variable, not URL prefixes |
+| D3  | Media Suite is SHARED utility                          |
+| D4  | Dashboard shows ACTIVE persona only                    |
+| D5  | Focus sessions are Personal, may link to Business work |
+
+**DoD Checklist**:
+
+- [x] Purpose & Non-goals defined
+- [x] Personal vs Business personas defined
+- [x] Data boundaries (Shared/Personal/Business) classified
+- [x] Navigation boundaries (routes, landing pages) specified
+- [x] Guardrails compatibility confirmed (WIP global, distraction shield unchanged)
+- [x] Migration phases (S2-1 through S2-5) outlined with DoD
+- [x] Acceptance tests (T1–T8) defined
+
+---
+
+### S2-1 — Data Tagging — 📋 BACKLOG
+
+**Scope**: Add `persona` field to Project entity, schema migration
+
+**DoD**:
+
+- [ ] Project interface includes `persona: 'personal' | 'business'`
+- [ ] Schema migration defaults existing projects to `'business'`
+- [ ] UI unchanged (no filtering yet)
+
+---
+
+### S2-2 — Persona Context Variable — 📋 BACKLOG
+
+**Scope**: Create `personaStore`, persist to localStorage
+
+**DoD**:
+
+- [ ] `personaStore.ts` with `activePersona` state
+- [ ] Persisted to `gesu-active-persona`
+- [ ] No UI changes yet
+
+---
+
+### S2-3 — UI Separation — 📋 BACKLOG
+
+**Scope**: Sidebar filtering, landing routing, persona toggle
+
+**DoD**:
+
+- [ ] Sidebar filters routes by `activePersona`
+- [ ] Root `/` redirects to persona landing
+- [ ] Persona toggle in sidebar/header
+- [ ] Dashboard respects active persona
+
+---
+
+### S2-4 — Cross-Persona Guardrails — 📋 BACKLOG
+
+**Scope**: Global WIP enforcement, block switch during focus
+
+**DoD**:
+
+- [ ] `canAddTask()` counts tasks from both personas
+- [ ] Persona switch blocked during `focusActive=true`
+- [ ] Toast on blocked switch attempt
+
+---
+
+### S2-5 — QA & Polish — 📋 BACKLOG
+
+**Scope**: End-to-end testing, regression verification
+
+**DoD**:
+
+- [ ] All acceptance tests (T1–T8) pass
+- [ ] No S1 regressions
+- [ ] i18n keys for persona labels/toasts
+
+---
+
+## S1 — Guardrails (COMPLETE)
 
 ### S1-3b — Fix Daily Check-in Prompt Reliability — ✅ IMPLEMENTED
 

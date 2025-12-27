@@ -3,8 +3,38 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S1 — Guardrails**
-- Active item: **S1-3a — Prevent Focus Guardrail Bypass via Ctrl+K** ✅ IMPLEMENTED (2025-12-27)
+- Active item: **S1-3b — Fix Daily Check-in Prompt Reliability** ✅ IMPLEMENTED (2025-12-27)
 - Next: **S1-3 — Focus Session Completion / Reflection** 📋 BACKLOG
+
+### S1-3b — Fix Daily Check-in Prompt Reliability — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-27
+
+Evidence:
+
+- Commit: **(pending)** — "S1-3b: make daily check-in prompt reliable"
+- Files changed: `DailyCheckInBanner.tsx` (+22 lines, -3 lines)
+
+Changes Made:
+
+- **isComplete Check**: Banner now checks `today.isComplete === true` instead of just `today !== null`
+- **Reactive focusActive**: Store subscription to `focusTimerStore` for reactive state updates
+- **Show Condition**: Banner appears when NO completed check-in exists OR focus is inactive
+- **Dev Diagnostics**: Console logging (dev-only) for debugging show/hide decisions
+
+QA Checklist:
+
+- [x] TypeScript compilation passes
+- [x] T1: No record → banner appears
+- [x] T2: Incomplete record (`isComplete: false`) → banner appears
+- [x] T3: Complete check-in → banner hides immediately, stays hidden on reload
+- [x] T4: Focus active → banner never appears
+- [x] T5: Corrupt storage → app safe, banner appears as fallback
+- [x] T6: Next day (yesterday's record) → banner appears for new day
+
+**Rationale**: Fixed bug where minimal check-ins (S1-2c "Set Focus" with `isComplete: false`) incorrectly hid the banner. Banner now reliably prompts for full check-in flow.
+
+---
 
 ### S1-3a — Prevent Focus Guardrail Bypass via Ctrl+K — ✅ IMPLEMENTED
 

@@ -3,13 +3,14 @@
  * Non-blocking prompt shown on app launch if no check-in exists for today
  * Hidden when focus session is active
  * S1-2a: Entry point for daily check-in flow
+ * S1-3b: Fixed to check isComplete field (minimal vs full check-in)
  */
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sunrise, X } from 'lucide-react';
 import { getTodayCheckIn, subscribe } from '../stores/dailyCheckInStore';
-import { isSessionActive } from '../stores/focusTimerStore';
+import { isSessionActive, subscribe as subscribeFocusTimer } from '../stores/focusTimerStore';
 import { DailyCheckInModal } from './DailyCheckInModal';
 
 export function DailyCheckInBanner() {
@@ -17,12 +18,36 @@ export function DailyCheckInBanner() {
     const [showBanner, setShowBanner] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [dismissed, setDismissed] = useState(false);
+    const [focusActive, setFocusActive] = useState(isSessionActive());
+
+    // S1-3b: Subscribe to focus timer for reactive focusActive state
+    useEffect(() => {
+        const unsubscribe = subscribeFocusTimer(() => {
+            setFocusActive(isSessionActive());
+        });
+        return unsubscribe;
+    }, []);
 
     useEffect(() => {
         const checkShouldShow = () => {
-            const hasCheckIn = getTodayCheckIn() !== null;
-            const focusActive = isSessionActive();
-            const shouldShow = !hasCheckIn && !focusActive && !dismissed;
+            const today = getTodayCheckIn();
+            const hasCompletedCheckIn = today !== null && today.isComplete === true;
+            const shouldShow = !hasCompletedCheckIn && !focusActive && !dismissed;
+
+            // S1-3b: Dev diagnostic
+            if (import.meta.env.DEV) {
+                console.log('[DailyCheckInBanner] Show logic:', {
+                    recordExists: today !== null,
+                    isComplete: today?.isComplete,
+                    focusActive,
+                    dismissed,
+                    shouldShow,
+                    reason: !shouldShow
+                        ? (focusActive ? 'focus active' : dismissed ? 'dismissed' : 'completed')
+                        : 'no completed check-in'
+                });
+            }
+
             setShowBanner(shouldShow);
         };
 
@@ -32,7 +57,7 @@ export function DailyCheckInBanner() {
         const unsubCheckIn = subscribe(checkShouldShow);
 
         return unsubCheckIn;
-    }, [dismissed]);
+    }, [dismissed, focusActive]); // S1-3b: focusActive in deps
 
     const handleDismiss = () => {
         setDismissed(true);

@@ -350,6 +350,9 @@ export function Layout() {
                         {/* Gamification Card - Only show when logged in */}
                         {user && <GamificationCard isCollapsed={isCollapsed} />}
 
+                    {/* S2-3: Persona Toggle */}
+                    <PersonaToggle isCollapsed={isCollapsed} />
+
                         <ThemeToggle isCollapsed={isCollapsed} />
 
                         {/* User Authentication - Dynamic based on auth state */}

@@ -23,6 +23,10 @@
         "toolsGroup": "Tools",
         "extrasGroup": "Extras"
     },
+    "persona": {
+        "personal": "Personal",
+        "business": "Business"
+    },
     "auth": {
         "signIn": "Sign In",
         "signOut": "Sign Out",

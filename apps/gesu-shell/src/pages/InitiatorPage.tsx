@@ -40,6 +40,7 @@ import { getProgressForProject, mergeNodesWithProgress } from '../stores/workflo
 import { calculateOverallProgress } from '../utils/workflowProgress';
 import { blueprintToWorkflowNodes } from '../services/workflowBlueprintRenderer';
 import { WORKFLOW_NODES } from './workflowData';
+import { usePersona } from '../hooks/usePersona';
 
 
 // --- Types & Interfaces ---
@@ -718,6 +719,9 @@ export function ProjectHubPage() {
     // Sprint 21: Load blueprints for robust filtering
     const [blueprintData, setBlueprintData] = useState<BlueprintFileShape | null>(null);
 
+    // S2-3: Persona context for filtering
+    const { activePersona } = usePersona();
+
     // Sprint 20.1: Blueprint filter state
     const [blueprintFilter, setBlueprintFilter] = useState<string>('all');
     const [statusFilters, setStatusFilters] = useState<string[]>([]); // Sprint 6.8: Status filtering
@@ -822,6 +826,9 @@ export function ProjectHubPage() {
     const filteredProjects = useMemo(() => {
         let result = projects; // Start with all projects
 
+        // S2-3: Filter by persona FIRST
+        result = result.filter(p => p.persona === activePersona);
+
         // 1. Filter by Blueprint
         if (blueprintFilter === 'none') {
             result = result.filter(p => !p.blueprintId);
@@ -864,7 +871,7 @@ export function ProjectHubPage() {
         }
 
         return result;
-    }, [projects, blueprintFilter, statusFilters, typeFilters, blueprintData]);
+    }, [projects, activePersona, blueprintFilter, statusFilters, typeFilters, blueprintData]);
 
 
 

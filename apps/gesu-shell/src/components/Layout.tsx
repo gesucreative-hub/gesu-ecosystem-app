@@ -1,8 +1,11 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase } from 'lucide-react';
+import { usePersona } from '../hooks/usePersona';
+import { isSessionActive } from '../stores/focusTimerStore';
+import { BlockedRouteToast } from './focus/BlockedRouteToast';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
 import { FocusTimerPill } from './focus/FocusTimerPill';
 import { DistractionGuard } from './focus/DistractionGuard';
@@ -102,6 +105,68 @@ const ThemeToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     );
 }
 
+// Persona Toggle Component - S2-3
+const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
+    const { t } = useTranslation('common');
+    const { activePersona, setActivePersona } = usePersona();
+    const [showBlockedToast, setShowBlockedToast] = useState(false);
+
+    const handleSwitch = (newPersona: 'personal' | 'business') => {
+        // S2-3: Block persona switch during focus
+        if (isSessionActive()) {
+            setShowBlockedToast(true);
+            return;
+        }
+        setActivePersona(newPersona);
+    };
+
+    if (isCollapsed) {
+        // Collapsed: Show only active persona icon
+        const Icon = activePersona === 'personal' ? User : Briefcase;
+        return (
+            <button
+                onClick={() => handleSwitch(activePersona === 'personal' ? 'business' : 'personal')}
+                className="w-10 h-10 rounded-lg bg-tokens-brand-DEFAULT/10 hover:bg-tokens-brand-DEFAULT/20 flex items-center justify-center transition-colors"
+                title={t(`persona.${activePersona}`)}
+            >
+                <Icon size={18} className="text-tokens-brand-DEFAULT" />
+                {showBlockedToast && <BlockedRouteToast onClose={() => setShowBlockedToast(false)} />}
+            </button>
+        );
+    }
+
+    // Full: Segmented control
+    return (
+        <div className="relative">
+            <div className="flex gap-1 p-1 bg-tokens-panel2 rounded-lg">
+                <button
+                    onClick={() => handleSwitch('personal')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        activePersona === 'personal'
+                            ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
+                            : 'text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel'
+                    }`}
+                >
+                    <User size={14} />
+                    {t('persona.personal')}
+                </button>
+                <button
+                    onClick={() => handleSwitch('business')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        activePersona === 'business'
+                            ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
+                            : 'text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel'
+                    }`}
+                >
+                    <Briefcase size={14} />
+                    {t('persona.business')}
+                </button>
+            </div>
+            {showBlockedToast && <BlockedRouteToast onClose={() => setShowBlockedToast(false)} />}
+        </div>
+    );
+};
+
 // Auth User Section - Shows login button or user menu based on auth state
 const UserAuthSection = ({ isCollapsed }: { isCollapsed: boolean }) => {
     const { t } = useTranslation('common');
@@ -134,9 +199,11 @@ const UserAuthSection = ({ isCollapsed }: { isCollapsed: boolean }) => {
 
 export function Layout() {
     const location = useLocation();
+    const navigate = useNavigate();
     const p = location.pathname;
     const { user } = useAuth();
     const { t } = useTranslation('common');
+    const { activePersona } = usePersona();
 
     // Persisted Sidebar State
     const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -168,6 +235,22 @@ export function Layout() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
+
+    // S2-3: Persona-aware redirect for incompatible routes
+    useEffect(() => {
+        const path = location.pathname;
+        
+        // Personal routes
+        const personalRoutes = ['/compass', '/activity', '/refocus'];
+        // Business routes
+        const businessRoutes = ['/initiator'];
+        
+        if (activePersona === 'business' && personalRoutes.some(r => path.startsWith(r))) {
+            navigate('/initiator', { replace: true });
+        } else if (activePersona === 'personal' && businessRoutes.some(r => path.startsWith(r))) {
+            navigate('/compass', { replace: true });
+        }
+    }, [activePersona, location.pathname, navigate]);
 
     return (
         <DistractionGuard>
@@ -244,7 +327,7 @@ export function Layout() {
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-2 animate-in fade-in">{t('nav.coreGroup', 'Core')}</div>}
 
                         <NavItem to="/dashboard" icon={<Home strokeWidth={1.5} size={20} />} label={t('nav.dashboard')} isActive={p === '/' || p === '/dashboard'} isCollapsed={isCollapsed} />
-                        <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t('nav.compass')} isActive={p.startsWith('/compass')} isCollapsed={isCollapsed} />
+                        {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
                         <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />
                         <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
 

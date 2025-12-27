@@ -1,7 +1,8 @@
 import './config/i18n'; // Initialize i18n
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { usePersona } from './hooks/usePersona';
 import { Layout } from './components/Layout';
 import { DashboardPage } from './pages/DashboardPage';
 // LauncherPage might still be useful as a specific tool or redundant?
@@ -19,6 +20,7 @@ import { useGesuSettings } from './lib/gesuSettings';
 
 function App() {
     const { settings } = useGesuSettings();
+    const { activePersona } = usePersona();
 
     // Apply theme to document root
     useEffect(() => {
@@ -60,7 +62,13 @@ function App() {
 
                 {/* Main App with Layout */}
                 <Route path="/" element={<Layout />}>
-                    <Route index element={<DashboardPage />} />
+                    {/* S2-3: Persona-aware landing redirect */}
+                    <Route index element={
+                        <Navigate 
+                            to={activePersona === 'personal' ? '/compass' : '/initiator'} 
+                            replace 
+                        />
+                    } />
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="launcher" element={<LauncherPage />} />
                     <Route path="compass" element={<CompassPage />} />

@@ -23,6 +23,10 @@
         "toolsGroup": "Alat",
         "extrasGroup": "Tambahan"
     },
+    "persona": {
+        "personal": "Personal",
+        "business": "Bisnis"
+    },
     "auth": {
         "signIn": "Masuk",
         "signOut": "Keluar",

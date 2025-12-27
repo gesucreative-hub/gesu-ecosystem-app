@@ -328,14 +328,14 @@ export function Layout() {
 
                         <NavItem to="/dashboard" icon={<Home strokeWidth={1.5} size={20} />} label={t('nav.dashboard')} isActive={p === '/' || p === '/dashboard'} isCollapsed={isCollapsed} />
                         {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
-                        <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />
-                        <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />
+                        {activePersona === 'personal' && <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />}
 
                         {/* TOOLS Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.toolsGroup', 'Tools')}</div>}
                         {isCollapsed && <div className="h-4"></div>}
 
-                        <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label={t('nav.refocus', 'Refocus')} isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />
+                        {activePersona === 'personal' && <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label={t('nav.refocus', 'Refocus')} isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />}
 
                         {/* EXTRAS Group - Media Suite */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.extrasGroup', 'Extras')}</div>}

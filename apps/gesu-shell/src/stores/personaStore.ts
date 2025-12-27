@@ -1,7 +1,10 @@
 // Persona Store - Manages active persona context (personal vs business)
 // S2-2: Persist to localStorage, no UI changes yet
+// S2-4: Block persona switch during focus session
 
 export type Persona = 'personal' | 'business';
+
+import { isSessionActive } from './focusTimerStore';
 
 const STORAGE_KEY = 'gesu-active-persona';
 
@@ -54,10 +57,21 @@ function savePersona(persona: Persona): void {
 
 // --- Actions ---
 
-export function setActivePersona(persona: Persona): void {
+/**
+ * Set active persona with focus protection (S2-4)
+ * Returns false if blocked due to active focus session
+ */
+export function setActivePersona(persona: Persona): boolean {
+    // S2-4: Block persona switch during focus
+    if (isSessionActive()) {
+        console.warn('[personaStore] Blocked persona switch during focus session');
+        return false;
+    }
+    
     activePersona = persona;
     savePersona(persona);
     notifySubscribers();
+    return true;
 }
 
 // --- Getters ---

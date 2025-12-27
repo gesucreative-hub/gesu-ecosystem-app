@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { isSessionActive } from '../stores/focusTimerStore';
 import { BlockedRouteToast } from './focus/BlockedRouteToast';
@@ -105,33 +105,57 @@ const ThemeToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     );
 }
 
-// Persona Toggle Component - S2-3
+// Persona Toggle Component - S2-3/S2-4
 const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     const { t } = useTranslation('common');
+    const { t: tFocus } = useTranslation('focus');
     const { activePersona, setActivePersona } = usePersona();
     const [showBlockedToast, setShowBlockedToast] = useState(false);
 
     const handleSwitch = (newPersona: 'personal' | 'business') => {
-        // S2-3: Block persona switch during focus
+        // S2-3/S2-4: Block persona switch during focus
         if (isSessionActive()) {
             setShowBlockedToast(true);
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => setShowBlockedToast(false), 3000);
             return;
         }
         setActivePersona(newPersona);
     };
 
+    // S2-4: Blocked toast component (inline for persona context)
+    const PersonaBlockedToast = () => (
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="flex items-center gap-3 px-4 py-3 bg-tokens-bg border border-amber-500/30 rounded-lg shadow-lg max-w-sm">
+                <div className="p-2 bg-amber-500/10 rounded-lg shrink-0">
+                    <ShieldAlert className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-sm font-medium text-tokens-fg truncate">
+                        {tFocus('distractionShield.blocked', 'Focus session active')}
+                    </p>
+                    <p className="text-xs text-tokens-muted">
+                        {tFocus('distractionShield.finishFirst', 'Finish your session to switch persona', { screen: 'persona' })}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+
     if (isCollapsed) {
         // Collapsed: Show only active persona icon
         const Icon = activePersona === 'personal' ? User : Briefcase;
         return (
-            <button
-                onClick={() => handleSwitch(activePersona === 'personal' ? 'business' : 'personal')}
-                className="w-10 h-10 rounded-lg bg-tokens-brand-DEFAULT/10 hover:bg-tokens-brand-DEFAULT/20 flex items-center justify-center transition-colors"
-                title={t(`persona.${activePersona}`)}
-            >
-                <Icon size={18} className="text-tokens-brand-DEFAULT" />
-                {showBlockedToast && <BlockedRouteToast onClose={() => setShowBlockedToast(false)} />}
-            </button>
+            <>
+                <button
+                    onClick={() => handleSwitch(activePersona === 'personal' ? 'business' : 'personal')}
+                    className="w-10 h-10 rounded-lg bg-tokens-brand-DEFAULT/10 hover:bg-tokens-brand-DEFAULT/20 flex items-center justify-center transition-colors"
+                    title={t(`persona.${activePersona}`)}
+                >
+                    <Icon size={18} className="text-tokens-brand-DEFAULT" />
+                </button>
+                {showBlockedToast && <PersonaBlockedToast />}
+            </>
         );
     }
 
@@ -162,7 +186,7 @@ const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
                     {t('persona.business')}
                 </button>
             </div>
-            {showBlockedToast && <BlockedRouteToast onClose={() => setShowBlockedToast(false)} />}
+            {showBlockedToast && <PersonaBlockedToast />}
         </div>
     );
 };

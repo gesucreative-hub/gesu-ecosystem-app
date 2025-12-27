@@ -154,7 +154,7 @@ QA Checklist:
 
 Evidence:
 
-- Commit: **[to be filled]** — "S2-4: cross-persona guardrails (global WIP + block switch during focus)"
+- Commit: **3d9bfb4** — "S2-4: cross-persona guardrails (global WIP + block switch during focus)"
 - Files: `personaStore.ts` (focus guard in setActivePersona), `Layout.tsx` (PersonaBlockedToast with auto-dismiss)
 
 Changes Made:

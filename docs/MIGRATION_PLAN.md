@@ -3,8 +3,8 @@
 ## Current Status (Single Source of Truth)
 
 - Current Sprint: **S2 — Persona Split**
-- Active item: **S2-0 — Persona Split Architecture** ✅ DONE (2025-12-27)
-- Next: **S2-1 — Data Tagging** 📋 BACKLOG
+- Active item: **Trust Gate / S2-5** (making checks green)
+- Next: **S3 — Unified Daily Loop**
 
 ---
 

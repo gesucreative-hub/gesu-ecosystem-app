@@ -76,6 +76,8 @@ export async function clearAllActivitySessions(afterDate?: string): Promise<{ ok
         return { ok: false, error: 'Clear sessions not available' };
     }
 
-    return await window.gesu.activityTracking.clearAllSessions({ afterDate });
+    return await window.gesu.activityTracking.clearAllSessions(
+        afterDate ? { afterDate } : {}
+    );
 }
 

@@ -15,6 +15,8 @@ module.exports = {
     'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     'no-case-declarations': 'off',
+    // BACKLOG: react-hooks/rules-of-hooks has 5 violations in ESparkline.tsx
+    // Requires restructuring early returns - logged for S3 cleanup
     'react-hooks/rules-of-hooks': 'off',
     'prefer-const': 'off',
   },

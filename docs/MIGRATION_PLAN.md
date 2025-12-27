@@ -2,9 +2,9 @@
 
 ## Current Status (Single Source of Truth)
 
-- Current Sprint: **S2 — Persona Split**
-- Active item: **Trust Gate / S2-5** (making checks green)
-- Next: **S3 — Unified Daily Loop**
+- Current Sprint: **S3 — Unified Daily Loop**
+- Active item: **S3-1 — Next Action Field**
+- Next: **S3-2** (to be determined)
 
 ---
 
@@ -238,6 +238,43 @@ i18n Coverage:
 
 - [x] persona labels (EN/ID) — COMPLETE (S2-3)
 - [x] persona-blocked toast — COMPLETE (reuses focus i18n, S2-4)
+
+---
+
+## S3 — Unified Daily Loop
+
+### S3-1 — Next Action Field — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-27
+
+Evidence:
+
+- Commit: **[to be filled]** — "S3-1: add next action to tasks (Compass thin slice)"
+- Files changed:
+  - `apps/gesu-shell/src/stores/projectHubTasksStore.ts` (+12 lines)
+  - `apps/gesu-shell/src/pages/CompassPage.tsx` (+20 lines)
+
+Changes Made:
+
+- **ProjectHubTask Interface**: Added optional `nextAction?: string` field (no schema migration needed)
+- **Store Function**: Added `updateTaskNextAction(taskId, nextAction, dateKey?)` with existing save/notify patterns
+- **UI**: Added "Next Action" input field in Compass task list (uncontrolled input, saves on blur + Enter)
+
+QA Checklist:
+
+- [x] TypeScript compilation passes (tsc --noEmit)
+- [ ] Manual QA: Next Action input visible in /compass (browser environment crashed)
+- [ ] Manual QA: Next Action persists on blur (browser environment crashed)
+- [ ] Manual QA: Next Action persists across reload (browser environment crashed)
+- [x] WIP limit logic unchanged (canAddMoreTasksToday still counts all tasks)
+- [x] Persona split guardrails unchanged (no impact on persona filtering)
+- [x] Focus blocking unchanged (no changes to focusActive logic)
+
+**Notes**:
+
+- Browser QA failed due to environment crash ("target closed" errors)
+- Code implementation verified via static analysis and tsc
+- Manual verification recommended by user before next sprint
 
 ---
 

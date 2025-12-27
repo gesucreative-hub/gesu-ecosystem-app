@@ -16,6 +16,7 @@ import {
     getTodayTasks,
     toggleTaskDone,
     removeTask,
+    updateTaskNextAction,
     ProjectHubTask
 } from '../stores/projectHubTasksStore';
 import {
@@ -919,6 +920,25 @@ export function CompassPage() {
                                                     <span className="inline-block w-2 h-2 rounded-full bg-tokens-brand-DEFAULT/30"></span>
                                                     {task.stepTitle} · {task.projectName}
                                                 </span>
+                                                {/* S3-1: Next Action input */}
+                                                <div className="mt-2">
+                                                    <label className="text-[10px] text-tokens-muted uppercase tracking-wide font-medium block mb-1">
+                                                        Next Action
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        defaultValue={task.nextAction ?? ""}
+                                                        placeholder="Define the next physical step..."
+                                                        onBlur={(e) => updateTaskNextAction(task.id, e.target.value, task.dateKey)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                e.preventDefault();
+                                                                e.currentTarget.blur();
+                                                            }
+                                                        }}
+                                                        className="w-full px-2 py-1 text-xs bg-tokens-bg border border-tokens-border/50 rounded focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30 text-tokens-fg placeholder:text-tokens-muted/40"
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button

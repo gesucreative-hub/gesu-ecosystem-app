@@ -17,6 +17,7 @@ export interface ProjectHubTask {
     dodItemId: string;
     dodItemLabel: string;
     createdAt: number;        // timestamp
+    nextAction?: string;      // S3-1: Optional next physical step to reduce paralysis
 }
 
 const STORAGE_KEY = 'gesu-projecthub-tasks';
@@ -260,6 +261,17 @@ export function toggleTaskForDoDItem(stepId: string, dodItemId: string, isDone: 
         notifySubscribers();
     }
     // If task doesn't exist, do nothing (user hasn't sent it to Compass yet)
+}
+
+// S3-1: Update next action for a task
+export function updateTaskNextAction(taskId: string, nextAction: string, dateKey?: string): void {
+    const key = dateKey || getTodayKey();
+    const tasks = loadTasksForDate(key);
+    const updated = tasks.map(t =>
+        t.id === taskId ? { ...t, nextAction } : t
+    );
+    saveTasksForDate(key, updated);
+    notifySubscribers();
 }
 
 // --- Reactive Subscription Pattern ---

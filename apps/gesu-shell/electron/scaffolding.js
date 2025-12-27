@@ -70,7 +70,8 @@ export function buildPlan({ projectsRoot, projectName, templateId, categoryId, b
         name: displayName || projectName,
         createdAt: new Date().toISOString(),
         templateId,
-        projectPath
+        projectPath,
+        persona: 'business'  // S2-1: Always business for new projects
     };
 
     // Sprint 20: Add blueprint fields if provided

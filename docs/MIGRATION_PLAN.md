@@ -47,15 +47,45 @@ Evidence:
 
 ---
 
-### S2-1 — Data Tagging — 📋 BACKLOG
+### S2-1 — Data Tagging — ✅ IMPLEMENTED
 
-**Scope**: Add `persona` field to Project entity, schema migration
+**Completed**: 2025-12-27
 
-**DoD**:
+Evidence:
 
-- [ ] Project interface includes `persona: 'personal' | 'business'`
-- [ ] Schema migration defaults existing projects to `'business'`
-- [ ] UI unchanged (no filtering yet)
+- Commit: **(this commit)** — "S2-1: add project persona field + migrate defaults"
+- Files changed:
+  - `projectStore.ts` (+45 lines, -8 lines)
+  - `scaffolding.js` (+1 line)
+  - `projects-registry.js` (+3 lines)
+
+Changes Made:
+
+- **Project Interface**: Added `persona: 'personal' | 'business'` field (required)
+- **Schema v2→v3**: Added `migrateProjectsV2ToV3` function defaulting to `'business'`
+- **Migration Chain**: v2→v3 and v1→v3 paths with backup-before-migration
+- **createProject**: Defaults `persona: 'business'` for new projects
+- **importFromDisk**: Preserves disk persona or defaults to `'business'`
+- **Scaffolding**: Writes `persona: 'business'` to `project.meta.json`
+- **Disk Import**: Parses `metadata.persona` with default `'business'`
+- **Legacy Fallback**: Includes `persona: 'business'` for projects without meta
+
+QA Checklist:
+
+- [x] Project interface includes `persona: 'personal' | 'business'`
+- [x] Schema migration v2→v3 defaults existing projects to `'business'`
+- [x] Migration chain handles v1→v3 path with single backup
+- [x] Disk import preserves persona from meta or defaults to `'business'`
+- [x] New projects created with `persona: 'business'`
+- [x] Legacy project detection includes `persona: 'business'`
+- [x] UI unchanged (no filtering yet - deferred to S2-3)
+- [ ] TypeScript build passes (pre-existing errors in InitiatorPage.tsx unrelated to persona changes)
+
+**Notes**:
+
+- TypeScript compilation has pre-existing errors in `InitiatorPage.tsx:100` and `activityTrackingService.ts` unrelated to S2-1 changes
+- All persona-related type changes are type-safe
+- No UI behavior changes—projects list still shows all projects without filtering
 
 ---
 

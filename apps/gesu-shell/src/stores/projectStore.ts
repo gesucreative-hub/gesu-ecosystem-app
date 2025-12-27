@@ -18,6 +18,8 @@ export interface Project {
     blueprintId?: string;           // e.g. 'general-default'
     blueprintVersion?: number;      // e.g. 1
     projectPath?: string;           // Disk path (for imported projects)
+    // S2-1: Persona split
+    persona: 'personal' | 'business';  // Required: personal vs business context
 }
 
 interface ProjectStoreState {
@@ -27,7 +29,7 @@ interface ProjectStoreState {
 }
 
 const STORAGE_KEY = 'gesu-projects';
-const CURRENT_SCHEMA_VERSION = 2;  // Bumped for type migration
+const CURRENT_SCHEMA_VERSION = 3;  // S2-1: Bumped for persona migration
 
 // --- Utility ---
 
@@ -80,6 +82,22 @@ function migrateProjectsV1ToV2(projects: Project[]): Project[] {
     });
 }
 
+/**
+ * Migrate projects from v2 to v3 (add persona field)
+ * S2-1: Default all existing projects to 'business'
+ */
+function migrateProjectsV2ToV3(projects: Project[]): Project[] {
+    return projects.map(project => {
+        if (!(project as any).persona) {
+            return {
+                ...project,
+                persona: 'business' as const
+            };
+        }
+        return project;
+    });
+}
+
 // --- Storage ---
 
 import {
@@ -123,21 +141,39 @@ export function loadState(): ProjectStoreState {
         const parsed = parseResult.data!;
         const version = detectVersion(parsed);
 
-        // Handle schema migration v1 -> v2
-        if (version === 1) {
-            console.log('[projectStore] Migrating from schema v1 to v2...');
+        // Handle schema migration v2 -> v3
+        if (version === 2) {
+            console.log('[projectStore] Migrating from schema v2 to v3...');
             
-            // Create backup BEFORE migration (async, but we proceed with migration)
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: 'pre-migration', 
+                fromVersion: 2, 
+                toVersion: 3 
+            }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
+            
+            parsed.projects = migrateProjectsV2ToV3(parsed.projects);
+            parsed.schemaVersion = 3;
+            saveState(parsed);
+            console.log('[projectStore] Migration v2->v3 complete!');
+            return parsed;
+        }
+        
+        // Handle schema migration v1 -> v2 -> v3
+        if (version === 1) {
+            console.log('[projectStore] Migrating from schema v1 to v3...');
+            
+            // S2-1 Fix: Single backup with final target version
             void createBackupSnapshot(STORAGE_KEY, raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 1, 
-                toVersion: 2 
+                toVersion: 3 
             }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
             
             parsed.projects = migrateProjectsV1ToV2(parsed.projects);
-            parsed.schemaVersion = 2;
+            parsed.projects = migrateProjectsV2ToV3(parsed.projects);
+            parsed.schemaVersion = 3;
             saveState(parsed);
-            console.log('[projectStore] Migration complete!');
+            console.log('[projectStore] Migration v1->v2->v3 complete!');
             return parsed;
         }
         
@@ -215,6 +251,7 @@ export function createProject(
         blueprintId: options?.blueprintId,
         blueprintVersion: options?.blueprintVersion,
         projectPath: options?.projectPath,
+        persona: 'business',  // S2-1: Default all new projects to business
     };
 
     state.projects.push(project);
@@ -361,6 +398,8 @@ export function importFromDisk(diskProjects: Array<{
     // Sprint 23: Project type and client info
     projectType?: ProjectType;
     clientName?: string;
+    // S2-1: Persona field
+    persona?: 'personal' | 'business';
 }>): number {
     const state = loadState();
     let importCount = 0;
@@ -384,6 +423,8 @@ export function importFromDisk(diskProjects: Array<{
                     // Sprint 23: Update type and client info if available from disk
                     if (diskProject.projectType) existingProject.type = diskProject.projectType;
                     if (diskProject.clientName) existingProject.clientName = diskProject.clientName;
+                    // S2-1 Fix: Preserve persona: disk > existing > default
+                    existingProject.persona = diskProject.persona ?? existingProject.persona ?? 'business';
                 }
             }
             continue; // Skip import for duplicates
@@ -403,6 +444,7 @@ export function importFromDisk(diskProjects: Array<{
             categoryId: diskProject.categoryId,
             blueprintId: diskProject.blueprintId,
             blueprintVersion: diskProject.blueprintVersion,
+            persona: diskProject.persona || 'business',  // S2-1: Default to business if not specified
         };
 
         state.projects.push(project);

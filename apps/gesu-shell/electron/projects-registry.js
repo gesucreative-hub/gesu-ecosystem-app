@@ -101,7 +101,9 @@ export async function listProjects(projectsRoot) {
                     blueprintVersion: metadata.blueprintVersion,
                     // Sprint 23: Project type and client info
                     projectType: metadata.projectType,
-                    clientName: metadata.clientName
+                    clientName: metadata.clientName,
+                    // S2-1: Persona field
+                    persona: metadata.persona || 'business'  // Default to business
                 };
 
                 projects.push(project);
@@ -119,7 +121,8 @@ export async function listProjects(projectsRoot) {
                         templateId: null,
                         categoryId: categoryPrefix ? categoryPrefix.replace(/\d+$/, '').toLowerCase() : null,
                         blueprintId: null, // Legacy projects have no blueprint
-                        blueprintVersion: null
+                        blueprintVersion: null,
+                        persona: 'business'  // S2-1 Fix: Legacy projects default to business
                     };
 
                     console.log(`[projects-registry] Legacy project detected: ${entry.name} -> "${parsedName}"`);

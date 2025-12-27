@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { isSessionActive } from '../stores/focusTimerStore';
-import { BlockedRouteToast } from './focus/BlockedRouteToast';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
 import { FocusTimerPill } from './focus/FocusTimerPill';
 import { DistractionGuard } from './focus/DistractionGuard';

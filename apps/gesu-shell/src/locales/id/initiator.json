@@ -203,7 +203,16 @@
         "markAsDone": "Tandai Selesai",
         "stepCompletedUndo": "Langkah ini sudah selesai. Klik untuk membatalkan.",
         "allChecklistComplete": "Semua item checklist selesai!",
-        "actionHints": "Petunjuk Aksi"
+        "actionHints": "Petunjuk Aksi",
+        "addToToday": "+ Hari Ini",
+        "added": "Ditambahkan",
+        "addHintToToday": "Tambah ke hari ini",
+        "hintAlreadyAdded": "Sudah ditambahkan ke hari ini",
+        "alreadyAdded": "Sudah Ditambahkan",
+        "hintAlreadyAddedMessage": "Petunjuk ini sudah ditambahkan ke tugas hari ini.",
+        "wipFull": "Batas WIP Tercapai",
+        "success": "Berhasil",
+        "hintAddedToToday": "Petunjuk aksi ditambahkan ke tugas hari ini!"
     },
     "tooltips": {
         "clearProgress": "Hapus semua progres",

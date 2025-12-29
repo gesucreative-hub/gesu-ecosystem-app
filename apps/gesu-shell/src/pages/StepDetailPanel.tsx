@@ -45,7 +45,16 @@ export function StepDetailPanel({
     // Use blueprint phases if provided, otherwise fallback to defaults
     const phasesToUse = blueprintPhases || WORKFLOW_PHASES;
 
-
+    // S4-2: Deterministic hash for stable hint keys (FP1)
+    const hashHint = (text: string): string => {
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+            const char = text.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash).toString(36);
+    };
 
     const { alert, AlertDialogComponent } = useAlertDialog();
 
@@ -123,6 +132,49 @@ export function StepDetailPanel({
             navigate('/compass');
         }
     }, [selectedNode, selectedForFinish, navigate]);
+
+    // S4-2: Add action hint to today's tasks
+    const handleAddHintToToday = useCallback((hint: string, hintHash: string) => {
+        if (!selectedNode) return;
+
+        const hintKey = `hint-${selectedNode.id}-${hintHash}`;
+
+        // Check if already added today
+        if (isDodItemAlreadySentToday(selectedNode.id, hintKey)) {
+            alert({
+                title: t('initiator:stepDetail.alreadyAdded', 'Already Added'),
+                message: t('initiator:stepDetail.hintAlreadyAddedMessage', 'This hint was already added to today\'s tasks.'),
+                type: 'info'
+            });
+            return;
+        }
+
+        // Check WIP limit
+        if (!canAddTask()) {
+            alert({
+                title: t('initiator:stepDetail.wipFull', 'WIP Limit Reached'),
+                message: getBlockedMessage(),
+                type: 'warning'
+            });
+            return;
+        }
+
+        // Add to today
+        addTaskToToday({
+            stepId: selectedNode.id,
+            stepTitle: selectedNode.title,
+            dodItemId: hintKey,
+            dodItemLabel: hint,
+            projectName: getActiveProject()?.name || 'Project',
+        });
+
+        // Success feedback
+        alert({
+            title: t('initiator:stepDetail.success', 'Success'),
+            message: t('initiator:stepDetail.hintAddedToToday', 'Action hint added to today\'s tasks!'),
+            type: 'success'
+        });
+    }, [selectedNode, alert, t]);
 
     // Empty state
     if (!selectedNode) {
@@ -252,19 +304,43 @@ export function StepDetailPanel({
                             {t('initiator:stepDetail.actionHints', 'Action Hints')}
                         </h3>
                         <div className="space-y-2">
-                            {selectedNode.actionHints.map((hint, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-start gap-2 p-2 rounded-lg bg-tokens-panel2/50 border border-tokens-border/50"
-                                >
-                                    <span className="text-tokens-brand-DEFAULT text-xs font-semibold mt-0.5 min-w-[1rem]">
-                                        {index + 1}.
-                                    </span>
-                                    <span className="text-sm text-tokens-fg flex-1 break-words">
-                                        {hint}
-                                    </span>
-                                </div>
-                            ))}
+                            {selectedNode.actionHints.map((hint, index) => {
+                                const hintHash = hashHint(hint);
+                                const hintKey = `hint-${selectedNode.id}-${hintHash}`;
+                                const alreadyAdded = isDodItemAlreadySentToday(selectedNode.id, hintKey);
+                                
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex items-start gap-2 p-2 rounded-lg bg-tokens-panel2/50 border border-tokens-border/50"
+                                    >
+                                        <span className="text-tokens-brand-DEFAULT text-xs font-semibold mt-0.5 min-w-[1rem]">
+                                            {index + 1}.
+                                        </span>
+                                        <span className="text-sm text-tokens-fg flex-1 break-words">
+                                            {hint}
+                                        </span>
+                                        {/* S4-2: Add to Today button */}
+                                        <button
+                                            onClick={() => handleAddHintToToday(hint, hintHash)}
+                                            disabled={alreadyAdded}
+                                            className={`text-xs px-2 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0
+                                                ${alreadyAdded 
+                                                    ? 'bg-tokens-panel text-tokens-muted cursor-not-allowed opacity-50'
+                                                    : 'bg-tokens-brand-DEFAULT/10 text-tokens-brand-DEFAULT hover:bg-tokens-brand-DEFAULT/20'
+                                                }`}
+                                            title={alreadyAdded 
+                                                ? t('initiator:stepDetail.hintAlreadyAdded', 'Already added to today')
+                                                : t('initiator:stepDetail.addHintToToday', 'Add to today')
+                                            }
+                                        >
+                                            {alreadyAdded 
+                                                ? t('initiator:stepDetail.added', 'Added') 
+                                                : t('initiator:stepDetail.addToToday', '+ Today')}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

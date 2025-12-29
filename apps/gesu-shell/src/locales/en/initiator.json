@@ -201,7 +201,16 @@
         "markAsDone": "Mark as Done",
         "stepCompletedUndo": "This step is completed. Click to undo.",
         "allChecklistComplete": "All checklist items are complete!",
-        "actionHints": "Action Hints"
+        "actionHints": "Action Hints",
+        "addToToday": "+ Today",
+        "added": "Added",
+        "addHintToToday": "Add to today",
+        "hintAlreadyAdded": "Already added to today",
+        "alreadyAdded": "Already Added",
+        "hintAlreadyAddedMessage": "This hint was already added to today's tasks.",
+        "wipFull": "WIP Limit Reached",
+        "success": "Success",
+        "hintAddedToToday": "Action hint added to today's tasks!"
     },
     "tooltips": {
         "clearProgress": "Clear all progress",

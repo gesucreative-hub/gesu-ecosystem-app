@@ -6,6 +6,7 @@
 - Current Sprint: **S4 — Workflow Polish**
 - Completed: **S4-0 — Workflow Action Hints (Read-Only)** ✅ DONE (2025-12-29)
 - Completed: **S4-1 — Workflow Action Hints (Editable + Persisted)** ✅ DONE (2025-12-29)
+- Completed: **S4-2 — Action Hint → Add to Today Task** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1551,6 +1552,40 @@ Regression:
 - [x] R1: DoD editing → unchanged, still works
 - [x] R2: Tools editing → unchanged, still works
 - [x] R3: Blueprint save/load → no data loss
+
+**Known Issues**: None
+
+---
+
+### S4-2 — Action Hint → Add to Today Task — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **8149cdf** — "S4-2: add action hints to today task"
+- Files:
+  - `StepDetailPanel.tsx` (+94 lines) - Hash function, handler, Add to Today buttons
+  - `locales/en/initiator.json` (+9 lines) - EN labels
+  - `locales/id/initiator.json` (+9 lines) - ID labels
+
+**Feature Summary**:
+
+- Each action hint has "Add to Today" button in step detail panel
+- Creates Project Hub Today Task with WIP enforcement (MAX 3)
+- Duplicate prevention via stable hint key: `hint-${nodeId}-${hash(hintText)}`
+- FP1: Deterministic string hash ensures stable keys across reorders
+- Reuses existing DoD→Today Task APIs (addTaskToToday, canAddTask, isDodItemAlreadySentToday)
+
+**QA Results** (Manual verification):
+
+- [x] A1: Add hint → task appears in Project Hub Today
+- [x] A2: Reload → task persists
+- [x] A3: Duplicate → blocked + button shows "Added" (disabled)
+- [x] A4: WIP full (3 tasks) → blocked with message
+- [x] A5: Remove one task → can add hint again
+- [x] R1: DoD send-to-today still works
+- [x] R2: Action hints display unchanged
 
 **Known Issues**: None
 

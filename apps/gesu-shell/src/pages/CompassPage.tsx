@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList, ArrowRight } from 'lucide-react';
 import { calculateInferredEnergy, getEnergyColorClass } from '../utils/inferredEnergy';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -17,6 +17,7 @@ import {
     getTodayTasks,
     toggleTaskDone,
     removeTask,
+    addTaskToToday,
     ProjectHubTask
 } from '../stores/projectHubTasksStore';
 import {
@@ -320,6 +321,46 @@ export function CompassPage() {
             projectName: planTopOutcome || t('dailyPlan.defaultProject')
         });
     }, [timerActive, planTopOutcome, confirm, t]);
+
+    // S3-1: Promote plan task to Project Hub (MOVE semantics)
+    const handlePromotePlanTask = useCallback(async (taskText: string, index: number) => {
+        // Check WIP capacity before promoting
+        if (!canAddAnyTask()) {
+            await alert({
+                title: t('dailyPlan.wipBlocked', { count: getRemainingWipSlots() }),
+                message: t('dailyPlan.cannotPromote'),
+                type: 'warning'
+            });
+            return;
+        }
+
+        // Add to Project Hub first (atomic-like operation)
+        const hubTask = addTaskToToday({
+            stepId: 'daily-plan',
+            stepTitle: 'Daily Plan',
+            dodItemId: `dp-${Date.now()}-${index}`,
+            dodItemLabel: taskText,
+            projectName: planTopOutcome || 'Daily Plan'
+        });
+
+        if (!hubTask) {
+            // Promotion failed (WIP at limit or duplicate)
+            await alert({
+                title: t('dailyPlan.promoteError'),
+                message: t('dailyPlan.promoteErrorDetail'),
+                type: 'error'
+            });
+            return;
+        }
+
+        // Success - now remove from plan (MOVE semantics)
+        const newTasks = planTasks.filter((_, i) => i !== index);
+        setPlanTasks(newTasks);
+        handleSavePlan(planTopOutcome, newTasks);
+
+        // Force reload of project hub tasks to reflect change
+        setProjectHubTasks(getTodayTasks());
+    }, [planTasks, planTopOutcome, handleSavePlan, alert, t]);
 
     // Inferred Energy - calculated from activity data (depends on projectHubTasks)
     const inferredEnergy = useMemo(() => calculateInferredEnergy(), [projectHubTasks]);
@@ -1141,6 +1182,15 @@ export function CompassPage() {
                                                             >
                                                                 <Trash2 size={14} />
                                                             </button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handlePromotePlanTask(task, index)}
+                                                                icon={<ArrowRight size={14} />}
+                                                                title={t('dailyPlan.promoteToHub')}
+                                                            >
+                                                                {t('dailyPlan.promote')}
+                                                            </Button>
                                                             <Button
                                                                 variant="secondary"
                                                                 size="sm"

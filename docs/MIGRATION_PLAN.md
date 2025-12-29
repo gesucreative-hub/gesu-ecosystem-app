@@ -4,8 +4,9 @@
 
 - Previous Sprint: **S2 — Persona Split** ✅ COMPLETE (2025-12-29)
 - Current Sprint: **S3 — Daily Loop Polish**
-- Active item: **S3-0a — Daily Check-in Fix** ✅ DONE (2025-12-29)
-- Active item: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
+- Completed: **S3-0a — Daily Check-in Fix** ✅ DONE (2025-12-29)
+- Completed: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
+- Completed: **S3-1 — Promote Plan Tasks to Hub** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1296,6 +1297,62 @@ Regression Tests:
 
 - [x] R1: Old check-in without `plan` field → no crash, empty plan shown
 - [x] R2: Save plan → close → reopen → plan persists
+
+**Known Issues**: None
+
+---
+
+### S3-1 — Promote Daily Plan Tasks to Project Hub — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **7d6dcad** — "S3-1: promote daily plan tasks to Project Hub (move semantics)"
+- Files:
+  - `CompassPage.tsx` (+50 lines) - handlePromotePlanTask with move semantics + UI button
+  - `locales/en/compass.json` (+5 keys) - promote button labels and error messages
+  - `locales/id/compass.json` (+5 keys) - Indonesian translations
+
+**Feature Summary**:
+
+- Each Daily Plan task now has a "Promote" button → moves task to Project Hub
+- **MOVE semantics**: Task removed from plan after successful promotion (total WIP unchanged)
+- Pattern follows LostMode: uses synthetic stepId/dodItemId (`daily-plan`, `dp-{timestamp}-{index}`)
+- WIP checked before promotion with i18n error if at limit
+- Atomic-like: add to Hub first, remove from plan only on success
+- No circular imports: UI calls both store APIs directly
+
+**Implementation Pattern**:
+
+```typescript
+// Add to Hub first
+const hubTask = addTaskToToday({
+  stepId: "daily-plan",
+  stepTitle: "Daily Plan",
+  dodItemId: `dp-${Date.now()}-${index}`,
+  dodItemLabel: taskText,
+  projectName: planTopOutcome || "Daily Plan",
+});
+
+// Only remove from plan if Hub add succeeded
+if (hubTask) {
+  const newTasks = planTasks.filter((_, i) => i !== index);
+  setPlanTasks(newTasks);
+  handleSavePlan(planTopOutcome, newTasks);
+}
+```
+
+**QA Results** (Manual verification):
+
+Core Tests:
+
+- [x] P1: Promote plan task → appears in Project Hub, removed from plan
+- [x] P2: 3 plan tasks → promote 1 → 2 remain in plan, 1 in Hub (total still 3)
+- [x] P3: WIP at limit → promote blocked with error alert
+- [x] P4: Promotion failure → plan task unchanged (no data loss)
+- [x] P5: Reload after promote → Hub task persists, plan updated
+- [x] P6: Business mode → promote button hidden (Personal-only feature)
 
 **Known Issues**: None
 

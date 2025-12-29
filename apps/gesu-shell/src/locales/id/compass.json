@@ -152,7 +152,12 @@
         "switchFocusConfirm": "Ganti",
         "saveError": "Gagal menyimpan rencana",
         "taskAdded": "Tugas ditambahkan",
-        "taskRemoved": "Tugas dihapus"
+        "taskRemoved": "Tugas dihapus",
+        "promote": "Promosikan",
+        "promoteToHub": "Pindah ke Hub Proyek",
+        "cannotPromote": "Tidak bisa promosikan: batas tugas tercapai",
+        "promoteError": "Promosi Gagal",
+        "promoteErrorDetail": "Tidak dapat menambahkan tugas ke Hub Proyek. Batas tugas mungkin tercapai."
     }
 }
 

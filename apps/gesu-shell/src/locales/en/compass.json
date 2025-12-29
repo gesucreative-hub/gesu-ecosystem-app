@@ -129,6 +129,30 @@
         "focusActiveDesc": "Timer is running",
         "switchFocus": "Switch Focus",
         "fromCheckIn": "From today's check-in"
+    },
+    "dailyPlan": {
+        "title": "Today's Plan",
+        "subtitle": "Define your win + up to 3 tasks (shared limit)",
+        "topOutcome": "Top Outcome",
+        "topOutcomePlaceholder": "What would make today a win?",
+        "tasks": "Tasks",
+        "taskPlaceholder": "What needs to get done?",
+        "addTask": "Add Task",
+        "removeTask": "Remove",
+        "startFocus": "Start Focus",
+        "maxTasks": "Maximum 3 tasks total",
+        "wipBlocked": "Task limit reached ({{count}} active elsewhere)",
+        "wipBlockedDetail": "Complete or remove a task first",
+        "completeCheckInFirst": "Complete daily check-in first",
+        "noOutcome": "No outcome set",
+        "noTasks": "No tasks planned",
+        "defaultProject": "Daily Plan",
+        "switchFocusTitle": "Switch Focus?",
+        "switchFocusMessage": "A focus session is already running. Switch to this task?",
+        "switchFocusConfirm": "Switch",
+        "saveError": "Failed to save plan",
+        "taskAdded": "Task added",
+        "taskRemoved": "Task removed"
     }
 }
 

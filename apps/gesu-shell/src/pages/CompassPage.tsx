@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList } from 'lucide-react';
 import { calculateInferredEnergy, getEnergyColorClass } from '../utils/inferredEnergy';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -12,6 +12,7 @@ import { useAlertDialog } from '../components/AlertDialog';
 import { ESparkline } from '../components/charts/ESparkline';
 import { ERadarChart } from '../components/charts/ERadarChart';
 import { useSessionTimer } from '../hooks/useSessionTimer';
+import { usePersona } from '../hooks/usePersona';
 import {
     getTodayTasks,
     toggleTaskDone,
@@ -40,9 +41,10 @@ import {
     CompassSnapshotListItem,
 } from '../services/compassSnapshotsService';
 import { startWithTask, isSessionActive as isTimerActive, getState as getTimerState } from '../stores/focusTimerStore';
-import { getTodayCheckIn, updateTodayTopFocus } from '../stores/dailyCheckInStore';
+import { getTodayCheckIn, updateTodayTopFocus, getTodayPlan, saveTodayPlan, DailyPlan } from '../stores/dailyCheckInStore';
 import { listProjects } from '../stores/projectStore';
-import { getRemainingSlots } from '../utils/taskGuardrail';
+import { getRemainingSlots, canAddAnyTask, getRemainingWipSlots } from '../utils/taskGuardrail';
+
 
 // --- Types & Interfaces ---
 
@@ -138,6 +140,13 @@ export function CompassPage() {
     const [microStep, setMicroStep] = useState<string>(''); // Resets every session
     const [focusFirstLoading, setFocusFirstLoading] = useState(false);
 
+    // --- S3-0b: Daily Plan State ---
+    const { activePersona } = usePersona();
+    const isPersonalMode = activePersona === 'personal';
+    const [planTopOutcome, setPlanTopOutcome] = useState<string>('');
+    const [planTasks, setPlanTasks] = useState<string[]>([]);
+    const [planNewTaskInput, setPlanNewTaskInput] = useState<string>('');
+
     // Get check-in and project data for Focus First
     const todayCheckIn = useMemo(() => getTodayCheckIn(), [projectHubTasks]); // Refresh when tasks change
     const activeProjects = useMemo(() => listProjects(), []);
@@ -145,6 +154,10 @@ export function CompassPage() {
     const timerState = getTimerState();
     const remainingSlots = getRemainingSlots();
     const wipAtLimit = remainingSlots === 0;
+    
+    // S3-0b: Compute if user can add a plan task (respects combined WIP limit)
+    const canAddPlanTask = canAddAnyTask() && planTasks.length < 3;
+
 
     // Initialize FocusFirst selection from today's check-in
     useEffect(() => {
@@ -225,6 +238,89 @@ export function CompassPage() {
         }
     }, [canStartFocus, getFocusDisplayLabel, selectedFocusType, selectedRefId, selectedText, activeProjects, projectHubTasks, todayCheckIn]);
 
+    // --- S3-0b: Daily Plan Handlers ---
+    
+    // Initialize plan from store
+    useEffect(() => {
+        const plan = getTodayPlan();
+        if (plan) {
+            setPlanTopOutcome(plan.topOutcome);
+            setPlanTasks(plan.tasks);
+        }
+    }, [todayCheckIn]); // Re-read when check-in changes
+
+    // Save plan to store (debounced style - saves on changes)
+    const handleSavePlan = useCallback((outcome: string, tasks: string[]) => {
+        const result = saveTodayPlan(outcome, tasks);
+        if (!result.success) {
+            console.warn('[CompassPage] Plan save failed:', result.error);
+        }
+    }, []);
+
+    // Add a task to plan
+    const handleAddPlanTask = useCallback(() => {
+        const trimmed = planNewTaskInput.trim();
+        if (!trimmed) return;
+        
+        if (!canAddAnyTask()) {
+            alert({
+                title: t('dailyPlan.wipBlocked', { count: getRemainingWipSlots() }),
+                message: t('dailyPlan.wipBlockedDetail'),
+                type: 'warning'
+            });
+            return;
+        }
+        
+        if (planTasks.length >= 3) {
+            alert({
+                title: t('dailyPlan.maxTasks'),
+                message: t('dailyPlan.wipBlockedDetail'),
+                type: 'warning'
+            });
+            return;
+        }
+        
+        const newTasks = [...planTasks, trimmed];
+        setPlanTasks(newTasks);
+        setPlanNewTaskInput('');
+        handleSavePlan(planTopOutcome, newTasks);
+    }, [planNewTaskInput, planTasks, planTopOutcome, handleSavePlan, alert, t]);
+
+    // Remove a task from plan
+    const handleRemovePlanTask = useCallback((index: number) => {
+        const newTasks = planTasks.filter((_, i) => i !== index);
+        setPlanTasks(newTasks);
+        handleSavePlan(planTopOutcome, newTasks);
+    }, [planTasks, planTopOutcome, handleSavePlan]);
+
+    // Update top outcome
+    const handleUpdatePlanOutcome = useCallback((value: string) => {
+        setPlanTopOutcome(value);
+        // Debounce save (simplified - immediate for now)
+        handleSavePlan(value, planTasks);
+    }, [planTasks, handleSavePlan]);
+
+    // Start focus from plan task
+    const handleStartFocusFromPlan = useCallback(async (taskText: string, index: number) => {
+        // Check if focus session already active
+        if (timerActive) {
+            const shouldSwitch = await confirm({
+                title: t('dailyPlan.switchFocusTitle'),
+                message: t('dailyPlan.switchFocusMessage'),
+                type: 'warning',
+                yesLabel: t('dailyPlan.switchFocusConfirm'),
+            });
+            if (!shouldSwitch) return;
+        }
+        
+        // Start focus with ephemeral context
+        await startWithTask({
+            taskId: `plan-task-${Date.now()}-${index}`,
+            taskTitle: taskText,
+            projectName: planTopOutcome || t('dailyPlan.defaultProject')
+        });
+    }, [timerActive, planTopOutcome, confirm, t]);
+
     // Inferred Energy - calculated from activity data (depends on projectHubTasks)
     const inferredEnergy = useMemo(() => calculateInferredEnergy(), [projectHubTasks]);
 
@@ -244,6 +340,7 @@ export function CompassPage() {
     useEffect(() => {
         loadRecentSnapshots();
     }, [loadRecentSnapshots]);
+
 
     // Handler for deleting a snapshot
     const handleDeleteSnapshot = useCallback(async (snapshotId: string, e: React.MouseEvent) => {
@@ -989,6 +1086,128 @@ export function CompassPage() {
                                 </div>
                             )}
                         </Card>
+
+                        {/* S3-0b: Daily Plan Card - Personal Persona Only, After Check-in Complete */}
+                        {isPersonalMode && todayCheckIn?.isComplete && (
+                            <Card title={
+                                <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2">
+                                        <ClipboardList size={18} className="text-tokens-brand-DEFAULT" />
+                                        <span>{t('dailyPlan.title')}</span>
+                                    </div>
+                                    <Badge variant="neutral" className="ml-2">
+                                        {planTasks.length}/3 {t('dailyPlan.tasks')}
+                                    </Badge>
+                                </div>
+                            }>
+                                <div className="space-y-4">
+                                    {/* Top Outcome Input */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
+                                            {t('dailyPlan.topOutcome')}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={planTopOutcome}
+                                            onChange={(e) => handleUpdatePlanOutcome(e.target.value)}
+                                            placeholder={t('dailyPlan.topOutcomePlaceholder')}
+                                            className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow"
+                                        />
+                                    </div>
+
+                                    {/* Tasks List */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
+                                            {t('dailyPlan.tasks')} ({planTasks.length}/3)
+                                        </label>
+                                        
+                                        {planTasks.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {planTasks.map((task, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50"
+                                                    >
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-sm font-medium text-tokens-fg truncate block">
+                                                                {task}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => handleRemovePlanTask(index)}
+                                                                className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
+                                                                title={t('dailyPlan.removeTask')}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                onClick={() => handleStartFocusFromPlan(task, index)}
+                                                            >
+                                                                {t('dailyPlan.startFocus')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4 bg-tokens-panel2/50 rounded-lg border border-tokens-border border-dashed">
+                                                <p className="text-sm text-tokens-muted">{t('dailyPlan.noTasks')}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Add Task Input */}
+                                        {planTasks.length < 3 && (
+                                            <div className="flex gap-2 mt-2">
+                                                <input
+                                                    type="text"
+                                                    value={planNewTaskInput}
+                                                    onChange={(e) => setPlanNewTaskInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleAddPlanTask()}
+                                                    placeholder={t('dailyPlan.taskPlaceholder')}
+                                                    disabled={!canAddPlanTask}
+                                                    className="flex-1 px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                                                />
+                                                <Button
+                                                    variant="secondary"
+                                                    size="md"
+                                                    onClick={handleAddPlanTask}
+                                                    disabled={!canAddPlanTask || !planNewTaskInput.trim()}
+                                                    icon={<Plus size={16} />}
+                                                >
+                                                    {t('dailyPlan.addTask')}
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {/* WIP Limit Warning */}
+                                        {!canAddAnyTask() && planTasks.length < 3 && (
+                                            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                    {t('dailyPlan.wipBlocked', { count: getRemainingWipSlots() })}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Show hint if check-in not complete (Personal only) */}
+                        {isPersonalMode && (!todayCheckIn || !todayCheckIn.isComplete) && (
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <ClipboardList size={18} className="text-tokens-muted" />
+                                    <span className="text-tokens-muted">{t('dailyPlan.title')}</span>
+                                </div>
+                            }>
+                                <div className="text-center py-6">
+                                    <p className="text-sm text-tokens-muted">{t('dailyPlan.completeCheckInFirst')}</p>
+                                </div>
+                            </Card>
+                        )}
                     </div>
 
                     {/* RIGHT COLUMN (Visualization & History) - Spans 5 cols */}

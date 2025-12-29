@@ -4,6 +4,11 @@
  * S1-2a: Operationalize Daily Check-in v0
  */
 
+export interface DailyPlan {
+    topOutcome: string;          // One sentence describing today's win condition
+    tasks: string[];             // Up to 3 task descriptions
+}
+
 export interface DailyCheckIn {
     id: string;                     // uuid
     date: string;                   // 'YYYY-MM-DD' local
@@ -14,6 +19,7 @@ export interface DailyCheckIn {
     topFocusText?: string;          // free text fallback
     createdAt: string;              // ISO timestamp
     isComplete?: boolean;           // S1-2c: true if user completed full check-in flow, false if only focus set
+    plan?: DailyPlan;               // S3-0b: Optional daily plan (top outcome + tasks)
 }
 
 interface DailyCheckInStoreState {
@@ -192,5 +198,59 @@ export function subscribe(callback: () => void): () => void {
 
 export function getState(): DailyCheckInStoreState {
     return { ...state };
+}
+
+// --- S3-0b: Daily Plan Functions ---
+
+/**
+ * Get count of today's plan tasks (for WIP calculation in taskGuardrail)
+ */
+export function getTodayPlanTaskCount(): number {
+    const checkIn = getTodayCheckIn();
+    return checkIn?.plan?.tasks.length || 0;
+}
+
+/**
+ * Get today's plan (convenience helper)
+ */
+export function getTodayPlan(): DailyPlan | null {
+    const checkIn = getTodayCheckIn();
+    return checkIn?.plan || null;
+}
+
+export interface SavePlanResult {
+    success: boolean;
+    error?: 'check_in_required' | 'max_exceeded';
+    max?: number;
+}
+
+/**
+ * Save today's plan (local validation only - cross-store WIP is UI's responsibility)
+ * - Requires completed check-in
+ * - Enforces max 3 tasks within plan (local rule)
+ * - Does NOT truncate - returns error if over max
+ */
+export function saveTodayPlan(topOutcome: string, tasks: string[]): SavePlanResult {
+    const existing = getTodayCheckIn();
+    
+    if (!existing || !existing.isComplete) {
+        console.warn('[dailyCheckInStore] Cannot save plan: no completed check-in for today');
+        return { success: false, error: 'check_in_required' };
+    }
+    
+    // Local enforcement: max 3 tasks in plan
+    if (tasks.length > 3) {
+        console.warn('[dailyCheckInStore] Cannot save plan: max 3 tasks allowed');
+        return { success: false, error: 'max_exceeded', max: 3 };
+    }
+    
+    // Save with plan
+    saveCheckIn({
+        ...existing,
+        plan: { topOutcome, tasks }
+    });
+    
+    console.log('[dailyCheckInStore] Plan saved:', { topOutcome, tasks });
+    return { success: true };
 }
 

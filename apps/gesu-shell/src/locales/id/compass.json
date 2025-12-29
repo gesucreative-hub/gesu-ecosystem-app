@@ -129,6 +129,30 @@
         "focusActiveDesc": "Timer sedang berjalan",
         "switchFocus": "Ganti Fokus",
         "fromCheckIn": "Dari check-in hari ini"
+    },
+    "dailyPlan": {
+        "title": "Rencana Hari Ini",
+        "subtitle": "Tentukan kemenangan + hingga 3 tugas (batas bersama)",
+        "topOutcome": "Hasil Utama",
+        "topOutcomePlaceholder": "Apa yang membuat hari ini sukses?",
+        "tasks": "Tugas",
+        "taskPlaceholder": "Apa yang perlu diselesaikan?",
+        "addTask": "Tambah Tugas",
+        "removeTask": "Hapus",
+        "startFocus": "Mulai Fokus",
+        "maxTasks": "Maksimal 3 tugas total",
+        "wipBlocked": "Batas tugas tercapai ({{count}} aktif di tempat lain)",
+        "wipBlockedDetail": "Selesaikan atau hapus tugas dulu",
+        "completeCheckInFirst": "Selesaikan check-in harian dulu",
+        "noOutcome": "Belum ada target",
+        "noTasks": "Belum ada tugas",
+        "defaultProject": "Rencana Harian",
+        "switchFocusTitle": "Ganti Fokus?",
+        "switchFocusMessage": "Sesi fokus sedang berjalan. Ganti ke tugas ini?",
+        "switchFocusConfirm": "Ganti",
+        "saveError": "Gagal menyimpan rencana",
+        "taskAdded": "Tugas ditambahkan",
+        "taskRemoved": "Tugas dihapus"
     }
 }
 

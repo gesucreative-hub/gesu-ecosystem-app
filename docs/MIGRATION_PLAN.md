@@ -2,9 +2,10 @@
 
 ## Current Status (Single Source of Truth)
 
-- Current Sprint: **S2 — Persona Split**
-- Active item: **S2-5 — QA & Polish** ✅ DONE (2025-12-29)
-- Next: **S3 — Next Sprint** 📋 BACKLOG
+- Previous Sprint: **S2 — Persona Split** ✅ COMPLETE (2025-12-29)
+- Current Sprint: **S3 — Daily Loop Polish**
+- Active item: **S3-0a — Daily Check-in Fix** ✅ DONE (2025-12-29)
+- Active item: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1238,6 +1239,63 @@ Evidence:
 - [x] T3: Complete check-in → banner hides + persists
 - [x] T4: Business mode → banner never shows
 - [x] Draft→Complete upgrade verified
+
+**Known Issues**: None
+
+---
+
+### S3-0b — Plan From Daily Check-in (Compass) — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **cc0d102** — "S3-0b: add Daily Plan to Compass (combined WIP cap)"
+- Files:
+  - `dailyCheckInStore.ts` (+60 lines) - Plan model + functions
+  - `taskGuardrail.ts` (rewritten) - Combined WIP count including plan tasks
+  - `CompassPage.tsx` (+130 lines) - Daily Plan card UI
+  - `locales/en/compass.json` (+25 lines) - i18n keys
+  - `locales/id/compass.json` (+25 lines) - i18n keys
+
+**Feature Summary**:
+
+- Users can define a Daily Plan (Top Outcome + up to 3 Tasks) after completing check-in
+- Plan card shown in Compass (Personal persona only)
+- Combined WIP limit: Plan tasks share MAX 3 with Project Hub + Finish Mode
+- Focus can be started directly from plan tasks (with session-switch confirmation)
+- No silent truncation: add blocked when at limit with i18n message
+
+**Key Implementation Decisions**:
+| Aspect | Decision |
+|--------|----------|
+| WIP Counting | **Combined-cap** — Plan + Hub + Finish share MAX_ACTIVE_ITEMS (3) |
+| Circular Imports | **Avoided** — Stores don't import taskGuardrail; guardrail imports from stores |
+| Persona Guard | Personal only, plan card hidden in Business |
+| Focus Integration | Uses `startWithTask()` with ephemeral TaskContext |
+
+**QA Results** (Manual verification):
+
+Core Tests:
+
+- [x] T1: Personal + completed check-in → plan card visible
+- [x] T2: Add 3 plan tasks (no Hub) → 4th blocked
+- [x] T3: Click "Start Focus" on plan task → timer starts
+- [x] T4: Reload app → plan persists
+- [x] T5: Business mode → plan card hidden
+
+WIP Bidirectional Tests:
+
+- [x] E1: 3 Hub tasks → Compass → plan add blocked
+- [x] E2: 3 Plan tasks → Hub → add blocked
+- [x] E3: 2 Hub + 1 Plan → plan add blocked (combined = 3)
+- [x] E4: Focus active → Start Focus from plan → confirm dialog appears
+- [x] E5: Create 3 plan tasks → Project Hub → add task → blocked
+
+Regression Tests:
+
+- [x] R1: Old check-in without `plan` field → no crash, empty plan shown
+- [x] R2: Save plan → close → reopen → plan persists
 
 **Known Issues**: None
 

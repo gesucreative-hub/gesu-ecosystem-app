@@ -180,7 +180,11 @@
         "manageStructures": "Manage structures",
         "templates": "Templates",
         "duplicateTemplate": "Duplicate Template",
-        "duplicateTemplateMessage": "This blueprint already exists as a template."
+        "duplicateTemplateMessage": "This blueprint already exists as a template.",
+        "actionHints": "Action Hints",
+        "actionHintsHelp": "Practical steps or tips to guide execution of this step",
+        "hintPlaceholder": "Hint text...",
+        "addHint": "Add Hint"
     },
     "stepDetail": {
         "whyThisStep": "Why This Step Exists",

@@ -15,6 +15,7 @@ export interface BlueprintNode {
     description: string;
     dod: string[];                 // DoD item labels (max 7)
     tools: string[];               // Tool names
+    actionHints?: string[];        // S4-1: Action hints for this step (max 6)
 }
 
 // Sprint 21.3 Phase 6: Per-blueprint phase definitions

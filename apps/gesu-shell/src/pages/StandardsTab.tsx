@@ -466,6 +466,41 @@ export function StandardsTab() {
         updateNodeField(nodeId, 'tools', newTools);
     }, [data, updateNodeField]);
 
+    // S4-1: Action Hints Management
+
+    // Add action hint
+    const addActionHint = useCallback((nodeId: string) => {
+        if (!data) return;
+        const node = data.blueprints.flatMap(b => b.nodes).find(n => n.id === nodeId);
+        if (!node) return;
+        
+        const currentHints = node.actionHints || [];
+        if (currentHints.length >= 6) return;  // FP3: Max 6 hints
+
+        updateNodeField(nodeId, 'actionHints', [...currentHints, '']);  // FP3: Default empty
+    }, [data, updateNodeField]);
+
+    // Remove action hint
+    const removeActionHint = useCallback((nodeId: string, index: number) => {
+        if (!data) return;
+        const node = data.blueprints.flatMap(b => b.nodes).find(n => n.id === nodeId);
+        if (!node || !node.actionHints) return;
+
+        const newHints = node.actionHints.filter((_, i) => i !== index);
+        updateNodeField(nodeId, 'actionHints', newHints.length > 0 ? newHints : undefined);
+    }, [data, updateNodeField]);
+
+    // Update action hint
+    const updateActionHint = useCallback((nodeId: string, index: number, value: string) => {
+        if (!data) return;
+        const node = data.blueprints.flatMap(b => b.nodes).find(n => n.id === nodeId);
+        if (!node || !node.actionHints) return;
+
+        const newHints = [...node.actionHints];
+        newHints[index] = value;
+        updateNodeField(nodeId, 'actionHints', newHints);
+    }, [data, updateNodeField]);
+
     // Sprint 21.3 Phase 6: Add new step to blueprint
     const addStep = useCallback((phaseId: string) => {
         if (!data || !selectedBlueprint) return;
@@ -1436,6 +1471,61 @@ export function StandardsTab() {
                                             }}
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* S4-1: Action Hints Editor */}
+                            <div className="border-t border-tokens-border pt-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wide">
+                                            {t('initiator:standards.actionHints', 'Action Hints')}
+                                        </h3>
+                                        <span className="text-xs text-tokens-muted">
+                                            {selectedNode.actionHints?.length || 0}/6
+                                        </span>
+                                    </div>
+
+                                    {/* Helper text */}
+                                    <p className="text-xs text-tokens-muted italic">
+                                        {t('initiator:standards.actionHintsHelp', 'Practical steps or tips to guide execution of this step')}
+                                    </p>
+
+                                    {/* Hints list */}
+                                    <div className="space-y-1.5">
+                                        {(selectedNode.actionHints || []).map((hint, index) => (
+                                            <div key={index} className="flex items-start gap-2">
+                                                <span className="text-xs text-tokens-muted mt-2 min-w-[1.5rem]">
+                                                    {index + 1}.
+                                                </span>
+                                                <Input
+                                                    value={hint}
+                                                    onChange={(e) => updateActionHint(selectedNode.id, index, e.target.value)}
+                                                    placeholder={t('initiator:standards.hintPlaceholder', 'Hint text...')}
+                                                    className="flex-1 text-sm"
+                                                />
+                                                <button
+                                                    onClick={() => removeActionHint(selectedNode.id, index)}
+                                                    className="p-1 text-tokens-muted hover:text-red-500 transition-colors mt-1"
+                                                    title={t('common:remove', 'Remove')}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Add hint button */}
+                                    {(selectedNode.actionHints?.length || 0) < 6 && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => addActionHint(selectedNode.id)}
+                                            icon={<Plus size={14} />}
+                                        >
+                                            {t('initiator:standards.addHint', 'Add Hint')}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </Card>

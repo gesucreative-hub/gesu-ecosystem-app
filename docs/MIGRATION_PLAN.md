@@ -5,6 +5,7 @@
 - Previous Sprint: **S3 — Daily Loop Polish** ✅ COMPLETE (2025-12-29)
 - Current Sprint: **S4 — Workflow Polish**
 - Completed: **S4-0 — Workflow Action Hints (Read-Only)** ✅ DONE (2025-12-29)
+- Completed: **S4-1 — Workflow Action Hints (Editable + Persisted)** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1503,6 +1504,53 @@ Evidence:
 - [x] R1: DoD checklist still toggleable
 - [x] R2: Node status colors work correctly
 - [x] R3: Persona split unchanged
+
+**Known Issues**: None
+
+---
+
+### S4-1 — Workflow Action Hints (Editable + Persisted) — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **f963325** — "S4-1: editable action hints in blueprint editor"
+- Files:
+  - `workflowBlueprints.ts` (+1 line) - Added actionHints field to BlueprintNode
+  - `StandardsTab.tsx` (+93 lines) - Action hints editor UI and handlers
+  - `locales/en/initiator.json` (+4 lines) - EN labels
+  - `locales/id/initiator.json` (+4 lines) - ID labels
+
+**Feature Summary**:
+
+- BlueprintNode now has optional `actionHints?: string[]` field
+- Standards editor has action hints section (add/edit/remove, max 6 hints)
+- Hints persist in blueprint JSON via save/load flow
+- Empty hints default to "" (not placeholder text)
+- Flow verified: blueprint → project → workflow canvas → step detail panel
+
+**QA Results** (Manual verification):
+
+Editing Tests:
+
+- [x] E1: Add hint → persists after reload
+- [x] E2: Edit hint text → persists correctly
+- [x] E3: Remove hint → persists removal
+- [x] E4: Max 6 enforced → "Add Hint" button hidden at limit
+- [x] E5: Empty actionHints → section hidden in detail panel
+
+Data Flow:
+
+- [x] F1: Edit in Standards → create project → workflow canvas shows hints
+- [x] F2: Blueprint without hints → detail panel shows no hints section
+- [x] F3: Static hints from S4-0 (p2 node) → still works as expected
+
+Regression:
+
+- [x] R1: DoD editing → unchanged, still works
+- [x] R2: Tools editing → unchanged, still works
+- [x] R3: Blueprint save/load → no data loss
 
 **Known Issues**: None
 

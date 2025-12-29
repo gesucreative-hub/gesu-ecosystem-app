@@ -9,6 +9,9 @@
 - Completed: **S4-2 — Action Hint → Add to Today Task** ✅ DONE (2025-12-29)
 - Completed: **S4-3 — Action Hints Reorder (Up/Down)** ✅ DONE (2025-12-29)
 
+> **⚠️ QA Pending**: S4 regression tests (A1-A4) and S3-3 verification (D1-D4) require manual testing.  
+> See [walkthrough.md](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for detailed checklist.
+
 ---
 
 ## S2 — Persona Split

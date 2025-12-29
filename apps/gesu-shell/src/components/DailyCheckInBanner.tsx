@@ -11,10 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { Sunrise, X } from 'lucide-react';
 import { getTodayCheckIn, subscribe } from '../stores/dailyCheckInStore';
 import { isSessionActive, subscribe as subscribeFocusTimer } from '../stores/focusTimerStore';
+import { usePersona } from '../hooks/usePersona'; // S3-0a: Persona guard
 import { DailyCheckInModal } from './DailyCheckInModal';
 
 export function DailyCheckInBanner() {
     const { t } = useTranslation('common');
+    const { activePersona } = usePersona(); // S3-0a: Personal-only banner
     const [showBanner, setShowBanner] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [dismissed, setDismissed] = useState(false);
@@ -32,18 +34,23 @@ export function DailyCheckInBanner() {
         const checkShouldShow = () => {
             const today = getTodayCheckIn();
             const hasCompletedCheckIn = today !== null && today.isComplete === true;
-            const shouldShow = !hasCompletedCheckIn && !focusActive && !dismissed;
+            
+            // S3-0a: Personal-only (anti-flicker: hide if persona not ready)
+            const isPersonalMode = activePersona === 'personal';
+            
+            const shouldShow = !hasCompletedCheckIn && !focusActive && !dismissed && isPersonalMode;
 
-            // S1-3b: Dev diagnostic
+            // S3-0a: Enhanced dev diagnostic with persona
             if (import.meta.env.DEV) {
                 console.log('[DailyCheckInBanner] Show logic:', {
                     recordExists: today !== null,
                     isComplete: today?.isComplete,
                     focusActive,
                     dismissed,
+                    activePersona, // S3-0a: Log persona
                     shouldShow,
                     reason: !shouldShow
-                        ? (focusActive ? 'focus active' : dismissed ? 'dismissed' : 'completed')
+                        ? (activePersona !== 'personal' ? 'business mode' : focusActive ? 'focus active' : dismissed ? 'dismissed' : 'completed')
                         : 'no completed check-in'
                 });
             }

@@ -1212,7 +1212,38 @@ _(Template)_
 
 ---
 
-## 9. Sprint Roadmap (Post-Phase 1)
+## S3 — Daily Loop Polish (Thin Slices)
+
+### S3-0a — Daily Check-in Completion State Fix — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **6c2e983** — "S3-0a: fix daily check-in completion + persona guard"
+- Files: `DailyCheckInModal.tsx` (+1 line), `DailyCheckInBanner.tsx` (+8 lines)
+
+**Problem**: "Set Today's Focus" flow created draft check-in but banner incorrectly hid after partial completion
+
+**Solution**:
+
+- DailyCheckInModal now sets `isComplete: true` when saving full check-in
+- DailyCheckInBanner respects persona (Personal-only, no flicker)
+- Draft check-ins (`isComplete: false`) keep banner visible until completion
+
+**QA Results** (Manual verification):
+
+- [x] T1: Banner shows on fresh start (Personal mode)
+- [x] T2: Draft check-in (Set Focus) → banner still shows
+- [x] T3: Complete check-in → banner hides + persists
+- [x] T4: Business mode → banner never shows
+- [x] Draft→Complete upgrade verified
+
+**Known Issues**: None
+
+---
+
+## Historical Sprints Roadmap (Post-Phase 1)
 
 ### Sprint S0: Stabilize / Trust Fixes
 

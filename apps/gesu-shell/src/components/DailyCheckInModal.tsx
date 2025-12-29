@@ -53,7 +53,8 @@ export function DailyCheckInModal({ onClose }: DailyCheckInModalProps) {
             why,
             topFocusType: showTextInput ? 'text' : topFocusType,
             topFocusRefId: showTextInput ? undefined : topFocusRefId,
-            topFocusText: showTextInput ? topFocusText : undefined
+            topFocusText: showTextInput ? topFocusText : undefined,
+            isComplete: true // S3-0a: Mark full check-in as complete
         });
 
         onClose();

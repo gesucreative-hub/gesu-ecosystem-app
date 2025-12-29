@@ -793,6 +793,79 @@ export function CompassPage() {
                     {/* LEFT COLUMN - Personal (Energy, Daily Plan, Snapshots) */}
                     <div className="space-y-6">
 
+                        {/* Energy Card - Enhanced Visuals - MOVED TO TOP */}
+                        <Card title={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                    <Zap size={18} className="text-amber-500" />
+                                    <span>{t('energyCalibration.title')}</span>
+                                </div>
+                                {/* Inferred Energy Badge */}
+                                <div className="flex items-center gap-1.5 group relative px-2 py-1 bg-tokens-bg rounded-md border border-tokens-border">
+                                    <span className="text-xs text-tokens-muted">{t('energyCalibration.inferred')}:</span>
+                                    <span className={`text-sm font-bold ${getEnergyColorClass(inferredEnergy.score)}`}>
+                                        {inferredEnergy.score}/10
+                                    </span>
+                                    <Info size={12} className="text-tokens-muted ml-1" />
+
+                                    {/* Tooltip */}
+                                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-tokens-bg border border-tokens-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                        <div className="text-xs font-medium text-tokens-fg mb-2 border-b border-tokens-border pb-1">
+                                            Inferred Score Factors
+                                        </div>
+                                        <div className="space-y-2">
+                                            {inferredEnergy.factors.map(factor => (
+                                                <div key={factor.id} className="flex justify-between items-center text-xs">
+                                                    <span className="text-tokens-muted">{factor.label}</span>
+                                                    <span className={`font-mono ${getEnergyColorClass(factor.value)}`}>{factor.value}/10</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 text-[10px] text-tokens-muted italic">
+                                            Based on activity, time & tasks.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        } className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20">
+                            {/* Manual Slider (1-10) */}
+                            <div className="space-y-4 py-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-tokens-fg">{t('energyCalibration.howDoYouFeel')}</span>
+                                    <span className={`text-3xl font-black ${getEnergyColorClass(energyLevel)} transition-colors duration-300`}>
+                                        {energyLevel}
+                                    </span>
+                                </div>
+                                <div className="relative h-6 flex items-center">
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        value={energyLevel}
+                                        onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
+                                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 rounded-lg appearance-none cursor-pointer hover:h-3 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tokens-ring"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-[10px] uppercase tracking-wider font-medium text-tokens-muted">
+                                    <span>{t('energyCalibration.exhausted')}</span>
+                                    <span>{t('energyCalibration.neutral')}</span>
+                                    <span>{t('energyCalibration.energized')}</span>
+                                </div>
+                            </div>
+
+                            {/* Optional Note */}
+                            <div className="space-y-2 mt-4 pt-4 border-t border-tokens-border/50">
+                                <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">{t('contextNote.label')}</label>
+                                <textarea
+                                    value={energyNote}
+                                    onChange={(e) => setEnergyNote(e.target.value)}
+                                    placeholder={t('contextNote.placeholder')}
+                                    className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 resize-none transition-shadow"
+                                    rows={2}
+                                />
+                            </div>
+                        </Card>
+
                         {/* S1-2b: Focus First Card */}
                         <Card
                             title={
@@ -1074,79 +1147,6 @@ export function CompassPage() {
                                 </div>
                             </Card>
                         )}
-
-                        {/* Energy Card - Enhanced Visuals */}
-                        <Card title={
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2">
-                                    <Zap size={18} className="text-tokens-brand-DEFAULT" />
-                                    <span>{t('energyCalibration.title')}</span>
-                                </div>
-                                {/* Inferred Energy Badge */}
-                                <div className="flex items-center gap-1.5 group relative px-2 py-1 bg-tokens-bg rounded-md border border-tokens-border">
-                                    <span className="text-xs text-tokens-muted">{t('energyCalibration.inferred')}:</span>
-                                    <span className={`text-sm font-bold ${getEnergyColorClass(inferredEnergy.score)}`}>
-                                        {inferredEnergy.score}/10
-                                    </span>
-                                    <Info size={12} className="text-tokens-muted ml-1" />
-
-                                    {/* Tooltip */}
-                                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-tokens-bg border border-tokens-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                        <div className="text-xs font-medium text-tokens-fg mb-2 border-b border-tokens-border pb-1">
-                                            Inferred Score Factors
-                                        </div>
-                                        <div className="space-y-2">
-                                            {inferredEnergy.factors.map(factor => (
-                                                <div key={factor.id} className="flex justify-between items-center text-xs">
-                                                    <span className="text-tokens-muted">{factor.label}</span>
-                                                    <span className={`font-mono ${getEnergyColorClass(factor.value)}`}>{factor.value}/10</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-2 text-[10px] text-tokens-muted italic">
-                                            Based on activity, time & tasks.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }>
-                            {/* Manual Slider (1-10) */}
-                            <div className="space-y-4 py-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-tokens-fg">{t('energyCalibration.howDoYouFeel')}</span>
-                                    <span className={`text-3xl font-black ${getEnergyColorClass(energyLevel)} transition-colors duration-300`}>
-                                        {energyLevel}
-                                    </span>
-                                </div>
-                                <div className="relative h-6 flex items-center">
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="10"
-                                        value={energyLevel}
-                                        onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
-                                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 rounded-lg appearance-none cursor-pointer hover:h-3 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tokens-ring"
-                                    />
-                                </div>
-                                <div className="flex justify-between text-[10px] uppercase tracking-wider font-medium text-tokens-muted">
-                                    <span>{t('energyCalibration.exhausted')}</span>
-                                    <span>{t('energyCalibration.neutral')}</span>
-                                    <span>{t('energyCalibration.energized')}</span>
-                                </div>
-                            </div>
-
-                            {/* Optional Note */}
-                            <div className="space-y-2 mt-4 pt-4 border-t border-tokens-border/50">
-                                <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">{t('contextNote.label')}</label>
-                                <textarea
-                                    value={energyNote}
-                                    onChange={(e) => setEnergyNote(e.target.value)}
-                                    placeholder={t('contextNote.placeholder')}
-                                    className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 resize-none transition-shadow"
-                                    rows={2}
-                                />
-                            </div>
-                        </Card>
 
                         {/* Project Hub Tasks (Today) */}
                         <Card title={

@@ -97,13 +97,6 @@ function ProjectGeneratorForm({
 
     const { t } = useTranslation(['initiator', 'common']);
 
-    // Tab definitions with translated labels (inside component to access t)
-    const _tabs = [
-        { id: 'workflow', label: t('initiator:tabs.workflow', 'Workflow'), icon: <FileText size={16} /> },
-        { id: 'generator', label: t('initiator:tabs.generator', 'Generator'), icon: <Zap size={16} /> },
-        { id: 'standards', label: t('initiator:tabs.standards', 'Standards'), icon: <Settings size={16} /> }
-    ];
-
     // Update mode when URL param changes
     useEffect(() => {
         const modeParam = searchParams.get('mode');

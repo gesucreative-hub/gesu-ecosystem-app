@@ -157,7 +157,14 @@
         "promoteToHub": "Move to Project Hub",
         "cannotPromote": "Cannot promote: task limit reached",
         "promoteError": "Promotion Failed",
-        "promoteErrorDetail": "Could not add task to Project Hub. Task limit may be reached."
+        "promoteErrorDetail": "Could not add task to Project Hub. Task limit may be reached.",
+        "promoteAll": "Promote All",
+        "promoteAllSuccess": "All Tasks Promoted",
+        "promoteAllSuccessDetail": "{{count}} tasks moved to Project Hub",
+        "promoteAllPartial": "Partial Promotion",
+        "promoteAllPartialDetail": "Promoted {{success}} of {{total}} tasks. Some tasks remain in plan.",
+        "promoteAllFailed": "Promotion Failed",
+        "promoteAllFailedDetail": "Could not promote any tasks. Task limit may be reached."
     }
 }
 

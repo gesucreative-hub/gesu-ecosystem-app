@@ -362,6 +362,77 @@ export function CompassPage() {
         setProjectHubTasks(getTodayTasks());
     }, [planTasks, planTopOutcome, handleSavePlan, alert, t]);
 
+    // S3-2: Promote all plan tasks to Project Hub (batch with partial failure handling)
+    const handlePromoteAllPlanTasks = useCallback(async () => {
+        if (planTasks.length === 0) return;
+
+        const tasksToPromote = [...planTasks];
+        const successfulIndices: number[] = [];
+        const failedTasks: string[] = [];
+
+        // Promote each task
+        for (let i = 0; i < tasksToPromote.length; i++) {
+            const taskText = tasksToPromote[i];
+            
+            // Check WIP capacity for this task
+            if (!canAddAnyTask()) {
+                failedTasks.push(taskText);
+                continue;
+            }
+
+            // Try to add to Project Hub
+            const hubTask = addTaskToToday({
+                stepId: 'daily-plan',
+                stepTitle: 'Daily Plan',
+                dodItemId: `dp-${Date.now()}-${i}`,
+                dodItemLabel: taskText,
+                projectName: planTopOutcome || 'Daily Plan'
+            });
+
+            if (hubTask) {
+                successfulIndices.push(i);
+            } else {
+                failedTasks.push(taskText);
+            }
+        }
+
+        // Update plan: keep only failed tasks
+        const newTasks = planTasks.filter((_, i) => !successfulIndices.includes(i));
+        setPlanTasks(newTasks);
+        handleSavePlan(planTopOutcome, newTasks);
+
+        // Force reload Hub tasks
+        setProjectHubTasks(getTodayTasks());
+
+        // Show result message
+        const totalCount = tasksToPromote.length;
+        const successCount = successfulIndices.length;
+        
+        if (successCount === totalCount) {
+            // All succeeded
+            await alert({
+                title: t('dailyPlan.promoteAllSuccess'),
+                message: t('dailyPlan.promoteAllSuccessDetail', { count: successCount }),
+                type: 'success'
+            });
+        } else if (successCount > 0) {
+            // Partial success
+            await alert({
+                title: t('dailyPlan.promoteAllPartial'),
+                message: t('dailyPlan.promoteAllPartialDetail', { success: successCount, total: totalCount }),
+                type: 'warning'
+            });
+        } else {
+            // All failed
+            await alert({
+                title: t('dailyPlan.promoteAllFailed'),
+                message: t('dailyPlan.promoteAllFailedDetail'),
+                type: 'error'
+            });
+        }
+    }, [planTasks, planTopOutcome, handleSavePlan, alert, t]);
+
+
     // Inferred Energy - calculated from activity data (depends on projectHubTasks)
     const inferredEnergy = useMemo(() => calculateInferredEnergy(), [projectHubTasks]);
 
@@ -1158,9 +1229,21 @@ export function CompassPage() {
 
                                     {/* Tasks List */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
-                                            {t('dailyPlan.tasks')} ({planTasks.length}/3)
-                                        </label>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
+                                                {t('dailyPlan.tasks')} ({planTasks.length}/3)
+                                            </label>
+                                            {planTasks.length > 0 && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={handlePromoteAllPlanTasks}
+                                                    icon={<ArrowRight size={14} />}
+                                                >
+                                                    {t('dailyPlan.promoteAll')}
+                                                </Button>
+                                            )}
+                                        </div>
                                         
                                         {planTasks.length > 0 ? (
                                             <div className="space-y-2">

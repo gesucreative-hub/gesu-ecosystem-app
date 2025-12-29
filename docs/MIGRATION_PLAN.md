@@ -7,6 +7,7 @@
 - Completed: **S3-0a — Daily Check-in Fix** ✅ DONE (2025-12-29)
 - Completed: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
 - Completed: **S3-1 — Promote Plan Tasks to Hub** ✅ DONE (2025-12-29)
+- Completed: **S3-2 — Promote All Plan Tasks** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1354,6 +1355,50 @@ Core Tests:
 - [x] P4: Promotion failure → plan task unchanged (no data loss)
 - [x] P5: Reload after promote → Hub task persists, plan updated
 - [x] P6: Business mode → promote button hidden (Personal-only feature)
+
+**Known Issues**: None
+
+---
+
+### S3-2 — Promote All Daily Plan Tasks — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **11e4973** — "S3-2: promote all daily plan tasks to Project Hub"
+- Files:
+  - `CompassPage.tsx` (+73 lines) - handlePromoteAllPlanTasks with partial failure handling + UI button
+  - `locales/en/compass.json` (+7 keys) - success/partial/failure messages
+  - `locales/id/compass.json` (+7 keys) - Indonesian translations
+
+**Feature Summary**:
+
+- Added "Promote All" button in Daily Plan card header (shown when tasks exist)
+- Batch promotes all plan tasks to Project Hub with partial failure support
+- If all succeed: plan becomes empty, all in Hub
+- If some fail: only successful tasks removed from plan, failed tasks remain
+- Shows appropriate alert: success (all), partial (N of M), or failure (none)
+
+**Implementation**:
+
+- Iterates through plan tasks, attempts to promote each
+- Tracks successful/failed indices
+- Updates plan to keep only failed tasks
+- Force reloads Hub tasks after batch operation
+- Reuses same S3-1 `addTaskToToday` API with synthetic IDs
+
+**QA Results** (Manual verification):
+
+Core Tests:
+
+- [x] B1: 2 plan + 0 Hub → Promote All → 0 plan + 2 Hub (success alert)
+- [x] B2: 2 plan + 1 Hub → Promote All → 0 plan + 3 Hub (success alert)
+- [x] B3: 3 plan + 0 Hub → Promote All → WIP check works incrementally
+- [x] B4: Partial failure simulation → failed tasks remain in plan (partial alert)
+- [x] B5: All fail (WIP full) → all tasks remain in plan (failure alert)
+- [x] B6: Business mode → Promote All button hidden (Personal-only)
+- [x] B7: Reload after promote all → Hub tasks persist, plan updated
 
 **Known Issues**: None
 

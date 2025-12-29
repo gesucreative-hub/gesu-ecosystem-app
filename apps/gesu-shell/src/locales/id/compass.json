@@ -157,7 +157,14 @@
         "promoteToHub": "Pindah ke Hub Proyek",
         "cannotPromote": "Tidak bisa promosikan: batas tugas tercapai",
         "promoteError": "Promosi Gagal",
-        "promoteErrorDetail": "Tidak dapat menambahkan tugas ke Hub Proyek. Batas tugas mungkin tercapai."
+        "promoteErrorDetail": "Tidak dapat menambahkan tugas ke Hub Proyek. Batas tugas mungkin tercapai.",
+        "promoteAll": "Promosikan Semua",
+        "promoteAllSuccess": "Semua Tugas Dipromosikan",
+        "promoteAllSuccessDetail": "{{count}} tugas dipindah ke Hub Proyek",
+        "promoteAllPartial": "Promosi Sebagian",
+        "promoteAllPartialDetail": "Dipromosikan {{success}} dari {{total}} tugas. Beberapa tugas masih di rencana.",
+        "promoteAllFailed": "Promosi Gagal",
+        "promoteAllFailedDetail": "Tidak dapat mempromosikan tugas. Batas tugas mungkin tercapai."
     }
 }
 

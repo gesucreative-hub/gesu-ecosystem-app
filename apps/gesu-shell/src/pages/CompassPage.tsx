@@ -42,7 +42,7 @@ import {
     CompassSnapshotListItem,
 } from '../services/compassSnapshotsService';
 import { startWithTask, isSessionActive as isTimerActive, getState as getTimerState } from '../stores/focusTimerStore';
-import { getTodayCheckIn, updateTodayTopFocus, getTodayPlan, saveTodayPlan, DailyPlan } from '../stores/dailyCheckInStore';
+import { getTodayCheckIn, updateTodayTopFocus, getTodayPlan, saveTodayPlan } from '../stores/dailyCheckInStore';
 import { listProjects } from '../stores/projectStore';
 import { getRemainingSlots, canAddAnyTask, getRemainingWipSlots } from '../utils/taskGuardrail';
 
@@ -309,7 +309,7 @@ export function CompassPage() {
                 title: t('dailyPlan.switchFocusTitle'),
                 message: t('dailyPlan.switchFocusMessage'),
                 type: 'warning',
-                yesLabel: t('dailyPlan.switchFocusConfirm'),
+                confirmLabel: t('dailyPlan.switchFocusConfirm'),
             });
             if (!shouldSwitch) return;
         }

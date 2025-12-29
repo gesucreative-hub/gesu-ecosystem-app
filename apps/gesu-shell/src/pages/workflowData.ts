@@ -27,6 +27,8 @@ export interface WorkflowNode {
     dodChecklist: DoDItem[];
     /** Recommended tools (optional) */
     tools?: string[];
+    /** S4-0: Action hints for this step (read-only display) */
+    actionHints?: string[];
 }
 
 export interface WorkflowEdge {
@@ -127,7 +129,13 @@ export const WORKFLOW_NODES: WorkflowNode[] = [
             { id: 'p2-2', label: 'Competitive analysis done', done: false },
             { id: 'p2-3', label: 'Creative brief written', done: false },
         ],
-        tools: ['Pinterest', 'Notion']
+        tools: ['Pinterest', 'Notion'],
+        actionHints: [
+            'Start with competitor research - what are similar projects doing?',
+            'Create a Pinterest board with 15-20 reference images',
+            'Document your research findings in a brief (1-2 pages)',
+            'Share moodboard with stakeholders for alignment'
+        ]
     },
     {
         id: 'p3', phase: 'planning', title: 'Blueprint & Roadmap',

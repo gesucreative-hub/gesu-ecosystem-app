@@ -196,7 +196,8 @@
         "recommendedTools": "Recommended Tools",
         "markAsDone": "Mark as Done",
         "stepCompletedUndo": "This step is completed. Click to undo.",
-        "allChecklistComplete": "All checklist items are complete!"
+        "allChecklistComplete": "All checklist items are complete!",
+        "actionHints": "Action Hints"
     },
     "tooltips": {
         "clearProgress": "Clear all progress",

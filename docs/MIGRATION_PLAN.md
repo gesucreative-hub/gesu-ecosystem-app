@@ -2,13 +2,9 @@
 
 ## Current Status (Single Source of Truth)
 
-- Previous Sprint: **S2 — Persona Split** ✅ COMPLETE (2025-12-29)
-- Current Sprint: **S3 — Daily Loop Polish**
-- Completed: **S3-0a — Daily Check-in Fix** ✅ DONE (2025-12-29)
-- Completed: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
-- Completed: **S3-1 — Promote Plan Tasks to Hub** ✅ DONE (2025-12-29)
-- Completed: **S3-2 — Promote All Plan Tasks** ✅ DONE (2025-12-29)
-- Completed: **S3-3 — Task Completion Checkboxes** ✅ DONE (2025-12-29)
+- Previous Sprint: **S3 — Daily Loop Polish** ✅ COMPLETE (2025-12-29)
+- Current Sprint: **S4 — Workflow Polish**
+- Completed: **S4-0 — Workflow Action Hints (Read-Only)** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1473,6 +1469,40 @@ Regression:
 - [ ] R2: Remove task → works by ID
 - [ ] R3: Focus start → works correctly
 - [ ] R4: Business mode → plan card hidden
+
+**Known Issues**: None
+
+---
+
+### S4-0 — Workflow Action Hints (Read-Only) — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **321c7ba** — "S4-0: workflow action hints (read-only)"
+- Files:
+  - `workflowData.ts` (+8 lines) - Added actionHints field and seeded p2 node
+  - `StepDetailPanel.tsx` (+24 lines) - Conditional rendering of hints section
+  - `locales/en/initiator.json` (+1 line) - Action hints label
+  - `locales/id/initiator.json` (+1 line) - Indonesian translation
+
+**Feature Summary**:
+
+- Workflow nodes can now have optional `actionHints?: string[]` field
+- Step detail panel shows "Action Hints" section when hints exist
+- Hidden when hints absent/empty (no visual clutter)
+- Seeded 'p2' (Research & Brief) node with 4 example hints
+
+**QA Results** (Manual verification):
+
+- [x] H1: Hints visible for p2 node (4 hints displayed with numbers)
+- [x] H2: Hints hidden for nodes without them (p1, e1, f1, etc.)
+- [x] H3: Long text wraps properly (break-words applied)
+- [x] H4: Hints display in array order (1, 2, 3, 4)
+- [x] R1: DoD checklist still toggleable
+- [x] R2: Node status colors work correctly
+- [x] R3: Persona split unchanged
 
 **Known Issues**: None
 

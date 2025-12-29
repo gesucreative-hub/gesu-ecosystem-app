@@ -198,7 +198,8 @@
         "recommendedTools": "Alat yang Direkomendasikan",
         "markAsDone": "Tandai Selesai",
         "stepCompletedUndo": "Langkah ini sudah selesai. Klik untuk membatalkan.",
-        "allChecklistComplete": "Semua item checklist selesai!"
+        "allChecklistComplete": "Semua item checklist selesai!",
+        "actionHints": "Petunjuk Aksi"
     },
     "tooltips": {
         "clearProgress": "Hapus semua progres",

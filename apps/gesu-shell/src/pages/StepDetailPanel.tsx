@@ -245,6 +245,30 @@ export function StepDetailPanel({
                     </div>
                 </div>
 
+                {/* S4-0: Action Hints Section (conditionally rendered) */}
+                {selectedNode.actionHints && selectedNode.actionHints.length > 0 && (
+                    <div>
+                        <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">
+                            {t('initiator:stepDetail.actionHints', 'Action Hints')}
+                        </h3>
+                        <div className="space-y-2">
+                            {selectedNode.actionHints.map((hint, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-start gap-2 p-2 rounded-lg bg-tokens-panel2/50 border border-tokens-border/50"
+                                >
+                                    <span className="text-tokens-brand-DEFAULT text-xs font-semibold mt-0.5 min-w-[1rem]">
+                                        {index + 1}.
+                                    </span>
+                                    <span className="text-sm text-tokens-fg flex-1 break-words">
+                                        {hint}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
 
                 {/* Today's Focus Section (formerly Finish Mode) */}
                 <div className="border-t border-tokens-border pt-6">

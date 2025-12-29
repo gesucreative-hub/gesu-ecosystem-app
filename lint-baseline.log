@@ -1,0 +1,16 @@
+
+> gesu-shell@0.0.0 lint D:\03. Resources\_Gesu's\GesuEcosystemApp\apps\gesu-shell
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 "--no-cache"
+
+
+D:\03. Resources\_Gesu's\GesuEcosystemApp\apps\gesu-shell\src\pages\SettingsPage.tsx
+  306:9  error  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  404:9  error  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+D:\03. Resources\_Gesu's\GesuEcosystemApp\apps\gesu-shell\src\services\ai\OllamaProvider.ts
+  81:20  error  Unexpected constant condition  no-constant-condition
+
+✖ 3 problems (3 errors, 0 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+
+ ELIFECYCLE  Command failed with exit code 1.

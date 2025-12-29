@@ -1,0 +1,8 @@
+src/pages/InitiatorPage.tsx(710,12): error TS6133: 'isLoadingProjects' is declared but its value is never read.
+src/pages/MediaSuitePage.tsx(1,31): error TS6133: 'useMemo' is declared but its value is never read.
+src/pages/MediaSuitePage.tsx(1300,41): error TS2322: Type '(reset?: boolean) => Promise<void>' is not assignable to type 'MouseEventHandler<HTMLButtonElement>'.
+  Types of parameters 'reset' and 'event' are incompatible.
+    Type 'MouseEvent<HTMLButtonElement, MouseEvent>' is not assignable to type 'boolean | undefined'.
+src/pages/StepDetailPanel.tsx(6,41): error TS6133: 'WorkflowPhase' is declared but its value is never read.
+src/services/activityTrackingService.ts(75,41): error TS2339: Property 'clearAllSessions' does not exist on type '{ startSession: (payload: { type: "focus" | "break" | "idle"; taskId?: string | undefined; projectId?: string | undefined; }) => Promise<{ ok: boolean; sessionId?: string | undefined; error?: string | undefined; }>; endSession: (payload: { ...; }) => Promise<...>; getSummary: (payload: { ...; }) => Promise<...>; rec...'.
+src/services/activityTrackingService.ts(79,47): error TS2339: Property 'clearAllSessions' does not exist on type '{ startSession: (payload: { type: "focus" | "break" | "idle"; taskId?: string | undefined; projectId?: string | undefined; }) => Promise<{ ok: boolean; sessionId?: string | undefined; error?: string | undefined; }>; endSession: (payload: { ...; }) => Promise<...>; getSummary: (payload: { ...; }) => Promise<...>; rec...'.

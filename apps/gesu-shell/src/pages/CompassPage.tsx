@@ -16,7 +16,6 @@ import {
     getTodayTasks,
     toggleTaskDone,
     removeTask,
-    updateTaskNextAction,
     ProjectHubTask
 } from '../stores/projectHubTasksStore';
 import {
@@ -901,60 +900,42 @@ export function CompassPage() {
                                     {projectHubTasks.filter(t => !t.done).map(task => (
                                         <div
                                             key={task.id}
-                                            className="group flex flex-col gap-2 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50 hover:shadow-sm"
+                                            className="group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50 hover:shadow-sm"
                                         >
-                                            <div className="flex items-start gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={task.done}
-                                                    onChange={() => handleToggleProjectHubTask(task.id)}
-                                                    className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer transition-colors"
-                                                />
-                                                <div className="flex-1 min-w-0">
-                                                    <span
-                                                        onClick={() => navigate(`/initiator?tab=workflow&stepId=${task.stepId}`)}
-                                                        className="text-sm font-medium block cursor-pointer hover:underline text-tokens-fg truncate pr-2"
-                                                    >
-                                                        {task.title}
-                                                    </span>
-                                                    <span className="text-xs text-tokens-muted flex items-center gap-1 mt-0.5">
-                                                        <span className="inline-block w-2 h-2 rounded-full bg-tokens-brand-DEFAULT/30"></span>
-                                                        {task.stepTitle} · {task.projectName}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => handleRemoveTask(task.id)}
-                                                        className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
-                                                        title={t('compass:tooltips.removeTask', 'Remove task')}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        onClick={() => handleStartFocusOnTask(task)}
-                                                        className="ml-1"
-                                                    >
-                                                        Focus
-                                                    </Button>
-                                                </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={task.done}
+                                                onChange={() => handleToggleProjectHubTask(task.id)}
+                                                className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer transition-colors"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <span
+                                                    onClick={() => navigate(`/initiator?tab=workflow&stepId=${task.stepId}`)}
+                                                    className="text-sm font-medium block cursor-pointer hover:underline text-tokens-fg truncate pr-2"
+                                                >
+                                                    {task.title}
+                                                </span>
+                                                <span className="text-xs text-tokens-muted flex items-center gap-1 mt-0.5">
+                                                    <span className="inline-block w-2 h-2 rounded-full bg-tokens-brand-DEFAULT/30"></span>
+                                                    {task.stepTitle} · {task.projectName}
+                                                </span>
                                             </div>
-                                            {/* S3-1: Next Action Input */}
-                                            <div className="pl-8">
-                                                <input
-                                                    type="text"
-                                                    defaultValue={task.nextAction ?? ''}
-                                                    placeholder={t('compass:tasks.nextActionPlaceholder', 'Define the next physical step...')}
-                                                    onBlur={(e) => updateTaskNextAction(task.id, e.target.value, task.dateKey)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            (e.target as HTMLInputElement).blur();
-                                                        }
-                                                    }}
-                                                    className="w-full px-2 py-1 text-xs bg-tokens-panel border border-tokens-border/50 rounded focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30 text-tokens-fg placeholder:text-tokens-muted/50"
-                                                />
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleRemoveTask(task.id)}
+                                                    className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
+                                                    title={t('compass:tooltips.removeTask', 'Remove task')}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    onClick={() => handleStartFocusOnTask(task)}
+                                                    className="ml-1"
+                                                >
+                                                    Focus
+                                                </Button>
                                             </div>
                                         </div>
                                     ))}

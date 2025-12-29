@@ -70,15 +70,14 @@ export async function recordTaskCompletion(
 /**
  * Clear activity sessions (for data cleanup)
  * @param afterDate - Optional ISO date string. If provided, only deletes sessions after this date.
+ * TODO: Uncomment when clearAllSessions is added to the activity tracking API
  */
-export async function clearAllActivitySessions(afterDate?: string): Promise<{ ok: boolean; error?: string }> {
-    const tracking = (window as any).gesu?.activityTracking;
-    if (!tracking?.clearAllSessions) {
-        return { ok: false, error: 'Clear sessions not available' };
-    }
+// export async function clearAllActivitySessions(afterDate?: string): Promise<{ ok: boolean; error?: string }> {
+//     if (!window.gesu?.activityTracking?.clearAllSessions) {
+//         return { ok: false, error: 'Clear sessions not available' };
+//     }
+//
+//     return await window.gesu.activityTracking.clearAllSessions({ afterDate });
+// }
 
-    return await tracking.clearAllSessions(
-        afterDate ? { afterDate } : {}
-    );
-}
 

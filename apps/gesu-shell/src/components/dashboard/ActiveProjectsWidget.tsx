@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '../Card';
 import { Folder, Plus } from 'lucide-react';
 import { getProgressForProject } from '../../stores/workflowProgressStore';
+import { usePersona } from '../../hooks/usePersona';
 
 interface Project {
     id: string;
@@ -18,6 +19,7 @@ interface Project {
 
 export function ActiveProjectsWidget() {
     const { t } = useTranslation('dashboard');
+    const { activePersona } = usePersona();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -27,9 +29,12 @@ export function ActiveProjectsWidget() {
             try {
                 if (window.gesu?.projects?.list) {
                     const projectList = await window.gesu.projects.list();
+                    
+                    // S2-5 (T7): Filter by activePersona
+                    const filteredProjects = projectList.filter((p: any) => p.persona === activePersona);
 
                     // Calculate real progress for each project
-                    const projectsWithProgress = projectList.slice(0, 3).map((p: any) => {
+                    const projectsWithProgress = filteredProjects.slice(0, 3).map((p: any) => {
                         // Get workflow progress for this project
                         const progress = getProgressForProject(p.id);
                         let progressPercent = 0;
@@ -71,7 +76,7 @@ export function ActiveProjectsWidget() {
         };
 
         loadProjects();
-    }, []);
+    }, [activePersona]); // Re-run when persona changes
 
     const getProgressColor = (progress: number) => {
         if (progress >= 70) return 'bg-emerald-500';

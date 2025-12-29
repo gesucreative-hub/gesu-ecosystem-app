@@ -10,8 +10,7 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import {
     getActivitySummary,
-    ActivitySession,
-    clearAllActivitySessions
+    ActivitySession
 } from '../services/activityTrackingService';
 import { subscribe as subscribeToTimer, getState as getTimerState, FocusTimerState, start, stop as stopTimer } from '../stores/focusTimerStore';
 import { SegmentedControl } from '../components/SegmentedControl';
@@ -699,10 +698,16 @@ export function ActivityPage() {
                     }
                     // For 'all', afterDate stays undefined (deletes everything)
 
-                    const result = await clearAllActivitySessions(afterDate);
+                    // TODO: Re-enable when clearAllSessions API is available
+                    // const result = await clearAllActivitySessions(afterDate);
+                    console.warn('Clear sessions temporarily disabled - API not yet implemented');
+                    const result = { ok: false, error: 'Feature temporarily disabled' };
+                    
                     if (result.ok) {
                         loadData(true);
                         loadYearlyStats();
+                    } else {
+                        console.warn('Clear sessions not available:', result.error);
                     }
                 }}
                 onCancel={() => setShowClearConfirm(false)}

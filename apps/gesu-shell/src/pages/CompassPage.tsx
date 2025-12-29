@@ -42,7 +42,7 @@ import {
     CompassSnapshotListItem,
 } from '../services/compassSnapshotsService';
 import { startWithTask, isSessionActive as isTimerActive, getState as getTimerState } from '../stores/focusTimerStore';
-import { getTodayCheckIn, updateTodayTopFocus, getTodayPlan, saveTodayPlan } from '../stores/dailyCheckInStore';
+import { getTodayCheckIn, updateTodayTopFocus, getTodayPlan, saveTodayPlan, togglePlanTaskDone, clearCompletedPlanTasks, PlanTask } from '../stores/dailyCheckInStore';
 import { listProjects } from '../stores/projectStore';
 import { getRemainingSlots, canAddAnyTask, getRemainingWipSlots } from '../utils/taskGuardrail';
 
@@ -145,7 +145,7 @@ export function CompassPage() {
     const { activePersona } = usePersona();
     const isPersonalMode = activePersona === 'personal';
     const [planTopOutcome, setPlanTopOutcome] = useState<string>('');
-    const [planTasks, setPlanTasks] = useState<string[]>([]);
+    const [planTasks, setPlanTasks] = useState<PlanTask[]>([]);  // S3-3: Changed from string[]
     const [planNewTaskInput, setPlanNewTaskInput] = useState<string>('');
 
     // Get check-in and project data for Focus First
@@ -156,8 +156,9 @@ export function CompassPage() {
     const remainingSlots = getRemainingSlots();
     const wipAtLimit = remainingSlots === 0;
     
-    // S3-0b: Compute if user can add a plan task (respects combined WIP limit)
-    const canAddPlanTask = canAddAnyTask() && planTasks.length < 3;
+    // S3-3: FP3 - Compute if user can add a plan task (counts only ACTIVE/undone tasks)
+    const activePlanTasksCount = planTasks.filter(t => !t.done).length;
+    const canAddPlanTask = canAddAnyTask() && activePlanTasksCount < 3;
 
 
     // Initialize FocusFirst selection from today's check-in
@@ -250,18 +251,26 @@ export function CompassPage() {
         }
     }, [todayCheckIn]); // Re-read when check-in changes
 
-    // Save plan to store (debounced style - saves on changes)
-    const handleSavePlan = useCallback((outcome: string, tasks: string[]) => {
+    // S3-3: Save plan to store (now accepts PlanTask[])
+    const handleSavePlan = useCallback((outcome: string, tasks: PlanTask[]) => {
         const result = saveTodayPlan(outcome, tasks);
         if (!result.success) {
             console.warn('[CompassPage] Plan save failed:', result.error);
         }
     }, []);
 
+    // S3-3: Generate unique ID for plan task
+    function generatePlanTaskId(): string {
+        return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
     // Add a task to plan
     const handleAddPlanTask = useCallback(() => {
         const trimmed = planNewTaskInput.trim();
         if (!trimmed) return;
+        
+        // FP3: Check active tasks count, not total
+        const activeTasks = planTasks.filter(t => !t.done);
         
         if (!canAddAnyTask()) {
             alert({
@@ -272,7 +281,7 @@ export function CompassPage() {
             return;
         }
         
-        if (planTasks.length >= 3) {
+        if (activeTasks.length >= 3) {
             alert({
                 title: t('dailyPlan.maxTasks'),
                 message: t('dailyPlan.wipBlockedDetail'),
@@ -281,15 +290,21 @@ export function CompassPage() {
             return;
         }
         
-        const newTasks = [...planTasks, trimmed];
+        // S3-3: Create new PlanTask object
+        const newTask: PlanTask = {
+            id: generatePlanTaskId(),
+            text: trimmed,
+            done: false
+        };
+        const newTasks = [...planTasks, newTask];
         setPlanTasks(newTasks);
         setPlanNewTaskInput('');
         handleSavePlan(planTopOutcome, newTasks);
     }, [planNewTaskInput, planTasks, planTopOutcome, handleSavePlan, alert, t]);
 
-    // Remove a task from plan
-    const handleRemovePlanTask = useCallback((index: number) => {
-        const newTasks = planTasks.filter((_, i) => i !== index);
+    // S3-3: Remove a task from plan by ID
+    const handleRemovePlanTask = useCallback((taskId: string) => {
+        const newTasks = planTasks.filter(t => t.id !== taskId);
         setPlanTasks(newTasks);
         handleSavePlan(planTopOutcome, newTasks);
     }, [planTasks, planTopOutcome, handleSavePlan]);
@@ -322,8 +337,18 @@ export function CompassPage() {
         });
     }, [timerActive, planTopOutcome, confirm, t]);
 
-    // S3-1: Promote plan task to Project Hub (MOVE semantics)
-    const handlePromotePlanTask = useCallback(async (taskText: string, index: number) => {
+    // S3-3: Promote plan task to Project Hub (MOVE semantics, skip done)
+    const handlePromotePlanTask = useCallback(async (task: PlanTask) => {
+        // Skip if already done
+        if (task.done) {
+            await alert({
+                title: t('dailyPlan.cannotPromoteDone'),
+                message: t('dailyPlan.cannotPromoteDoneDetail'),
+                type: 'warning'
+            });
+            return;
+        }
+        
         // Check WIP capacity before promoting
         if (!canAddAnyTask()) {
             await alert({
@@ -338,8 +363,8 @@ export function CompassPage() {
         const hubTask = addTaskToToday({
             stepId: 'daily-plan',
             stepTitle: 'Daily Plan',
-            dodItemId: `dp-${Date.now()}-${index}`,
-            dodItemLabel: taskText,
+            dodItemId: `dp-${Date.now()}-${task.id}`,
+            dodItemLabel: task.text,
             projectName: planTopOutcome || 'Daily Plan'
         });
 
@@ -353,8 +378,8 @@ export function CompassPage() {
             return;
         }
 
-        // Success - now remove from plan (MOVE semantics)
-        const newTasks = planTasks.filter((_, i) => i !== index);
+        // Success - now remove from plan by ID (MOVE semantics)
+        const newTasks = planTasks.filter(t => t.id !== task.id);
         setPlanTasks(newTasks);
         handleSavePlan(planTopOutcome, newTasks);
 
@@ -362,21 +387,22 @@ export function CompassPage() {
         setProjectHubTasks(getTodayTasks());
     }, [planTasks, planTopOutcome, handleSavePlan, alert, t]);
 
-    // S3-2: Promote all plan tasks to Project Hub (batch with partial failure handling)
+    // S3-3: Promote all ACTIVE plan tasks to Project Hub (skip done)
     const handlePromoteAllPlanTasks = useCallback(async () => {
-        if (planTasks.length === 0) return;
+        const activeTasks = planTasks.filter(t => !t.done);
+        if (activeTasks.length === 0) return;
 
-        const tasksToPromote = [...planTasks];
-        const successfulIndices: number[] = [];
-        const failedTasks: string[] = [];
+        const tasksToPromote = [...activeTasks];
+        const successfullyPromoted: string[] = [];  // Store task IDs
+        const failedTasks: PlanTask[] = [];
 
-        // Promote each task
+        // Promote each active task
         for (let i = 0; i < tasksToPromote.length; i++) {
-            const taskText = tasksToPromote[i];
+            const task = tasksToPromote[i];
             
             // Check WIP capacity for this task
             if (!canAddAnyTask()) {
-                failedTasks.push(taskText);
+                failedTasks.push(task);
                 continue;
             }
 
@@ -385,19 +411,20 @@ export function CompassPage() {
                 stepId: 'daily-plan',
                 stepTitle: 'Daily Plan',
                 dodItemId: `dp-${Date.now()}-${i}`,
-                dodItemLabel: taskText,
+                dodItemLabel: task.text,
                 projectName: planTopOutcome || 'Daily Plan'
             });
 
             if (hubTask) {
-                successfulIndices.push(i);
+                successfullyPromoted.push(task.id);
             } else {
-                failedTasks.push(taskText);
+                failedTasks.push(task);
             }
         }
 
-        // Update plan: keep only failed tasks
-        const newTasks = planTasks.filter((_, i) => !successfulIndices.includes(i));
+        // Update plan: keep done tasks and failed active tasks
+        const doneTasks = planTasks.filter(t => t.done);
+        const newTasks = [...doneTasks, ...failedTasks];
         setPlanTasks(newTasks);
         handleSavePlan(planTopOutcome, newTasks);
 
@@ -406,7 +433,7 @@ export function CompassPage() {
 
         // Show result message
         const totalCount = tasksToPromote.length;
-        const successCount = successfulIndices.length;
+        const successCount = successfullyPromoted.length;
         
         if (successCount === totalCount) {
             // All succeeded
@@ -432,6 +459,36 @@ export function CompassPage() {
         }
     }, [planTasks, planTopOutcome, handleSavePlan, alert, t]);
 
+    // S3-3: Toggle task done state
+    const handleTogglePlanTaskDone = useCallback((taskId: string) => {
+        const success = togglePlanTaskDone(taskId);
+        if (success) {
+            // Force refresh from store
+            const plan = getTodayPlan();
+            if (plan) setPlanTasks(plan.tasks);
+        }
+    }, []);
+
+    // S3-3: Clear all completed tasks
+    const handleClearCompleted = useCallback(async () => {
+        const completedCount = planTasks.filter(t => t.done).length;
+        if (completedCount === 0) return;
+        
+        const confirmed = await confirm({
+            title: t('dailyPlan.clearCompleted'),
+            message: t('dailyPlan.clearCompletedConfirm', { count: completedCount }),
+            type: 'warning',
+            confirmLabel: t('dailyPlan.clearCompletedYes')
+        });
+        
+        if (!confirmed) return;
+        
+        const result = clearCompletedPlanTasks();
+        if (result.success) {
+            const plan = getTodayPlan();
+            if (plan) setPlanTasks(plan.tasks);
+        }
+    }, [planTasks, confirm, t]);
 
     // Inferred Energy - calculated from activity data (depends on projectHubTasks)
     const inferredEnergy = useMemo(() => calculateInferredEnergy(), [projectHubTasks]);
@@ -1231,57 +1288,82 @@ export function CompassPage() {
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
-                                                {t('dailyPlan.tasks')} ({planTasks.length}/3)
+                                                {t('dailyPlan.tasks')} ({activePlanTasksCount}/{planTasks.length})
                                             </label>
-                                            {planTasks.length > 0 && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={handlePromoteAllPlanTasks}
-                                                    icon={<ArrowRight size={14} />}
-                                                >
-                                                    {t('dailyPlan.promoteAll')}
-                                                </Button>
-                                            )}
+                                            <div className="flex gap-2">
+                                                {planTasks.some(t => t.done) && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={handleClearCompleted}
+                                                        icon={<Trash2 size={14} />}
+                                                    >
+                                                        {t('dailyPlan.clearCompleted')}
+                                                    </Button>
+                                                )}
+                                                {activePlanTasksCount > 0 && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handlePromoteAllPlanTasks}
+                                                        icon={<ArrowRight size={14} />}
+                                                    >
+                                                        {t('dailyPlan.promoteAll')}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                         
                                         {planTasks.length > 0 ? (
                                             <div className="space-y-2">
-                                                {planTasks.map((task, index) => (
+                                                {planTasks.map((task) => (
                                                     <div
-                                                        key={index}
-                                                        className="group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50"
+                                                        key={task.id}
+                                                        className={`group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50 ${task.done ? 'opacity-60' : ''}`}
                                                     >
+                                                        {/* Checkbox */}
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={task.done}
+                                                            onChange={() => handleTogglePlanTaskDone(task.id)}
+                                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer transition-colors"
+                                                        />
+                                                        
+                                                        {/* Task text */}
                                                         <div className="flex-1 min-w-0">
-                                                            <span className="text-sm font-medium text-tokens-fg truncate block">
-                                                                {task}
+                                                            <span className={`text-sm font-medium text-tokens-fg truncate block ${task.done ? 'line-through' : ''}`}>
+                                                                {task.text}
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button
-                                                                onClick={() => handleRemovePlanTask(index)}
-                                                                className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
-                                                                title={t('dailyPlan.removeTask')}
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handlePromotePlanTask(task, index)}
-                                                                icon={<ArrowRight size={14} />}
-                                                                title={t('dailyPlan.promoteToHub')}
-                                                            >
-                                                                {t('dailyPlan.promote')}
-                                                            </Button>
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                onClick={() => handleStartFocusFromPlan(task, index)}
-                                                            >
-                                                                {t('dailyPlan.startFocus')}
-                                                            </Button>
-                                                        </div>
+                                                        
+                                                        {/* Actions (only show if not done) */}
+                                                        {!task.done && (
+                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                   onClick={() => handleRemovePlanTask(task.id)}
+                                                                    className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
+                                                                    title={t('dailyPlan.removeTask')}
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handlePromotePlanTask(task)}
+                                                                    icon={<ArrowRight size={14} />}
+                                                                    title={t('dailyPlan.promoteToHub')}
+                                                                >
+                                                                    {t('dailyPlan.promote')}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={() => handleStartFocusFromPlan(task.text, planTasks.indexOf(task))}
+                                                                >
+                                                                    {t('dailyPlan.startFocus')}
+                                                                </Button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

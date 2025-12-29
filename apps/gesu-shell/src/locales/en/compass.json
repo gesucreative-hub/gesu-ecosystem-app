@@ -164,7 +164,13 @@
         "promoteAllPartial": "Partial Promotion",
         "promoteAllPartialDetail": "Promoted {{success}} of {{total}} tasks. Some tasks remain in plan.",
         "promoteAllFailed": "Promotion Failed",
-        "promoteAllFailedDetail": "Could not promote any tasks. Task limit may be reached."
+        "promoteAllFailedDetail": "Could not promote any tasks. Task limit may be reached.",
+        "clearCompleted": "Clear Completed",
+        "clearCompletedConfirm": "Remove {{count}} completed tasks from your plan?",
+        "clearCompletedYes": "Clear",
+        "clearCompletedSuccess": "Completed tasks cleared",
+        "cannotPromoteDone": "Task Already Done",
+        "cannotPromoteDoneDetail": "Cannot promote completed tasks. Uncheck the task first."
     }
 }
 

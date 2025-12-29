@@ -8,6 +8,7 @@
 - Completed: **S3-0b — Plan From Daily Check-in** ✅ DONE (2025-12-29)
 - Completed: **S3-1 — Promote Plan Tasks to Hub** ✅ DONE (2025-12-29)
 - Completed: **S3-2 — Promote All Plan Tasks** ✅ DONE (2025-12-29)
+- Completed: **S3-3 — Task Completion Checkboxes** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1399,6 +1400,79 @@ Core Tests:
 - [x] B5: All fail (WIP full) → all tasks remain in plan (failure alert)
 - [x] B6: Business mode → Promote All button hidden (Personal-only)
 - [x] B7: Reload after promote all → Hub tasks persist, plan updated
+
+**Known Issues**: None
+
+---
+
+### S3-3 — Daily Plan Task Completion Checkboxes — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **a96e742** — "S3-3: plan task completion checkboxes"
+- Files:
+  - `dailyCheckInStore.ts` (+120 lines) - PlanTask model, migration, WIP filter, toggle/clear functions
+  - `CompassPage.tsx` (+158/-89 lines) - Checkboxes, strikethrough, updated handlers, Clear Completed button
+  - `locales/en/compass.json` (+6 keys) - Clear Completed, cannot promote done messages
+  - `locales/id/compass.json` (+6 keys) - Indonesian translations
+
+**Feature Summary**:
+
+- Each Daily Plan task now has a checkbox for done/undone state
+- Done tasks show strikethrough text and faded appearance
+- Actions (remove/promote/focus) hidden for done tasks
+- WIP count excludes done tasks (only active/undone count toward limit)
+- "Clear Completed" button removes all done tasks with confirmation
+- Promote/Promote All skip done tasks automatically
+
+**Implementation**:
+
+- **Data Model**: Changed `tasks: string[]` → `tasks: PlanTask[]` where `PlanTask = {id, text, done}`
+- **Migration**: Non-destructive migration converts old `string[]` to `PlanTask[]` with `done: false`
+- **FP1**: `saveTodayPlan()` validates max 3 ACTIVE tasks (not total)
+- **FP2**: Normalizes tasks before saving (ensures consistent shape)
+- **FP3**: UI `canAddPlanTask` counts only active tasks
+- **WIP Filtering**: `getTodayPlanTaskCount()` returns `tasks.filter(t => !t.done).length`
+- **Toggle**: Click checkbox calls `togglePlanTaskDone(taskId)`, updates store, refreshes UI
+- **Clear**: Filters out done tasks, saves remaining to store
+
+**QA Results** (Manual verification required):
+
+Core Functionality:
+
+- [ ] C1: Toggle done → checkbox updates immediately
+- [ ] C2: Reload app → done state persists
+- [ ] C3: Done task → strikethrough + faded (opacity-60)
+- [ ] C4: 3 undone tasks → add blocked (WIP check)
+- [ ] C5: 2 undone + 1 done (3 total) → can add 1 more ✅ CRITICAL
+- [ ] C6: Mark task done → frees WIP slot immediately
+
+Migration:
+
+- [ ] M1: Old plan with `tasks: ["Task 1", "Task 2"]` → migrates to PlanTask[]
+- [ ] M2: Old tasks default to `done: false`
+- [ ] M3: No data loss (all task text preserved)
+
+Clear Completed:
+
+- [ ] CC1: "Clear Completed" button shows only when done tasks exist
+- [ ] CC2: Click → confirmation dialog with count
+- [ ] CC3: Confirm → only done tasks removed
+
+Promote:
+
+- [ ] P1: Done task → actions hidden (no promote button visible)
+- [ ] P2: Promote All with 2 undone + 1 done → only 2 promoted
+- [ ] P3: Try promote done via code → alert shown
+
+Regression:
+
+- [ ] R1: Add new task → creates with `done: false`
+- [ ] R2: Remove task → works by ID
+- [ ] R3: Focus start → works correctly
+- [ ] R4: Business mode → plan card hidden
 
 **Known Issues**: None
 

@@ -4,9 +4,16 @@
  * S1-2a: Operationalize Daily Check-in v0
  */
 
+// S3-3: Task with completion state
+export interface PlanTask {
+    id: string;      // Unique identifier
+    text: string;    // Task description
+    done: boolean;   // Completion state
+}
+
 export interface DailyPlan {
     topOutcome: string;          // One sentence describing today's win condition
-    tasks: string[];             // Up to 3 task descriptions
+    tasks: PlanTask[];           // Up to 3 task objects (was string[])
 }
 
 export interface DailyCheckIn {
@@ -203,19 +210,72 @@ export function getState(): DailyCheckInStoreState {
 // --- S3-0b: Daily Plan Functions ---
 
 /**
- * Get count of today's plan tasks (for WIP calculation in taskGuardrail)
+ * Generate unique ID for plan task
  */
-export function getTodayPlanTaskCount(): number {
-    const checkIn = getTodayCheckIn();
-    return checkIn?.plan?.tasks.length || 0;
+function generatePlanTaskId(): string {
+    return `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
- * Get today's plan (convenience helper)
+ * S3-3: Normalize and migrate plan tasks to ensure consistent format
+ * Handles:
+ * - Old format: string[] → PlanTask[]
+ * - Objects without 'done' → add done: false
+ * - Unknown shapes → safe fallback
+ */
+function normalizePlanTasks(tasks: any): PlanTask[] {
+    if (!tasks || !Array.isArray(tasks)) return [];
+    if (tasks.length === 0) return [];
+    
+    const firstTask = tasks[0];
+    
+    // Format 1: Already PlanTask[] (has id, text, done)
+    if (typeof firstTask === 'object' && 'id' in firstTask && 'text' in firstTask) {
+        return tasks.map(task => ({
+            id: task.id || generatePlanTaskId(),
+            text: task.text || '',
+            done: task.done ?? false  // Default to false if missing
+        }));
+    }
+    
+    // Format 2: Old string[]
+    if (typeof firstTask === 'string') {
+        return tasks.map((text: string) => ({
+            id: generatePlanTaskId(),
+            text,
+            done: false  // All old tasks default to undone
+        }));
+    }
+    
+    // Format 3: Unknown - try to salvage
+    return tasks.map(task => ({
+        id: generatePlanTaskId(),
+        text: typeof task === 'object' && task.text ? task.text : String(task),
+        done: false
+    }));
+}
+
+/**
+ * S3-3: Get count of today's ACTIVE (undone) plan tasks (for WIP calculation)
+ */
+export function getTodayPlanTaskCount(): number {
+    const checkIn = getTodayCheckIn();
+    if (!checkIn?.plan?.tasks) return 0;
+    const normalizedTasks = normalizePlanTasks(checkIn.plan.tasks);
+    return normalizedTasks.filter(t => !t.done).length;
+}
+
+/**
+ * S3-3: Get today's plan with normalized tasks
  */
 export function getTodayPlan(): DailyPlan | null {
     const checkIn = getTodayCheckIn();
-    return checkIn?.plan || null;
+    if (!checkIn?.plan) return null;
+    
+    return {
+        topOutcome: checkIn.plan.topOutcome,
+        tasks: normalizePlanTasks(checkIn.plan.tasks)
+    };
 }
 
 export interface SavePlanResult {
@@ -225,12 +285,11 @@ export interface SavePlanResult {
 }
 
 /**
- * Save today's plan (local validation only - cross-store WIP is UI's responsibility)
- * - Requires completed check-in
- * - Enforces max 3 tasks within plan (local rule)
- * - Does NOT truncate - returns error if over max
+ * S3-3: Save today's plan with PlanTask[] format
+ * FP1: Enforces MAX 3 ACTIVE (undone) tasks, NOT total tasks
+ * FP2: Normalizes tasks before saving
  */
-export function saveTodayPlan(topOutcome: string, tasks: string[]): SavePlanResult {
+export function saveTodayPlan(topOutcome: string, tasks: PlanTask[]): SavePlanResult {
     const existing = getTodayCheckIn();
     
     if (!existing || !existing.isComplete) {
@@ -238,19 +297,55 @@ export function saveTodayPlan(topOutcome: string, tasks: string[]): SavePlanResu
         return { success: false, error: 'check_in_required' };
     }
     
-    // Local enforcement: max 3 tasks in plan
-    if (tasks.length > 3) {
-        console.warn('[dailyCheckInStore] Cannot save plan: max 3 tasks allowed');
+    // FP1: Enforce max 3 ACTIVE (undone) tasks
+    const activeTasks = tasks.filter(t => !t.done);
+    if (activeTasks.length > 3) {
+        console.warn('[dailyCheckInStore] Cannot save plan: max 3 active tasks allowed');
         return { success: false, error: 'max_exceeded', max: 3 };
     }
+    
+    // Optional safety cap: total tasks <= 50 (prevent abuse)
+    if (tasks.length > 50) {
+        console.warn('[dailyCheckInStore] Cannot save plan: too many total tasks');
+        return { success: false, error: 'max_exceeded', max: 50 };
+    }
+    
+    // FP2: Normalize tasks before saving
+    const normalizedTasks = normalizePlanTasks(tasks);
     
     // Save with plan
     saveCheckIn({
         ...existing,
-        plan: { topOutcome, tasks }
+        plan: { topOutcome, tasks: normalizedTasks }
     });
     
-    console.log('[dailyCheckInStore] Plan saved:', { topOutcome, tasks });
+    console.log('[dailyCheckInStore] Plan saved:', { topOutcome, activeTasks: activeTasks.length, total: normalizedTasks.length });
     return { success: true };
+}
+
+/**
+ * S3-3: Toggle a plan task's done state
+ */
+export function togglePlanTaskDone(taskId: string): boolean {
+    const plan = getTodayPlan();
+    if (!plan) return false;
+    
+    const updatedTasks = plan.tasks.map(task =>
+        task.id === taskId ? { ...task, done: !task.done } : task
+    );
+    
+    const result = saveTodayPlan(plan.topOutcome, updatedTasks);
+    return result.success;
+}
+
+/**
+ * S3-3: Clear all completed tasks from plan
+ */
+export function clearCompletedPlanTasks(): SavePlanResult {
+    const plan = getTodayPlan();
+    if (!plan) return { success: false, error: 'check_in_required' };
+    
+    const activeTasks = plan.tasks.filter(t => !t.done);
+    return saveTodayPlan(plan.topOutcome, activeTasks);
 }
 

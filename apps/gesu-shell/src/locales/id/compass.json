@@ -164,7 +164,13 @@
         "promoteAllPartial": "Promosi Sebagian",
         "promoteAllPartialDetail": "Dipromosikan {{success}} dari {{total}} tugas. Beberapa tugas masih di rencana.",
         "promoteAllFailed": "Promosi Gagal",
-        "promoteAllFailedDetail": "Tidak dapat mempromosikan tugas. Batas tugas mungkin tercapai."
+        "promoteAllFailedDetail": "Tidak dapat mempromosikan tugas. Batas tugas mungkin tercapai.",
+        "clearCompleted": "Hapus Selesai",
+        "clearCompletedConfirm": "Hapus {{count}} tugas selesai dari rencana?",
+        "clearCompletedYes": "Hapus",
+        "clearCompletedSuccess": "Tugas selesai dihapus",
+        "cannotPromoteDone": "Tugas Sudah Selesai",
+        "cannotPromoteDoneDetail": "Tidak dapat mempromosikan tugas selesai. Hapus centang dulu."
     }
 }
 

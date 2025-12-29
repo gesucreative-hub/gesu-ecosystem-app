@@ -787,257 +787,11 @@ export function CompassPage() {
                     </div>
                 </div>
 
-                {/* 2-COLUMN DASHBOARD GRID (Option 1 - Personal | Work) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {/* 3-COLUMN LAYOUT (Responsive) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-                    {/* LEFT COLUMN - Personal (Energy, Daily Plan, Snapshots) */}
-                    <div className="space-y-6">
-
-                        {/* Energy Card - Enhanced Visuals - MOVED TO TOP */}
-                        <Card title={
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2">
-                                    <Zap size={18} className="text-amber-500" />
-                                    <span>{t('energyCalibration.title')}</span>
-                                </div>
-                                {/* Inferred Energy Badge */}
-                                <div className="flex items-center gap-1.5 group relative px-2 py-1 bg-tokens-bg rounded-md border border-tokens-border">
-                                    <span className="text-xs text-tokens-muted">{t('energyCalibration.inferred')}:</span>
-                                    <span className={`text-sm font-bold ${getEnergyColorClass(inferredEnergy.score)}`}>
-                                        {inferredEnergy.score}/10
-                                    </span>
-                                    <Info size={12} className="text-tokens-muted ml-1" />
-
-                                    {/* Tooltip */}
-                                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-tokens-bg border border-tokens-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                        <div className="text-xs font-medium text-tokens-fg mb-2 border-b border-tokens-border pb-1">
-                                            Inferred Score Factors
-                                        </div>
-                                        <div className="space-y-2">
-                                            {inferredEnergy.factors.map(factor => (
-                                                <div key={factor.id} className="flex justify-between items-center text-xs">
-                                                    <span className="text-tokens-muted">{factor.label}</span>
-                                                    <span className={`font-mono ${getEnergyColorClass(factor.value)}`}>{factor.value}/10</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="mt-2 text-[10px] text-tokens-muted italic">
-                                            Based on activity, time & tasks.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        } className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20">
-                            {/* Manual Slider (1-10) */}
-                            <div className="space-y-4 py-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-tokens-fg">{t('energyCalibration.howDoYouFeel')}</span>
-                                    <span className={`text-3xl font-black ${getEnergyColorClass(energyLevel)} transition-colors duration-300`}>
-                                        {energyLevel}
-                                    </span>
-                                </div>
-                                <div className="relative h-6 flex items-center">
-                                    <input
-                                        type="range"
-                                        min="1"
-                                        max="10"
-                                        value={energyLevel}
-                                        onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
-                                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 rounded-lg appearance-none cursor-pointer hover:h-3 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tokens-ring"
-                                    />
-                                </div>
-                                <div className="flex justify-between text-[10px] uppercase tracking-wider font-medium text-tokens-muted">
-                                    <span>{t('energyCalibration.exhausted')}</span>
-                                    <span>{t('energyCalibration.neutral')}</span>
-                                    <span>{t('energyCalibration.energized')}</span>
-                                </div>
-                            </div>
-
-                            {/* Optional Note */}
-                            <div className="space-y-2 mt-4 pt-4 border-t border-tokens-border/50">
-                                <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">{t('contextNote.label')}</label>
-                                <textarea
-                                    value={energyNote}
-                                    onChange={(e) => setEnergyNote(e.target.value)}
-                                    placeholder={t('contextNote.placeholder')}
-                                    className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 resize-none transition-shadow"
-                                    rows={2}
-                                />
-                            </div>
-                        </Card>
-
-                        {/* S3-0b: Daily Plan Card - MOVED TO LEFT COLUMN */}
-                        {isPersonalMode && todayCheckIn?.isComplete && (
-                            <Card title={
-                                <div className="flex items-center justify-between w-full">
-                                    <div className="flex items-center gap-2">
-                                        <ClipboardList size={18} className="text-amber-500" />
-                                        <span>{t('dailyPlan.title')}</span>
-                                    </div>
-                                    <Badge variant="neutral" className="ml-2">
-                                        {planTasks.length}/3 {t('dailyPlan.tasks')}
-                                    </Badge>
-                                </div>
-                            } className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20">
-                                <div className="space-y-4">
-                                    {/* Top Outcome Input */}
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
-                                            {t('dailyPlan.topOutcome')}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={planTopOutcome}
-                                            onChange={(e) => handleUpdatePlanOutcome(e.target.value)}
-                                            placeholder={t('dailyPlan.topOutcomePlaceholder')}
-                                            className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow"
-                                        />
-                                    </div>
-
-                                    {/* Tasks List */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
-                                                {t('dailyPlan.tasks')} ({activePlanTasksCount}/{planTasks.length})
-                                            </label>
-                                            <div className="flex gap-2">
-                                                {planTasks.some(t => t.done) && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={handleClearCompleted}
-                                                        icon={<Trash2 size={14} />}
-                                                    >
-                                                        {t('dailyPlan.clearCompleted')}
-                                                    </Button>
-                                                )}
-                                                {activePlanTasksCount > 0 && (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handlePromoteAllPlanTasks}
-                                                        icon={<ArrowRight size={14} />}
-                                                    >
-                                                        {t('dailyPlan.promoteAll')}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        {planTasks.length > 0 ? (
-                                            <div className="space-y-2">
-                                                {planTasks.map((task) => (
-                                                    <div
-                                                        key={task.id}
-                                                        className={`group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-amber-500/50 ${task.done ? 'opacity-60' : ''}`}
-                                                    >
-                                                        {/* Checkbox */}
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={task.done}
-                                                            onChange={() => handleTogglePlanTaskDone(task.id)}
-                                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-amber-500 focus:ring-amber-500/20 bg-tokens-bg cursor-pointer transition-colors"
-                                                        />
-                                                        
-                                                        {/* Task text */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <span className={`text-sm font-medium text-tokens-fg truncate block ${task.done ? 'line-through' : ''}`}>
-                                                                {task.text}
-                                                            </span>
-                                                        </div>
-                                                        
-                                                        {/* Actions (only show if not done) */}
-                                                        {!task.done && (
-                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={() => handleRemovePlanTask(task.id)}
-                                                                    className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
-                                                                    title={t('dailyPlan.removeTask')}
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handlePromotePlanTask(task)}
-                                                                    icon={<ArrowRight size={14} />}
-                                                                    title={t('dailyPlan.promoteToHub')}
-                                                                >
-                                                                    {t('dailyPlan.promote')}
-                                                                </Button>
-                                                                <Button
-                                                                    variant="secondary"
-                                                                    size="sm"
-                                                                    onClick={() => handleStartFocusFromPlan(task.text, planTasks.indexOf(task))}
-                                                                >
-                                                                    {t('dailyPlan.startFocus')}
-                                                                </Button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-4 bg-tokens-panel2/50 rounded-lg border border-tokens-border border-dashed">
-                                                <p className="text-sm text-tokens-muted">{t('dailyPlan.noTasks')}</p>
-                                            </div>
-                                        )}
-
-                                        {/* Add Task Input */}
-                                        {planTasks.length < 3 && (
-                                            <div className="flex gap-2 mt-2">
-                                                <input
-                                                    type="text"
-                                                    value={planNewTaskInput}
-                                                    onChange={(e) => setPlanNewTaskInput(e.target.value)}
-                                                    onKeyDown={(e) => e.key === 'Enter' && handleAddPlanTask()}
-                                                    placeholder={t('dailyPlan.taskPlaceholder')}
-                                                    disabled={!canAddPlanTask}
-                                                    className="flex-1 px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                                                />
-                                                <Button
-                                                    variant="secondary"
-                                                    size="md"
-                                                    onClick={handleAddPlanTask}
-                                                    disabled={!canAddPlanTask || !planNewTaskInput.trim()}
-                                                    icon={<Plus size={16} />}
-                                                >
-                                                    {t('dailyPlan.addTask')}
-                                                </Button>
-                                            </div>
-                                        )}
-
-                                        {/* WIP Limit Warning */}
-                                        {!canAddAnyTask() && planTasks.length < 3 && (
-                                            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                                                <p className="text-xs text-amber-600 dark:text-amber-400">
-                                                    {t('dailyPlan.wipBlocked', { count: getRemainingWipSlots() })}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </Card>
-                        )}
-
-                        {/* Show hint if check-in not complete (Personal only) */}
-                        {isPersonalMode && (!todayCheckIn || !todayCheckIn.isComplete) && (
-                            <Card title={
-                                <div className="flex items-center gap-2">
-                                    <ClipboardList size={18} className="text-tokens-muted" />
-                                    <span className="text-tokens-muted">{t('dailyPlan.title')}</span>
-                                </div>
-                            } className="border-amber-200/50 dark:border-amber-800/50">
-                                <div className="text-center py-6">
-                                    <p className="text-sm text-tokens-muted">{t('dailyPlan.completeCheckInFirst')}</p>
-                                </div>
-                            </Card>
-                        )}
-
-                    </div>
-
-                    {/* RIGHT COLUMN - Work (Project Hub, Focus First, Finish Mode) */}
-                    <div className="space-y-6">
+                    {/* LEFT COLUMN (Main Action & Inputs) - Spans 7 cols */}
+                    <div className="lg:col-span-7 space-y-6">
 
                         {/* S1-2b: Focus First Card */}
                         <Card
@@ -1321,18 +1075,91 @@ export function CompassPage() {
                             </Card>
                         )}
 
-                        {/* Project Hub Tasks (Today) - Blue styling for Work */}
+                        {/* Energy Card - Enhanced Visuals */}
                         <Card title={
                             <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-2">
-                                    <Briefcase size={18} className="text-blue-500" />
+                                    <Zap size={18} className="text-tokens-brand-DEFAULT" />
+                                    <span>{t('energyCalibration.title')}</span>
+                                </div>
+                                {/* Inferred Energy Badge */}
+                                <div className="flex items-center gap-1.5 group relative px-2 py-1 bg-tokens-bg rounded-md border border-tokens-border">
+                                    <span className="text-xs text-tokens-muted">{t('energyCalibration.inferred')}:</span>
+                                    <span className={`text-sm font-bold ${getEnergyColorClass(inferredEnergy.score)}`}>
+                                        {inferredEnergy.score}/10
+                                    </span>
+                                    <Info size={12} className="text-tokens-muted ml-1" />
+
+                                    {/* Tooltip */}
+                                    <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-tokens-bg border border-tokens-border rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                        <div className="text-xs font-medium text-tokens-fg mb-2 border-b border-tokens-border pb-1">
+                                            Inferred Score Factors
+                                        </div>
+                                        <div className="space-y-2">
+                                            {inferredEnergy.factors.map(factor => (
+                                                <div key={factor.id} className="flex justify-between items-center text-xs">
+                                                    <span className="text-tokens-muted">{factor.label}</span>
+                                                    <span className={`font-mono ${getEnergyColorClass(factor.value)}`}>{factor.value}/10</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-2 text-[10px] text-tokens-muted italic">
+                                            Based on activity, time & tasks.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }>
+                            {/* Manual Slider (1-10) */}
+                            <div className="space-y-4 py-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-tokens-fg">{t('energyCalibration.howDoYouFeel')}</span>
+                                    <span className={`text-3xl font-black ${getEnergyColorClass(energyLevel)} transition-colors duration-300`}>
+                                        {energyLevel}
+                                    </span>
+                                </div>
+                                <div className="relative h-6 flex items-center">
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        value={energyLevel}
+                                        onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
+                                        className="w-full h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 rounded-lg appearance-none cursor-pointer hover:h-3 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tokens-ring"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-[10px] uppercase tracking-wider font-medium text-tokens-muted">
+                                    <span>{t('energyCalibration.exhausted')}</span>
+                                    <span>{t('energyCalibration.neutral')}</span>
+                                    <span>{t('energyCalibration.energized')}</span>
+                                </div>
+                            </div>
+
+                            {/* Optional Note */}
+                            <div className="space-y-2 mt-4 pt-4 border-t border-tokens-border/50">
+                                <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">{t('contextNote.label')}</label>
+                                <textarea
+                                    value={energyNote}
+                                    onChange={(e) => setEnergyNote(e.target.value)}
+                                    placeholder={t('contextNote.placeholder')}
+                                    className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 resize-none transition-shadow"
+                                    rows={2}
+                                />
+                            </div>
+                        </Card>
+
+                        {/* Project Hub Tasks (Today) */}
+                        <Card title={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                    <Briefcase size={18} className="text-tokens-brand-DEFAULT" />
                                     <span>{t('projectHubTasks.title')}</span>
                                 </div>
                                 <Badge variant="neutral" className="ml-2">
                                     {projectHubTasks.filter(t => !t.done).length} {t('tasks.remaining')}
                                 </Badge>
                             </div>
-                        } className="border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/20">
+                        }>
                             {/* Active Tasks */}
                             {projectHubTasks.filter(t => !t.done).length > 0 ? (
                                 <div className="flex flex-col gap-2">
@@ -1428,6 +1255,178 @@ export function CompassPage() {
                                 </div>
                             )}
                         </Card>
+
+                        {/* S3-0b: Daily Plan Card - Personal Persona Only, After Check-in Complete */}
+                        {isPersonalMode && todayCheckIn?.isComplete && (
+                            <Card title={
+                                <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2">
+                                        <ClipboardList size={18} className="text-tokens-brand-DEFAULT" />
+                                        <span>{t('dailyPlan.title')}</span>
+                                    </div>
+                                    <Badge variant="neutral" className="ml-2">
+                                        {planTasks.length}/3 {t('dailyPlan.tasks')}
+                                    </Badge>
+                                </div>
+                            }>
+                                <div className="space-y-4">
+                                    {/* Top Outcome Input */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
+                                            {t('dailyPlan.topOutcome')}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={planTopOutcome}
+                                            onChange={(e) => handleUpdatePlanOutcome(e.target.value)}
+                                            placeholder={t('dailyPlan.topOutcomePlaceholder')}
+                                            className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow"
+                                        />
+                                    </div>
+
+                                    {/* Tasks List */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-medium text-tokens-muted uppercase tracking-wide">
+                                                {t('dailyPlan.tasks')} ({activePlanTasksCount}/{planTasks.length})
+                                            </label>
+                                            <div className="flex gap-2">
+                                                {planTasks.some(t => t.done) && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={handleClearCompleted}
+                                                        icon={<Trash2 size={14} />}
+                                                    >
+                                                        {t('dailyPlan.clearCompleted')}
+                                                    </Button>
+                                                )}
+                                                {activePlanTasksCount > 0 && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handlePromoteAllPlanTasks}
+                                                        icon={<ArrowRight size={14} />}
+                                                    >
+                                                        {t('dailyPlan.promoteAll')}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        {planTasks.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {planTasks.map((task) => (
+                                                    <div
+                                                        key={task.id}
+                                                        className={`group flex items-start gap-3 p-3 rounded-lg border transition-all bg-tokens-bg border-tokens-border hover:border-tokens-brand-DEFAULT/50 ${task.done ? 'opacity-60' : ''}`}
+                                                    >
+                                                        {/* Checkbox */}
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={task.done}
+                                                            onChange={() => handleTogglePlanTaskDone(task.id)}
+                                                            className="mt-0.5 w-5 h-5 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/20 bg-tokens-bg cursor-pointer transition-colors"
+                                                        />
+                                                        
+                                                        {/* Task text */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className={`text-sm font-medium text-tokens-fg truncate block ${task.done ? 'line-through' : ''}`}>
+                                                                {task.text}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        {/* Actions (only show if not done) */}
+                                                        {!task.done && (
+                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                   onClick={() => handleRemovePlanTask(task.id)}
+                                                                    className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
+                                                                    title={t('dailyPlan.removeTask')}
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handlePromotePlanTask(task)}
+                                                                    icon={<ArrowRight size={14} />}
+                                                                    title={t('dailyPlan.promoteToHub')}
+                                                                >
+                                                                    {t('dailyPlan.promote')}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="secondary"
+                                                                    size="sm"
+                                                                    onClick={() => handleStartFocusFromPlan(task.text, planTasks.indexOf(task))}
+                                                                >
+                                                                    {t('dailyPlan.startFocus')}
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4 bg-tokens-panel2/50 rounded-lg border border-tokens-border border-dashed">
+                                                <p className="text-sm text-tokens-muted">{t('dailyPlan.noTasks')}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Add Task Input */}
+                                        {planTasks.length < 3 && (
+                                            <div className="flex gap-2 mt-2">
+                                                <input
+                                                    type="text"
+                                                    value={planNewTaskInput}
+                                                    onChange={(e) => setPlanNewTaskInput(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleAddPlanTask()}
+                                                    placeholder={t('dailyPlan.taskPlaceholder')}
+                                                    disabled={!canAddPlanTask}
+                                                    className="flex-1 px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                                                />
+                                                <Button
+                                                    variant="secondary"
+                                                    size="md"
+                                                    onClick={handleAddPlanTask}
+                                                    disabled={!canAddPlanTask || !planNewTaskInput.trim()}
+                                                    icon={<Plus size={16} />}
+                                                >
+                                                    {t('dailyPlan.addTask')}
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {/* WIP Limit Warning */}
+                                        {!canAddAnyTask() && planTasks.length < 3 && (
+                                            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                    {t('dailyPlan.wipBlocked', { count: getRemainingWipSlots() })}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Show hint if check-in not complete (Personal only) */}
+                        {isPersonalMode && (!todayCheckIn || !todayCheckIn.isComplete) && (
+                            <Card title={
+                                <div className="flex items-center gap-2">
+                                    <ClipboardList size={18} className="text-tokens-muted" />
+                                    <span className="text-tokens-muted">{t('dailyPlan.title')}</span>
+                                </div>
+                            }>
+                                <div className="text-center py-6">
+                                    <p className="text-sm text-tokens-muted">{t('dailyPlan.completeCheckInFirst')}</p>
+                                </div>
+                            </Card>
+                        )}
+                    </div>
+
+                    {/* RIGHT COLUMN (Visualization & History) - Spans 5 cols */}
+                    <div className="lg:col-span-5 space-y-6">
 
                         {/* Focus Radar Chart */}
                         <Card title={

@@ -41,11 +41,25 @@
         "delete": "Hapus",
         "deleteConfirm": "Hapus snapshot ini?",
         "noSnapshots": "Belum ada snapshot",
-        "recentHistory": "Riwayat Terbaru"
+        "recentHistory": "Riwayat Terbaru",
+        "sessions": "sesi"
     },
     "insights": {
         "burnoutRisk": "Risiko Burnout",
-        "flowState": "Flow State Terdeteksi"
+        "flowState": "Flow State Terdeteksi",
+        "energyTrend": "Tren Energi"
+    },
+    "tabs": {
+        "today": "📋 Hari Ini",
+        "energy": "⚡ Energi",
+        "focus": "🎯 Fokus",
+        "history": "📊 Riwayat"
+    },
+    "history": {
+        "today": "Hari Ini",
+        "yesterday": "Kemarin",
+        "lastWeek": "Minggu Lalu",
+        "older": "Lebih Lama"
     },
     "status": {
         "savingToFiles": "Menyimpan ke file lokal",

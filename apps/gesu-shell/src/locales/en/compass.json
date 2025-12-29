@@ -80,6 +80,9 @@
         "noSnapshots": "No snapshots to delete for this period.",
         "snapshotsDeleted": "{{count}} snapshots deleted."
     },
+    "projectHubTasks": {
+        "title": "Project Hub Tasks"
+    },
     "tasks": {
         "title": "Tasks for Today",
         "noTasks": "No tasks for today",

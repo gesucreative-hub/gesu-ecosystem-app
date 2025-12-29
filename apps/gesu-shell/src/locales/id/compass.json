@@ -80,6 +80,9 @@
         "noSnapshots": "Tidak ada snapshot untuk dihapus pada periode ini.",
         "snapshotsDeleted": "{{count}} snapshot dihapus."
     },
+    "projectHubTasks": {
+        "title": "Tugas Project Hub"
+    },
     "tasks": {
         "title": "Tugas Hari Ini",
         "noTasks": "Tidak ada tugas untuk hari ini",

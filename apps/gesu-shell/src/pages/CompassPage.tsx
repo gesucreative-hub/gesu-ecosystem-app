@@ -1153,7 +1153,7 @@ export function CompassPage() {
                             <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-2">
                                     <Briefcase size={18} className="text-tokens-brand-DEFAULT" />
-                                    <span>{t('tasks.title')}</span>
+                                    <span>{t('projectHubTasks.title')}</span>
                                 </div>
                                 <Badge variant="neutral" className="ml-2">
                                     {projectHubTasks.filter(t => !t.done).length} {t('tasks.remaining')}

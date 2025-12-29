@@ -186,7 +186,9 @@
         "actionHints": "Petunjuk Aksi",
         "actionHintsHelp": "Langkah praktis atau tips untuk memandu eksekusi langkah ini",
         "hintPlaceholder": "Teks petunjuk...",
-        "addHint": "Tambah Petunjuk"
+        "addHint": "Tambah Petunjuk",
+        "moveUp": "Pindah ke atas",
+        "moveDown": "Pindah ke bawah"
     },
     "stepDetail": {
         "whyThisStep": "Mengapa Langkah Ini Ada",

@@ -10,7 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronRight, Trash2, Search, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
+import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronUp, ChevronRight, Trash2, Search, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import {
@@ -498,6 +498,28 @@ export function StandardsTab() {
 
         const newHints = [...node.actionHints];
         newHints[index] = value;
+        updateNodeField(nodeId, 'actionHints', newHints);
+    }, [data, updateNodeField]);
+
+    // S4-3: Move action hint up
+    const moveHintUp = useCallback((nodeId: string, index: number) => {
+        if (!data || index === 0) return;
+        const node = data.blueprints.flatMap(b => b.nodes).find(n => n.id === nodeId);
+        if (!node?.actionHints || index >= node.actionHints.length) return;
+
+        const newHints = [...node.actionHints];
+        [newHints[index - 1], newHints[index]] = [newHints[index], newHints[index - 1]];
+        updateNodeField(nodeId, 'actionHints', newHints);
+    }, [data, updateNodeField]);
+
+    // S4-3: Move action hint down
+    const moveHintDown = useCallback((nodeId: string, index: number) => {
+        if (!data) return;
+        const node = data.blueprints.flatMap(b => b.nodes).find(n => n.id === nodeId);
+        if (!node?.actionHints || index >= node.actionHints.length - 1) return;
+
+        const newHints = [...node.actionHints];
+        [newHints[index], newHints[index + 1]] = [newHints[index + 1], newHints[index]];
         updateNodeField(nodeId, 'actionHints', newHints);
     }, [data, updateNodeField]);
 
@@ -1493,26 +1515,60 @@ export function StandardsTab() {
 
                                     {/* Hints list */}
                                     <div className="space-y-1.5">
-                                        {(selectedNode.actionHints || []).map((hint, index) => (
-                                            <div key={index} className="flex items-start gap-2">
-                                                <span className="text-xs text-tokens-muted mt-2 min-w-[1.5rem]">
-                                                    {index + 1}.
-                                                </span>
-                                                <Input
-                                                    value={hint}
-                                                    onChange={(e) => updateActionHint(selectedNode.id, index, e.target.value)}
-                                                    placeholder={t('initiator:standards.hintPlaceholder', 'Hint text...')}
-                                                    className="flex-1 text-sm"
-                                                />
-                                                <button
-                                                    onClick={() => removeActionHint(selectedNode.id, index)}
-                                                    className="p-1 text-tokens-muted hover:text-red-500 transition-colors mt-1"
-                                                    title={t('common:remove', 'Remove')}
-                                                >
-                                                    <X size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
+                                        {(selectedNode.actionHints || []).map((hint, index) => {
+                                            const isFirst = index === 0;
+                                            const isLast = index === (selectedNode.actionHints?.length || 1) - 1;
+                                            
+                                            return (
+                                                <div key={index} className="flex items-start gap-2">
+                                                    <span className="text-xs text-tokens-muted mt-2 min-w-[1.5rem]">
+                                                        {index + 1}.
+                                                    </span>
+                                                    
+                                                    {/* S4-3: Reorder buttons */}
+                                                    <div className="flex flex-col gap-0.5 mt-1">
+                                                        <button
+                                                            onClick={() => moveHintUp(selectedNode.id, index)}
+                                                            disabled={isFirst}
+                                                            className={`p-0.5 rounded text-tokens-muted ${
+                                                                isFirst 
+                                                                    ? 'opacity-30 cursor-not-allowed' 
+                                                                    : 'hover:bg-tokens-panel2 hover:text-tokens-fg'
+                                                            }`}
+                                                            title={t('initiator:standards.moveUp', 'Move up')}
+                                                        >
+                                                            <ChevronUp size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => moveHintDown(selectedNode.id, index)}
+                                                            disabled={isLast}
+                                                            className={`p-0.5 rounded text-tokens-muted ${
+                                                                isLast 
+                                                                    ? 'opacity-30 cursor-not-allowed' 
+                                                                    : 'hover:bg-tokens-panel2 hover:text-tokens-fg'
+                                                            }`}
+                                                            title={t('initiator:standards.moveDown', 'Move down')}
+                                                        >
+                                                            <ChevronDown size={12} />
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    <Input
+                                                        value={hint}
+                                                        onChange={(e) => updateActionHint(selectedNode.id, index, e.target.value)}
+                                                        placeholder={t('initiator:standards.hintPlaceholder', 'Hint text...')}
+                                                        className="flex-1 text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={() => removeActionHint(selectedNode.id, index)}
+                                                        className="p-1 text-tokens-muted hover:text-red-500 transition-colors mt-1"
+                                                        title={t('common:remove', 'Remove')}
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Add hint button */}

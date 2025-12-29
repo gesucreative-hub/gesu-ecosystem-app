@@ -184,7 +184,9 @@
         "actionHints": "Action Hints",
         "actionHintsHelp": "Practical steps or tips to guide execution of this step",
         "hintPlaceholder": "Hint text...",
-        "addHint": "Add Hint"
+        "addHint": "Add Hint",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
     },
     "stepDetail": {
         "whyThisStep": "Why This Step Exists",

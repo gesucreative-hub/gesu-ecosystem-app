@@ -7,6 +7,7 @@
 - Completed: **S4-0 — Workflow Action Hints (Read-Only)** ✅ DONE (2025-12-29)
 - Completed: **S4-1 — Workflow Action Hints (Editable + Persisted)** ✅ DONE (2025-12-29)
 - Completed: **S4-2 — Action Hint → Add to Today Task** ✅ DONE (2025-12-29)
+- Completed: **S4-3 — Action Hints Reorder (Up/Down)** ✅ DONE (2025-12-29)
 
 ---
 
@@ -1586,6 +1587,50 @@ Evidence:
 - [x] A5: Remove one task → can add hint again
 - [x] R1: DoD send-to-today still works
 - [x] R2: Action hints display unchanged
+
+**Known Issues**: None
+
+---
+
+### S4-3 — Action Hints Reorder (Up/Down) — ✅ IMPLEMENTED
+
+**Completed**: 2025-12-29
+
+Evidence:
+
+- Commit: **979166d** — "S4-3: reorder action hints"
+- Files:
+  - `StandardsTab.tsx` (+60 lines) - Reorder handlers + Up/Down buttons
+  - `locales/en/initiator.json` (+2 lines) - Move labels
+  - `locales/id/initiator.json` (+2 lines) - Indonesian
+
+**Feature Summary**:
+
+- Up/Down buttons per action hint in blueprint editor (StandardsTab)
+- Move up swaps with previous, move down swaps with next
+- Persists order via existing save pipeline (updateNodeField + auto-save)
+- Disabled states: Up disabled on first, Down disabled on last, both disabled when only one hint
+- Order verified in StepDetailPanel after reload and project creation
+
+**QA Results** (Manual verification):
+
+Reorder Tests:
+
+- [x] R1: Add 3 hints (A, B, C), move B up → Order: B, A, C
+- [x] R2: Move A down → Order: B, C, A
+- [x] R3: Reload page → Order preserved
+- [x] R4: Create project → workflow → step detail → Order: B, C, A
+
+Edge Cases:
+
+- [x] E1: Click Up on first → Disabled, no action
+- [x] E2: Click Down on last → Disabled, no action
+- [x] E3: Single hint → Both disabled
+
+Regression:
+
+- [x] RG1: Add/remove/edit hints → Still works
+- [x] RG2: DoD/tools editing → Unchanged
 
 **Known Issues**: None
 

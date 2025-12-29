@@ -1308,11 +1308,12 @@ Regression Tests:
 
 Evidence:
 
-- Commit: **7d6dcad** — "S3-1: promote daily plan tasks to Project Hub (move semantics)"
+- Commit: **2a629ea** — "S3-1: promote daily plan tasks to Project Hub (move semantics)"
 - Files:
   - `CompassPage.tsx` (+50 lines) - handlePromotePlanTask with move semantics + UI button
   - `locales/en/compass.json` (+5 keys) - promote button labels and error messages
   - `locales/id/compass.json` (+5 keys) - Indonesian translations
+- **Note**: Evidence reconciled on 2025-12-29. Original commit 7d6dcad was amended with commit hash update, resulting in final commit 2a629ea.
 
 **Feature Summary**:
 

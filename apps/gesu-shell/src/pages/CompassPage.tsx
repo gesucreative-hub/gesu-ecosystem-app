@@ -787,11 +787,11 @@ export function CompassPage() {
                     </div>
                 </div>
 
-                {/* 3-COLUMN LAYOUT (Responsive) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {/* 2-COLUMN DASHBOARD GRID (Option 1 - Personal | Work) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-                    {/* LEFT COLUMN (Main Action & Inputs) - Spans 7 cols */}
-                    <div className="lg:col-span-7 space-y-6">
+                    {/* LEFT COLUMN - Personal (Energy, Daily Plan, Snapshots) */}
+                    <div className="space-y-6">
 
                         {/* S1-2b: Focus First Card */}
                         <Card
@@ -1425,8 +1425,8 @@ export function CompassPage() {
                         )}
                     </div>
 
-                    {/* RIGHT COLUMN (Visualization & History) - Spans 5 cols */}
-                    <div className="lg:col-span-5 space-y-6">
+                    {/* RIGHT COLUMN - Work (Project Hub, Focus First, Finish Mode) */}
+                    <div className="space-y-6">
 
                         {/* Focus Radar Chart */}
                         <Card title={

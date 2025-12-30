@@ -1,6 +1,7 @@
 # Gesu Ecosystem - Current State Document
 
 **Generated**: 2025-12-26  
+**Last Updated**: 2025-12-29 (S2 Persona Split + S3-0a Daily Check-in Fix)  
 **Purpose**: Evidence-based 1:1 snapshot of the Gesu Ecosystem as it exists today  
 **Scope**: Read-only analysis - no behavior changes
 
@@ -46,17 +47,19 @@ Gesu Ecosystem is a **desktop productivity application** for creative profession
 
 ### Current Maturity Snapshot
 
-| Module           | Status         | Evidence                                                  |
-| ---------------- | -------------- | --------------------------------------------------------- |
-| **Compass**      | ✅ Verified    | Browser QA + i18n complete, file-backed snapshots working |
-| **Project Hub**  | ✅ Verified    | Blueprint/template system working, nameKey i18n done      |
-| **Media Suite**  | ✅ Verified    | Job engine tested, yt-dlp/ffmpeg integration working      |
-| **Refocus**      | ✅ Verified    | Protocols localized, completion flow functional           |
-| **Settings**     | ✅ Verified    | External tools config, path management functional         |
-| **Timer**        | ✅ Verified    | Global singleton, cross-page persistence                  |
-| **Activity**     | ✅ Implemented | Heatmap/charts render, session tracking via SQLite        |
-| **Gamification** | ✅ Implemented | XP/level system working, leaderboard less tested          |
-| **Dashboard**    | ✅ Implemented | Widgets render, less integration testing                  |
+| Module             | Status         | Evidence                                                  |
+| ------------------ | -------------- | --------------------------------------------------------- |
+| **Compass**        | ✅ Verified    | Browser QA + i18n complete, file-backed snapshots working |
+| **Project Hub**    | ✅ Verified    | Blueprint/template system working, nameKey i18n done      |
+| **Media Suite**    | ✅ Verified    | Job engine tested, yt-dlp/ffmpeg integration working      |
+| **Refocus**        | ✅ Verified    | Protocols localized, completion flow functional           |
+| **Settings**       | ✅ Verified    | External tools config, path management functional         |
+| **Timer**          | ✅ Verified    | Global singleton, cross-page persistence                  |
+| **Activity**       | ✅ Implemented | Heatmap/charts render, session tracking via SQLite        |
+| **Gamification**   | ✅ Implemented | XP/level system working, leaderboard less tested          |
+| **Dashboard**      | ✅ Implemented | Widgets render, persona filtering added (S2-5)            |
+| **Persona Split**  | ✅ Implemented | Personal/Business contexts, nav filtering (S2 complete)   |
+| **Daily Check-in** | ✅ Implemented | Banner + completion state + persona guard (S3-0a)         |
 
 ### Top 10 Facts That Define the System
 
@@ -70,16 +73,18 @@ Gesu Ecosystem is a **desktop productivity application** for creative profession
 8. **11 i18n namespaces** (en/id) with English fallback (Evidence: `config/i18n.ts`)
 9. **AI integration** is local-first via Ollama (optional, suggestion-only)
 10. **BACKUP_ROOT defense** - `assertPathWithin()` rejects writes to backup directories
+11. **Persona Split (S2)** - Personal/Business contexts with `activePersona` in localStorage, nav filtering, dashboard isolation
+12. **WIP Limit (S1)** - Global MAX 3 active tasks enforced via `guardrails.ts` + `taskGuardrail.ts`
 
 ### Top 5 Fundamental Gaps
 
-| #   | Gap                                         | Evidence                                                              | Risk                                 |
-| --- | ------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------ |
-| 1   | **No explicit MAX_ACTIVE_TASKS=3 constant** | `grep -r "MAX_ACTIVE" → 0 results`                                    | UX guardrail not code-enforced       |
-| 2   | **Distraction shield incomplete**           | No "DistractionModal" found; timer overlay may exist but undocumented | Users may navigate away during focus |
-| 3   | **Large job history has no pagination**     | `getRecentJobs()` returns all jobs (RISK_REGISTER.md Risk 9)          | Performance on heavy use             |
-| 4   | **Schema migration is lossy on failure**    | Unknown versions reset to empty (projectStore.ts:101-103)             | Data loss on version mismatch        |
-| 5   | **Cosmetic modal i18n incomplete**          | ~11 EN strings in gamification cosmetics (RISK_REGISTER.md Risk 10)   | Minor UX for ID users                |
+| #   | Gap                                         | Evidence                                                            | Risk                               | Status          |
+| --- | ------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------- | --------------- |
+| 1   | ~~No explicit MAX_ACTIVE_TASKS=3 constant~~ | `guardrails.ts:9` → `MAX_ACTIVE_ITEMS = 3`                          | ~~UX guardrail not code-enforced~~ | ✅ FIXED (S1-1) |
+| 2   | ~~Distraction shield incomplete~~           | `CommandPaletteModal` + `FOCUS_ROUTE_POLICY` in guardrails.ts       | ~~Users may navigate away~~        | ✅ FIXED (S1-1) |
+| 3   | **Large job history has no pagination**     | `getRecentJobs()` returns all jobs (RISK_REGISTER.md Risk 9)        | Performance on heavy use           | ⚠️ OPEN         |
+| 4   | **Schema migration is lossy on failure**    | Unknown versions reset to empty (projectStore.ts:101-103)           | Data loss on version mismatch      | ⚠️ OPEN         |
+| 5   | **Cosmetic modal i18n incomplete**          | ~11 EN strings in gamification cosmetics (RISK_REGISTER.md Risk 10) | Minor UX for ID users              | ⚠️ OPEN         |
 
 ---
 

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList, ArrowRight } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList, ArrowRight, History, TrendingUp, ChevronRight, Activity, RefreshCw } from 'lucide-react';
 import { calculateInferredEnergy, getEnergyColorClass } from '../utils/inferredEnergy';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
+import { Tabs } from '../components/Tabs';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { useAlertDialog } from '../components/AlertDialog';
 import { ESparkline } from '../components/charts/ESparkline';
@@ -123,6 +124,9 @@ export function CompassPage() {
 
     // Project Hub Tasks State
     const [projectHubTasks, setProjectHubTasks] = useState<ProjectHubTask[]>([]);
+
+    // Tab Navigation State (Option 3: Tab-Based Workspace)
+    const [activeTab, setActiveTab] = useState<'today' | 'energy' | 'focus' | 'history'>('today');
 
     // Load project hub tasks on mount and refresh periodically
     useEffect(() => {
@@ -728,9 +732,6 @@ export function CompassPage() {
                                 <span className="text-xs font-semibold text-tokens-brand-DEFAULT">{t('insights.flowState')}</span>
                             </div>
                         )}
-                        <Link to="/initiator?tab=workflow" className="ml-2 px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
-                            ← {t('common:nav.projectHub', 'Workflow')}
-                        </Link>
                         
                         {/* Clear Data Dropdown */}
                         <div className="relative ml-2">
@@ -784,11 +785,30 @@ export function CompassPage() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Project Hub Link - Moved to end */}
+                        <Link to="/initiator?tab=workflow" className="ml-2 px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">
+                            ← {t('common:nav.projectHub', 'Workflow')}
+                        </Link>
                     </div>
                 </div>
 
-                {/* 3-COLUMN LAYOUT (Responsive) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                {/* TAB NAVIGATION - Pill Style */}
+                <Tabs
+                    tabs={[
+                        { id: 'today', label: t('tabs.today', 'Today'), icon: <ClipboardList size={16} /> },
+                        { id: 'energy', label: t('tabs.energy', 'Energy'), icon: <Zap size={16} /> },
+                        { id: 'focus', label: t('tabs.focus', 'Focus'), icon: <Target size={16} /> },
+                        { id: 'history', label: t('tabs.history', 'History'), icon: <History size={16} /> }
+                    ]}
+                    activeTab={activeTab}
+                    onChange={(id) => setActiveTab(id as typeof activeTab)}
+                    className="mb-6"
+                />
+
+                {/* === TODAY TAB === */}
+                {activeTab === 'today' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
                     {/* LEFT COLUMN (Main Action & Inputs) - Spans 7 cols */}
                     <div className="lg:col-span-7 space-y-6">
@@ -1625,7 +1645,325 @@ export function CompassPage() {
 
                     </div>
                 </div>
-            </PageContainer >
+                )}
+
+                {/* === ENERGY TAB === */}
+                {activeTab === 'energy' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Energy Calibration Card */}
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Zap size={20} className="text-amber-500" />
+                                <span>{t('energyCalibration.title')}</span>
+                            </div>
+                        } className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20">
+                            <div className="space-y-6 py-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-lg font-medium text-tokens-fg">{t('energyCalibration.howDoYouFeel')}</span>
+                                    <span className={`text-5xl font-black ${getEnergyColorClass(energyLevel)} transition-colors duration-300`}>
+                                        {energyLevel}
+                                    </span>
+                                </div>
+                                <div className="relative h-8 flex items-center">
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        value={energyLevel}
+                                        onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
+                                        className="w-full h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-emerald-500 rounded-lg appearance-none cursor-pointer hover:h-4 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tokens-ring"
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs uppercase tracking-wider font-medium text-tokens-muted">
+                                    <span>{t('energyCalibration.exhausted')}</span>
+                                    <span>{t('energyCalibration.neutral')}</span>
+                                    <span>{t('energyCalibration.energized')}</span>
+                                </div>
+                            </div>
+                            <div className="space-y-2 mt-6 pt-6 border-t border-tokens-border/50">
+                                <label className="text-sm font-medium text-tokens-muted">{t('contextNote.label')}</label>
+                                <textarea
+                                    value={energyNote}
+                                    onChange={(e) => setEnergyNote(e.target.value)}
+                                    placeholder={t('contextNote.placeholder')}
+                                    className="w-full px-4 py-3 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50 resize-none transition-shadow"
+                                    rows={3}
+                                />
+                            </div>
+                        </Card>
+
+                        {/* Inferred Energy Card */}
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Activity size={18} className="text-tokens-brand-DEFAULT" />
+                                <span>{t('energyCalibration.inferred', 'Inferred Energy')}</span>
+                            </div>
+                        }>
+                            <div className="grid grid-cols-3 gap-4">
+                                {inferredEnergy.factors.map(factor => (
+                                    <div key={factor.id} className="text-center p-4 bg-tokens-bg rounded-lg border border-tokens-border">
+                                        <div className={`text-2xl font-bold ${getEnergyColorClass(factor.value)}`}>{factor.value}/10</div>
+                                        <div className="text-xs text-tokens-muted mt-1">{factor.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-4 text-center">
+                                <span className="text-tokens-muted text-sm">Composite Score: </span>
+                                <span className={`text-xl font-bold ${getEnergyColorClass(inferredEnergy.score)}`}>
+                                    {inferredEnergy.score}/10
+                                </span>
+                            </div>
+                        </Card>
+
+                        {/* Save Snapshot Button */}
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Database size={18} className="text-tokens-brand-DEFAULT" />
+                                <span>{t('snapshot.title')}</span>
+                            </div>
+                        }>
+                            <div className="text-center py-4">
+                                <p className="text-sm text-tokens-muted mb-4">
+                                    {t('snapshot.recordDesc', { energy: energyLevel, focus: derivedFocusScore })}
+                                </p>
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
+                                    icon={<Database size={18} />}
+                                    onClick={saveSnapshot}
+                                    disabled={snapshotsLoading}
+                                >
+                                    {snapshotsLoading ? t('snapshot.logging') : t('snapshot.log')}
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+                {/* === FOCUS TAB === */}
+                {activeTab === 'focus' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Focus First Card */}
+                        <Card title={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                    <Rocket size={20} className="text-tokens-brand-DEFAULT" />
+                                    <span>{t('focusFirst.title')}</span>
+                                </div>
+                                {timerActive && (
+                                    <Badge variant="success" className="animate-pulse">
+                                        {t('focusFirst.focusActive')}
+                                    </Badge>
+                                )}
+                            </div>
+                        } className="border-tokens-brand-DEFAULT/30">
+                            <div className="space-y-4">
+                                {/* Timer Active State */}
+                                {timerActive && timerState.taskContext && (
+                                    <div className="bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-lg text-center">
+                                        <p className="text-xs text-tokens-muted mb-2">{t('focusFirst.focusActiveDesc')}</p>
+                                        <p className="text-2xl font-bold text-tokens-fg">{timerState.taskContext.taskTitle}</p>
+                                        {timerState.taskContext.projectName && (
+                                            <p className="text-sm text-tokens-muted mt-1">{timerState.taskContext.projectName}</p>
+                                        )}
+                                        <div className="text-4xl font-mono font-bold text-emerald-500 mt-4">
+                                            {Math.floor(timerState.remainingSeconds / 60)}:{String(timerState.remainingSeconds % 60).padStart(2, '0')}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Focus Setup */}
+                                {!timerActive && (
+                                    <>
+                                        <div>
+                                            <label className="text-xs font-bold text-tokens-muted uppercase tracking-wider mb-2 block">
+                                                {t('focusFirst.step1')}
+                                            </label>
+                                            <div className="flex gap-2 mb-3">
+                                                <button
+                                                    onClick={() => { setFocusFirstMode('select'); setSelectedFocusType('project'); }}
+                                                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                                                        focusFirstMode === 'select' 
+                                                            ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT text-tokens-brand-DEFAULT' 
+                                                            : 'bg-tokens-bg border-tokens-border text-tokens-muted hover:bg-tokens-panel2'
+                                                    }`}
+                                                >
+                                                    {t('focusFirst.selectFromList', 'Select from list')}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setFocusFirstMode('text'); setSelectedFocusType('text'); }}
+                                                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                                                        focusFirstMode === 'text' 
+                                                            ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT text-tokens-brand-DEFAULT' 
+                                                            : 'bg-tokens-bg border-tokens-border text-tokens-muted hover:bg-tokens-panel2'
+                                                    }`}
+                                                >
+                                                    {t('focusFirst.orTypeManually', 'Or type manually')}
+                                                </button>
+                                            </div>
+
+                                            {focusFirstMode === 'text' && (
+                                                <input
+                                                    type="text"
+                                                    value={selectedText}
+                                                    onChange={(e) => setSelectedText(e.target.value)}
+                                                    placeholder={t('focusFirst.typeManuallyPlaceholder', "Type what you'll focus on...")}
+                                                    className="w-full px-4 py-3 bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50"
+                                                />
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-bold text-tokens-muted uppercase tracking-wider mb-2 block">
+                                                {t('focusFirst.step2')} <span className="font-normal opacity-60">(optional)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={microStep}
+                                                onChange={(e) => setMicroStep(e.target.value)}
+                                                placeholder={t('focusFirst.step2Placeholder', 'e.g., Open the doc and read first paragraph')}
+                                                className="w-full px-4 py-3 bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg placeholder:text-tokens-muted/50"
+                                            />
+                                        </div>
+
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            fullWidth
+                                            onClick={handleStartFocusFirst}
+                                            disabled={!canStartFocus() || focusFirstLoading}
+                                            icon={<Play size={20} />}
+                                            className="!py-4 text-lg"
+                                        >
+                                            {focusFirstLoading ? t('focusFirst.starting') : t('focusFirst.startFocus')}
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Focus Balance Radar */}
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <Target size={18} className="text-tokens-brand-DEFAULT" />
+                                <span>{t('focusBalance.title')}</span>
+                            </div>
+                        }>
+                            <div className="flex justify-center">
+                                <ERadarChart
+                                    data={Object.entries(focusAreas).reduce((acc, [area, value]) => {
+                                        const translationKey = DOMAIN_KEY_MAP[area] || area.toLowerCase();
+                                        acc[t(`focusAreas.${translationKey}`, area)] = value;
+                                        return acc;
+                                    }, {} as Record<string, number>)}
+                                    width={300}
+                                    height={280}
+                                />
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+                {/* === HISTORY TAB === */}
+                {activeTab === 'history' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Recent History - Left Column */}
+                        <Card title={
+                            <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-2">
+                                    <History size={18} className="text-tokens-brand-DEFAULT" />
+                                    <span>{t('snapshot.recentHistory')}</span>
+                                </div>
+                                <Badge variant="neutral">{recentSnapshots.length} {t('snapshot.sessions', 'sessions')}</Badge>
+                            </div>
+                        }>
+                            {snapshotsLoading ? (
+                                <div className="text-center py-8 text-tokens-muted">
+                                    <RefreshCw size={24} className="animate-spin mx-auto mb-2" />
+                                    Loading...
+                                </div>
+                            ) : recentSnapshots.length === 0 ? (
+                                <div className="text-sm text-tokens-muted text-center py-8 italic">
+                                    {t('snapshot.noSnapshots')}
+                                </div>
+                            ) : (
+                                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {[
+                                        { key: 'today', label: t('history.today', 'Today'), items: categorizedSnapshots.today },
+                                        { key: 'yesterday', label: t('history.yesterday', 'Yesterday'), items: categorizedSnapshots.yesterday },
+                                        { key: 'lastWeek', label: t('history.lastWeek', 'Last Week'), items: categorizedSnapshots.lastWeek },
+                                        { key: 'older', label: t('history.older', 'Older'), items: categorizedSnapshots.older }
+                                    ].map(category => category.items.length > 0 && (
+                                        <div key={category.key} className="space-y-2">
+                                            <h4 className="text-xs font-bold text-tokens-muted uppercase tracking-widest px-1 sticky top-0 bg-tokens-panel/95 backdrop-blur-sm py-2">
+                                                {category.label}
+                                            </h4>
+                                            {category.items.map((snapshot) => {
+                                                const date = new Date(snapshot.timestamp);
+                                                return (
+                                                    <button
+                                                        key={snapshot.id}
+                                                        onClick={() => setSelectedSnapshot(snapshot)}
+                                                        className="w-full p-4 bg-tokens-bg rounded-lg border border-tokens-border hover:border-tokens-brand-DEFAULT/50 text-left transition-all group"
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-medium text-tokens-fg">
+                                                                {date.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
+                                                            </span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`text-sm font-bold ${getEnergyColorClass(snapshot.energy)}`}>
+                                                                    ⚡ {snapshot.energy}
+                                                                </span>
+                                                                <ChevronRight size={16} className="text-tokens-muted group-hover:text-tokens-brand-DEFAULT transition-colors" />
+                                                            </div>
+                                                        </div>
+                                                        {snapshot.note && (
+                                                            <p className="text-sm text-tokens-muted mt-1 truncate">{snapshot.note}</p>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </Card>
+
+                        {/* Energy Trend - Right Column */}
+                        <Card title={
+                            <div className="flex items-center gap-2">
+                                <TrendingUp size={18} className="text-tokens-brand-DEFAULT" />
+                                <span>{t('insights.energyTrend', 'Energy Trend')}</span>
+                            </div>
+                        }>
+                            <div className="flex flex-col items-center justify-center py-8">
+                                {recentSnapshots.length > 1 ? (
+                                    <>
+                                        <ESparkline
+                                            data={recentSnapshots.slice(0, 20).map(s => s.energy).reverse()}
+                                            width={280}
+                                            height={120}
+                                            color="#22c55e"
+                                            showTooltip={true}
+                                        />
+                                        <p className="text-xs text-tokens-muted mt-4">
+                                            Last {Math.min(recentSnapshots.length, 20)} sessions
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="text-center text-tokens-muted">
+                                        <TrendingUp size={48} className="mx-auto mb-2 opacity-30" />
+                                        <p className="text-sm">Not enough data yet</p>
+                                        <p className="text-xs mt-1">Log at least 2 snapshots to see trends</p>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+            </PageContainer>
 
             {/* Snapshot Detail Modal */}
             {selectedSnapshot && (

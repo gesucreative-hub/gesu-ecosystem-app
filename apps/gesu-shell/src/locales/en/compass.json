@@ -41,11 +41,27 @@
         "delete": "Delete",
         "deleteConfirm": "Delete this snapshot?",
         "noSnapshots": "No snapshots yet",
-        "recentHistory": "Recent History"
+        "recentHistory": "Recent History",
+        "sessions": "sessions"
+    },
+    "tabs": {
+        "today": "Today",
+        "energy": "Energy",
+        "focus": "Focus",
+        "history": "History"
+    },
+    "history": {
+        "title": "Recent History",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "lastWeek": "Last Week",
+        "older": "Older",
+        "focusScore": "Focus Score"
     },
     "insights": {
         "burnoutRisk": "Burnout Risk",
-        "flowState": "Flow State Detected"
+        "flowState": "Flow State Detected",
+        "energyTrend": "Energy Trend"
     },
     "status": {
         "savingToFiles": "Saving to local files",

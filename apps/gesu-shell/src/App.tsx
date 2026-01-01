@@ -17,6 +17,10 @@ import { LostModePage } from './pages/LostModePage';
 import { ActivityPage } from './pages/ActivityPage';
 import { LoginPage } from './pages/LoginPage';
 import { useGesuSettings } from './lib/gesuSettings';
+// S5: Business pages
+import { BusinessSettingsPage } from './pages/BusinessSettingsPage';
+import { ClientsPage } from './pages/ClientsPage';
+import { ClientDetailPage } from './pages/ClientDetailPage';
 
 function App() {
     const { settings } = useGesuSettings();
@@ -78,6 +82,10 @@ function App() {
                     <Route path="media-suite" element={<MediaSuitePage />} />
                     <Route path="initiator" element={<ProjectHubPage />} />
                     <Route path="settings" element={<SettingsPage />} />
+                    {/* S5: Business workspace routes */}
+                    <Route path="business-settings" element={<BusinessSettingsPage />} />
+                    <Route path="clients" element={<ClientsPage />} />
+                    <Route path="clients/:id" element={<ClientDetailPage />} />
                 </Route>
             </Routes>
         </AuthProvider>

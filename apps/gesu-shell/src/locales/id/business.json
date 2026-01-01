@@ -1,0 +1,58 @@
+{
+    "settings": {
+        "title": "Pengaturan Bisnis",
+        "subtitle": "Konfigurasi identitas bisnis, metode pembayaran, dan penomoran dokumen",
+        "identity": {
+            "title": "Identitas Bisnis",
+            "businessName": "Nama Bisnis",
+            "address": "Alamat Bisnis",
+            "email": "Email",
+            "phone": "Telepon",
+            "taxId": "NPWP"
+        },
+        "payment": {
+            "title": "Metode Pembayaran",
+            "bankName": "Nama Bank",
+            "accountNumber": "Nomor Rekening",
+            "accountHolder": "Pemilik Rekening",
+            "setDefault": "Jadikan default",
+            "addPayment": "Tambah Metode Pembayaran",
+            "noPayment": "Belum ada metode pembayaran"
+        },
+        "numbering": {
+            "title": "Penomoran Dokumen",
+            "invoiceFormat": "Format Nomor Invoice",
+            "contractFormat": "Format Nomor Kontrak",
+            "nextInvoice": "Urutan Invoice Berikutnya",
+            "nextContract": "Urutan Kontrak Berikutnya",
+            "tokenHelp": "Token: {YYYY}, {YY}, {MM}, {DD}, {####}"
+        },
+        "terms": {
+            "title": "Syarat Default",
+            "invoiceTerms": "Syarat Invoice",
+            "contractTerms": "Syarat Kontrak"
+        }
+    },
+    "clients": {
+        "title": "Klien",
+        "subtitle": "Kelola klien dan kontak bisnis Anda",
+        "addClient": "Tambah Klien",
+        "searchPlaceholder": "Cari klien...",
+        "noClients": "Belum ada klien. Tambahkan klien pertama Anda!",
+        "noResults": "Tidak ada klien yang cocok dengan pencarian",
+        "deleteConfirm": "Hapus klien ini?",
+        "deleteWithProjects": "Hapus \"{name}\"? Ini akan melepas tautan {count} proyek."
+    },
+    "clientDetail": {
+        "contactInfo": "Informasi Kontak",
+        "notes": "Catatan",
+        "details": "Detail",
+        "linkedProjects": "Proyek Terhubung",
+        "noProjects": "Belum ada proyek terhubung ke klien ini",
+        "linkFromProjects": "Hubungkan proyek dari halaman Proyek"
+    },
+    "nav": {
+        "clients": "Klien",
+        "businessSettings": "Bisnis"
+    }
+}

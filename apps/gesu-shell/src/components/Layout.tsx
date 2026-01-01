@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert, Users, Building2 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { isSessionActive } from '../stores/focusTimerStore';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
@@ -265,8 +265,8 @@ export function Layout() {
         
         // Personal routes
         const personalRoutes = ['/compass', '/activity', '/refocus'];
-        // Business routes
-        const businessRoutes = ['/initiator'];
+        // Business routes (S5: added clients + business-settings)
+        const businessRoutes = ['/initiator', '/clients', '/business-settings'];
         
         if (activePersona === 'business' && personalRoutes.some(r => path.startsWith(r))) {
             navigate('/initiator', { replace: true });
@@ -353,6 +353,8 @@ export function Layout() {
                         {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
                         {activePersona === 'personal' && <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/clients" icon={<Users strokeWidth={1.5} size={20} />} label={t('nav.clients', 'Clients')} isActive={p.startsWith('/clients')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/business-settings" icon={<Building2 strokeWidth={1.5} size={20} />} label={t('nav.businessSettings', 'Business')} isActive={p.startsWith('/business-settings')} isCollapsed={isCollapsed} />}
 
                         {/* TOOLS Group */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.toolsGroup', 'Tools')}</div>}

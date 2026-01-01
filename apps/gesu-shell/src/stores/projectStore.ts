@@ -20,6 +20,8 @@ export interface Project {
     projectPath?: string;           // Disk path (for imported projects)
     // S2-1: Persona split
     persona: 'personal' | 'business';  // Required: personal vs business context
+    // S5-3: Client linking
+    clientId?: string;              // Optional: links to client in clientStore
 }
 
 interface ProjectStoreState {
@@ -29,7 +31,7 @@ interface ProjectStoreState {
 }
 
 const STORAGE_KEY = 'gesu-projects';
-const CURRENT_SCHEMA_VERSION = 3;  // S2-1: Bumped for persona migration
+const CURRENT_SCHEMA_VERSION = 4;  // S5-3: Bumped for clientId field
 
 // --- Utility ---
 
@@ -98,6 +100,22 @@ function migrateProjectsV2ToV3(projects: Project[]): Project[] {
     });
 }
 
+/**
+ * Migrate projects from v3 to v4 (add clientId field)
+ * S5-3: Add optional clientId for client linking
+ */
+function migrateProjectsV3ToV4(projects: Project[]): Project[] {
+    return projects.map(project => {
+        if ((project as any).clientId === undefined) {
+            return {
+                ...project,
+                clientId: undefined  // Explicit undefined, not linked
+            };
+        }
+        return project;
+    });
+}
+
 // --- Storage ---
 
 import {
@@ -141,39 +159,58 @@ export function loadState(): ProjectStoreState {
         const parsed = parseResult.data!;
         const version = detectVersion(parsed);
 
-        // Handle schema migration v2 -> v3
+        // Handle schema migration v2 -> v3 -> v4
         if (version === 2) {
-            console.log('[projectStore] Migrating from schema v2 to v3...');
+            console.log('[projectStore] Migrating from schema v2 to v4...');
             
             void createBackupSnapshot(STORAGE_KEY, raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 2, 
-                toVersion: 3 
+                toVersion: 4 
             }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
             
             parsed.projects = migrateProjectsV2ToV3(parsed.projects);
-            parsed.schemaVersion = 3;
+            parsed.projects = migrateProjectsV3ToV4(parsed.projects);
+            parsed.schemaVersion = 4;
             saveState(parsed);
-            console.log('[projectStore] Migration v2->v3 complete!');
+            console.log('[projectStore] Migration v2->v3->v4 complete!');
             return parsed;
         }
         
-        // Handle schema migration v1 -> v2 -> v3
+        // Handle schema migration v1 -> v2 -> v3 -> v4
         if (version === 1) {
-            console.log('[projectStore] Migrating from schema v1 to v3...');
+            console.log('[projectStore] Migrating from schema v1 to v4...');
             
             // S2-1 Fix: Single backup with final target version
             void createBackupSnapshot(STORAGE_KEY, raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 1, 
-                toVersion: 3 
+                toVersion: 4 
             }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
             
             parsed.projects = migrateProjectsV1ToV2(parsed.projects);
             parsed.projects = migrateProjectsV2ToV3(parsed.projects);
-            parsed.schemaVersion = 3;
+            parsed.projects = migrateProjectsV3ToV4(parsed.projects);
+            parsed.schemaVersion = 4;
             saveState(parsed);
-            console.log('[projectStore] Migration v1->v2->v3 complete!');
+            console.log('[projectStore] Migration v1->v2->v3->v4 complete!');
+            return parsed;
+        }
+
+        // Handle schema migration v3 -> v4 (S5-3: clientId)
+        if (version === 3) {
+            console.log('[projectStore] Migrating from schema v3 to v4...');
+            
+            void createBackupSnapshot(STORAGE_KEY, raw, { 
+                reason: 'pre-migration', 
+                fromVersion: 3, 
+                toVersion: 4 
+            }).catch(err => console.error('[projectStore] Pre-migration backup failed:', err));
+            
+            parsed.projects = migrateProjectsV3ToV4(parsed.projects);
+            parsed.schemaVersion = 4;
+            saveState(parsed);
+            console.log('[projectStore] Migration v3->v4 complete!');
             return parsed;
         }
         
@@ -553,3 +590,75 @@ export function removeInvalidProjects(): number {
 
     return removed;
 }
+
+// --- S5-3: Client Linking ---
+
+/**
+ * Link project to a client
+ */
+export function linkProjectToClient(projectId: string, clientId: string): Project | null {
+    const state = loadState();
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) return null;
+    
+    project.clientId = clientId;
+    project.updatedAt = Date.now();
+    saveState(state);
+    console.log(`[projectStore] Linked project ${projectId} to client ${clientId}`);
+    return { ...project };
+}
+
+/**
+ * Unlink project from its client
+ */
+export function unlinkProjectFromClient(projectId: string): Project | null {
+    const state = loadState();
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) return null;
+    
+    project.clientId = undefined;
+    project.updatedAt = Date.now();
+    saveState(state);
+    console.log(`[projectStore] Unlinked project ${projectId} from client`);
+    return { ...project };
+}
+
+/**
+ * Get all projects linked to a specific client
+ */
+export function getProjectsByClientId(clientId: string): Project[] {
+    const state = loadState();
+    return state.projects.filter(p => p.clientId === clientId && !p.archived);
+}
+
+/**
+ * Unlink all projects from a client (when client is deleted)
+ */
+export function unlinkAllProjectsFromClient(clientId: string): number {
+    const state = loadState();
+    let count = 0;
+    
+    state.projects.forEach(p => {
+        if (p.clientId === clientId) {
+            p.clientId = undefined;
+            p.updatedAt = Date.now();
+            count++;
+        }
+    });
+    
+    if (count > 0) {
+        saveState(state);
+        console.log(`[projectStore] Unlinked ${count} projects from deleted client ${clientId}`);
+    }
+    
+    return count;
+}
+
+/**
+ * Get projects filtered by persona (for persona-scoped views)
+ */
+export function listProjectsByPersona(persona: 'personal' | 'business'): Project[] {
+    const state = loadState();
+    return state.projects.filter(p => p.persona === persona && !p.archived);
+}
+

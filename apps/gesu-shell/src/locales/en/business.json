@@ -1,0 +1,58 @@
+{
+    "settings": {
+        "title": "Business Settings",
+        "subtitle": "Configure your business identity, payment methods, and document numbering",
+        "identity": {
+            "title": "Business Identity",
+            "businessName": "Business Name",
+            "address": "Business Address",
+            "email": "Email",
+            "phone": "Phone",
+            "taxId": "Tax ID (NPWP)"
+        },
+        "payment": {
+            "title": "Payment Methods",
+            "bankName": "Bank Name",
+            "accountNumber": "Account Number",
+            "accountHolder": "Account Holder",
+            "setDefault": "Set as default",
+            "addPayment": "Add Payment Method",
+            "noPayment": "No payment methods configured"
+        },
+        "numbering": {
+            "title": "Document Numbering",
+            "invoiceFormat": "Invoice Number Format",
+            "contractFormat": "Contract Number Format",
+            "nextInvoice": "Next Invoice Sequence",
+            "nextContract": "Next Contract Sequence",
+            "tokenHelp": "Tokens: {YYYY}, {YY}, {MM}, {DD}, {####}"
+        },
+        "terms": {
+            "title": "Default Terms",
+            "invoiceTerms": "Invoice Terms",
+            "contractTerms": "Contract Terms"
+        }
+    },
+    "clients": {
+        "title": "Clients",
+        "subtitle": "Manage your business clients and contacts",
+        "addClient": "Add Client",
+        "searchPlaceholder": "Search clients...",
+        "noClients": "No clients yet. Add your first client!",
+        "noResults": "No clients found matching your search",
+        "deleteConfirm": "Delete this client?",
+        "deleteWithProjects": "Delete \"{name}\"? This will unlink {count} project(s)."
+    },
+    "clientDetail": {
+        "contactInfo": "Contact Information",
+        "notes": "Notes",
+        "details": "Details",
+        "linkedProjects": "Linked Projects",
+        "noProjects": "No projects linked to this client yet",
+        "linkFromProjects": "Link projects from the Projects page"
+    },
+    "nav": {
+        "clients": "Clients",
+        "businessSettings": "Business"
+    }
+}

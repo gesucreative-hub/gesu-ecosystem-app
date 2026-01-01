@@ -2,15 +2,19 @@
 
 ## Current Status (Single Source of Truth)
 
-- Previous Sprint: **S3 — Daily Loop Polish** ✅ COMPLETE (2025-12-29)
-- Current Sprint: **S4 — Workflow Polish**
-- Completed: **S4-0 — Workflow Action Hints (Read-Only)** ✅ DONE (2025-12-29)
-- Completed: **S4-1 — Workflow Action Hints (Editable + Persisted)** ✅ DONE (2025-12-29)
-- Completed: **S4-2 — Action Hint → Add to Today Task** ✅ DONE (2025-12-29)
-- Completed: **S4-3 — Action Hints Reorder (Up/Down)** ✅ DONE (2025-12-29)
+- Previous Sprint: **S4 — Workflow Polish** ✅ COMPLETE (2026-01-01)
+- Current Sprint: **S5 — Business Toolkit Foundation**
+- Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)
+- Completed: **S5-2 — Clients Store + Pages** ✅ DONE (2026-01-01)
+- Completed: **S5-3 — Projects clientId + Client Linking** ✅ DONE (2026-01-01)
 
-> **✅ QA Complete (2026-01-01)**: S4 regression tests (A1-A4) and S3-3 verification (D1-D4) executed manually — **8/8 PASS** (100% success rate).  
-> See [Closeout Pack Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for detailed evidence.
+> **S5 Implementation**: Business foundations complete.
+>
+> - New stores: `businessProfileStore.ts`, `clientStore.ts`
+> - Project schema v4: added `clientId` field
+> - New pages: BusinessSettingsPage, ClientsPage, ClientDetailPage
+> - Routes and navigation wired for BUSINESS persona  
+>   See [Sprint S5 Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md)
 
 ---
 

@@ -1,0 +1,289 @@
+// Clients Page - S5-2: Client list with CRUD operations
+// BUSINESS workspace only
+
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { PageContainer } from '../components/PageContainer';
+import { Card } from '../components/Card';
+import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { Badge } from '../components/Badge';
+import { Users, Plus, Search, Trash2, Edit, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { usePersona } from '../hooks/usePersona';
+import {
+    listClients,
+    createClient,
+    updateClient,
+    deleteClient,
+    searchClients,
+    subscribe,
+    type Client
+} from '../stores/clientStore';
+import { getProjectsByClientId, unlinkAllProjectsFromClient } from '../stores/projectStore';
+
+export function ClientsPage() {
+    const { t } = useTranslation(['business', 'common']);
+    const navigate = useNavigate();
+    const { activePersona } = usePersona();
+
+    // Redirect if not BUSINESS persona
+    useEffect(() => {
+        if (activePersona !== 'business') {
+            navigate('/compass');
+        }
+    }, [activePersona, navigate]);
+
+    // State
+    const [clients, setClients] = useState<Client[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [editingClient, setEditingClient] = useState<Client | null>(null);
+
+    // Form state
+    const [formData, setFormData] = useState({
+        name: '',
+        company: '',
+        email: '',
+        phone: '',
+        address: '',
+        notes: ''
+    });
+
+    // Subscribe to client changes
+    useEffect(() => {
+        const loadClients = () => {
+            const filtered = searchQuery ? searchClients(searchQuery) : listClients();
+            setClients(filtered);
+        };
+        loadClients();
+        return subscribe(loadClients);
+    }, [searchQuery]);
+
+    const resetForm = () => {
+        setFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+        setShowAddForm(false);
+        setEditingClient(null);
+    };
+
+    const handleSubmit = () => {
+        if (!formData.name.trim()) {
+            alert('Client name is required');
+            return;
+        }
+
+        if (editingClient) {
+            updateClient(editingClient.id, formData);
+        } else {
+            createClient(formData);
+        }
+        resetForm();
+    };
+
+    const handleEdit = (client: Client) => {
+        setEditingClient(client);
+        setFormData({
+            name: client.name,
+            company: client.company,
+            email: client.email,
+            phone: client.phone,
+            address: client.address,
+            notes: client.notes
+        });
+        setShowAddForm(true);
+    };
+
+    const handleDelete = (client: Client) => {
+        const linkedProjects = getProjectsByClientId(client.id);
+        const message = linkedProjects.length > 0
+            ? `Delete "${client.name}"? This will unlink ${linkedProjects.length} project(s).`
+            : `Delete "${client.name}"?`;
+        
+        if (confirm(message)) {
+            unlinkAllProjectsFromClient(client.id);
+            deleteClient(client.id);
+        }
+    };
+
+    const handleViewDetail = (clientId: string) => {
+        navigate(`/clients/${clientId}`);
+    };
+
+    if (activePersona !== 'business') {
+        return null;
+    }
+
+    return (
+        <PageContainer className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Users size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('business:clients.title', 'Clients')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">
+                        {t('business:clients.subtitle', 'Manage your business clients and contacts')}
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="secondary"
+                        onClick={() => navigate(-1)}
+                        icon={<ArrowLeft size={16} />}
+                    >
+                        {t('common:buttons.back', 'Back')}
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setShowAddForm(true)}
+                        icon={<Plus size={16} />}
+                    >
+                        {t('business:clients.addClient', 'Add Client')}
+                    </Button>
+                </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t('business:clients.searchPlaceholder', 'Search clients...')}
+                    className="w-full pl-10 pr-4 py-3 bg-tokens-panel border border-tokens-border rounded-xl text-tokens-fg focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
+                />
+            </div>
+
+            {/* Add/Edit Form */}
+            {showAddForm && (
+                <Card
+                    title={editingClient ? 'Edit Client' : 'Add New Client'}
+                    className="border-tokens-brand-DEFAULT/30"
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                            label="Name *"
+                            value={formData.name}
+                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                            placeholder="Contact person name"
+                        />
+                        <Input
+                            label="Company"
+                            value={formData.company}
+                            onChange={(e) => setFormData(f => ({ ...f, company: e.target.value }))}
+                            placeholder="Company or organization"
+                        />
+                        <Input
+                            label="Email"
+                            value={formData.email}
+                            onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
+                            placeholder="email@example.com"
+                        />
+                        <Input
+                            label="Phone"
+                            value={formData.phone}
+                            onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))}
+                            placeholder="+62 812 3456 789"
+                        />
+                        <div className="md:col-span-2">
+                            <Input
+                                label="Address"
+                                value={formData.address}
+                                onChange={(e) => setFormData(f => ({ ...f, address: e.target.value }))}
+                                placeholder="Full address"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-tokens-fg mb-2">Notes</label>
+                            <textarea
+                                value={formData.notes}
+                                onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))}
+                                className="w-full h-20 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
+                                placeholder="Additional notes..."
+                            />
+                        </div>
+                    </div>
+                    <div className="flex gap-2 justify-end mt-4">
+                        <Button variant="secondary" onClick={resetForm}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" onClick={handleSubmit}>
+                            {editingClient ? 'Update' : 'Create'}
+                        </Button>
+                    </div>
+                </Card>
+            )}
+
+            {/* Client List */}
+            <div className="space-y-3">
+                {clients.length === 0 ? (
+                    <Card className="py-12 text-center">
+                        <Users size={48} className="mx-auto text-tokens-muted mb-4 opacity-50" />
+                        <p className="text-tokens-muted">
+                            {searchQuery ? 'No clients found matching your search' : 'No clients yet. Add your first client!'}
+                        </p>
+                    </Card>
+                ) : (
+                    clients.map((client) => {
+                        const projectCount = getProjectsByClientId(client.id).length;
+                        return (
+                            <div
+                                key={client.id}
+                                className="group flex items-center justify-between p-4 bg-tokens-panel border border-tokens-border rounded-xl hover:border-tokens-brand-DEFAULT/30 transition-colors cursor-pointer"
+                                onClick={() => handleViewDetail(client.id)}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-tokens-brand-DEFAULT/10 flex items-center justify-center">
+                                        <Building2 size={24} className="text-tokens-brand-DEFAULT" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-tokens-fg">{client.name}</span>
+                                            {client.company && (
+                                                <Badge variant="neutral">{client.company}</Badge>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-4 text-xs text-tokens-muted mt-1">
+                                            {client.email && (
+                                                <span className="flex items-center gap-1">
+                                                    <Mail size={12} />
+                                                    {client.email}
+                                                </span>
+                                            )}
+                                            {client.phone && (
+                                                <span className="flex items-center gap-1">
+                                                    <Phone size={12} />
+                                                    {client.phone}
+                                                </span>
+                                            )}
+                                            {projectCount > 0 && (
+                                                <Badge variant="brand">{projectCount} project{projectCount !== 1 ? 's' : ''}</Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={(e) => { e.stopPropagation(); handleEdit(client); }}
+                                        icon={<Edit size={14} />}
+                                    />
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(client); }}
+                                        icon={<Trash2 size={14} className="text-red-500" />}
+                                    />
+                                    <ChevronRight size={18} className="text-tokens-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
+        </PageContainer>
+    );
+}

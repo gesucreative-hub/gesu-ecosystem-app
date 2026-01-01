@@ -9,8 +9,8 @@
 - Completed: **S4-2 — Action Hint → Add to Today Task** ✅ DONE (2025-12-29)
 - Completed: **S4-3 — Action Hints Reorder (Up/Down)** ✅ DONE (2025-12-29)
 
-> **⚠️ QA Status**: S4 regression tests (A1-A4) and S3-3 verification (D1-D4) attempted but **BLOCKED** due to browser tool failure (2026-01-01).  
-> See [walkthrough.md](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for blocker details. Manual execution required.
+> **✅ QA Complete (2026-01-01)**: S4 regression tests (A1-A4) and S3-3 verification (D1-D4) executed manually — **8/8 PASS** (100% success rate).  
+> See [Closeout Pack Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for detailed evidence.
 
 ---
 
@@ -1476,8 +1476,9 @@ Regression:
 - [ ] R3: Focus start → works correctly
 - [ ] R4: Business mode → plan card hidden
 
-**⚠️ QA Status (2026-01-01)**: All checklist items above attempted but **BLOCKED** due to browser tool failure.  
-See [Closeout Pack Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for details. Manual execution required.
+**✅ QA Complete (2026-01-01)**: All checklist items above executed manually — **All PASS**.  
+Core (C1-C6), Migration (M1-M3), Clear Completed (CC1-CC3), Promote (P1-P3), Regression (R1-R4) verified successfully.  
+See [Closeout Pack Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md) for evidence.
 
 **Known Issues**: None
 

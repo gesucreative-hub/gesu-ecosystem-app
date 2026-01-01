@@ -21,7 +21,12 @@
         "search": "Cari...",
         "coreGroup": "Utama",
         "toolsGroup": "Alat",
-        "extrasGroup": "Tambahan"
+        "extrasGroup": "Tambahan",
+        "clients": "Klien",
+        "businessSettings": "Bisnis",
+        "pricelist": "Daftar Harga",
+        "invoices": "Faktur",
+        "contracts": "Kontrak"
     },
     "persona": {
         "personal": "Personal",
@@ -93,7 +98,9 @@
         "exportJson": "Ekspor JSON",
         "addFromTemplates": "Tambah dari template",
         "setAsFocus": "Jadikan fokus hari ini",
-        "goToCompass": "Ke Kompas"
+        "goToCompass": "Ke Kompas",
+        "update": "Perbarui",
+        "create": "Buat"
     },
     "status": {
         "loading": "Memuat...",

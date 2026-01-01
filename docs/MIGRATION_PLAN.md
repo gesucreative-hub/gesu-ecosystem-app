@@ -4,7 +4,8 @@
 
 - Previous Sprint: **S5 — Business Toolkit Foundation** ✅ COMPLETE (2026-01-02)
 - Current Sprint: **S6 — Invoices & Contracts**
-- In Progress: **S6-A — Stores + Numbering** ✅ DONE (2026-01-02)
+- Completed: **S6-A — Stores + Numbering** ✅ DONE (2026-01-02)
+- Completed: **S6-B — Nav + List Pages** ✅ DONE (2026-01-02)
 - Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)
 - Completed: **S5-2 — Clients Store + Pages** ✅ DONE (2026-01-01)
 - Completed: **S5-3 — Projects clientId + Client Linking** ✅ DONE (2026-01-01)
@@ -93,6 +94,53 @@
 | Contract freeze rule                                                           | ✅ PASS |
 
 **Build**: ✅ Passing (0 new errors, 1 pre-existing warning in ActivityPage.tsx)
+
+### S6-B — Nav + List Pages — ✅ DONE (2026-01-02)
+
+**Scope**: Navigation, routing, and list pages for BUSINESS workspace
+
+**Pages Created**:
+
+- `pages/PricelistPage.tsx` — CRUD table with search + category filter
+- `pages/InvoicesPage.tsx` — List with status tabs and search
+- `pages/InvoiceDetailPage.tsx` — Read-only stub (Edit disabled: "Coming in S6-C")
+- `pages/ContractsPage.tsx` — List with status tabs and search
+- `pages/ContractDetailPage.tsx` — Read-only stub (Edit disabled: "Coming in S6-C")
+
+**Routes Added** (App.tsx):
+
+- `/pricelist` → PricelistPage
+- `/invoices` → InvoicesPage
+- `/invoices/:id` → InvoiceDetailPage
+- `/contracts` → ContractsPage
+- `/contracts/:id` → ContractDetailPage
+
+**Navigation** (Layout.tsx):
+
+- Added 3 nav items for BUSINESS persona: Invoices, Contracts, Pricelist
+- Updated `businessRoutes` array for persona guards
+
+**i18n** (EN/ID):
+
+- Created `locales/en/invoices.json` + `locales/id/invoices.json` (~100 keys each)
+- Added nav keys to `common.json` (pricelist, invoices, contracts)
+- Registered `invoices` namespace in `i18n.ts`
+
+**QA Results**:
+
+| Test                                                | Result  |
+| --------------------------------------------------- | ------- |
+| BUSINESS: Nav shows new entries                     | ✅ PASS |
+| PricelistPage: Create item → appears in table       | ✅ PASS |
+| PricelistPage: Edit/delete item                     | ✅ PASS |
+| PricelistPage: Search + category filter             | ✅ PASS |
+| InvoicesPage: New Invoice → number generated → list | ✅ PASS |
+| InvoicesPage: Click → detail stub opens             | ✅ PASS |
+| ContractsPage: New Contract → number generated      | ✅ PASS |
+| PERSONAL: Nav items hidden                          | ✅ PASS |
+| PERSONAL: Direct /invoices → redirect to /compass   | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
 
 ---
 

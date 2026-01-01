@@ -1,0 +1,95 @@
+{
+    "nav": {
+        "pricelist": "Pricelist",
+        "invoices": "Invoices",
+        "contracts": "Contracts"
+    },
+    "pricelist": {
+        "title": "Pricelist",
+        "subtitle": "Manage your service catalog and pricing",
+        "searchPlaceholder": "Search items...",
+        "allCategories": "All Categories",
+        "add": "Add Item",
+        "addTitle": "Add New Item",
+        "editTitle": "Edit Item",
+        "name": "Name",
+        "description": "Description",
+        "unit": "Unit",
+        "price": "Price",
+        "category": "Category",
+        "noItems": "No items yet. Add your first service!",
+        "noResults": "No items found",
+        "nameRequired": "Name is required",
+        "deleteConfirm": "Delete this item?"
+    },
+    "list": {
+        "title": "Invoices",
+        "subtitle": "Manage and track your invoices",
+        "searchPlaceholder": "Search by number or client...",
+        "create": "New Invoice",
+        "all": "All",
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "cancelled": "Cancelled",
+        "noInvoices": "No invoices yet. Create your first invoice!",
+        "noResults": "No invoices found",
+        "noClient": "No client"
+    },
+    "status": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "paid": "Paid",
+        "signed": "Signed",
+        "cancelled": "Cancelled"
+    },
+    "detail": {
+        "title": "Invoice",
+        "subtitle": "Invoice details",
+        "client": "Client",
+        "business": "From",
+        "summary": "Summary",
+        "items": "items",
+        "created": "Created",
+        "updated": "Updated",
+        "notFound": "Invoice not found",
+        "editDisabled": "Coming in S6-C",
+        "editorNotice": "Invoice editor (line items grid) coming in S6-C"
+    },
+    "editor": {
+        "lineItems": "Line Items",
+        "subtotal": "Subtotal",
+        "adjustments": "Adjustments",
+        "total": "Total"
+    },
+    "contracts": {
+        "title": "Contracts",
+        "subtitle": "Manage your project contracts",
+        "searchPlaceholder": "Search by number or client...",
+        "create": "New Contract",
+        "all": "All",
+        "draft": "Draft",
+        "sent": "Sent",
+        "signed": "Signed",
+        "cancelled": "Cancelled",
+        "noContracts": "No contracts yet. Create your first contract!",
+        "noResults": "No contracts found",
+        "noClient": "No client",
+        "scopeItems": "scope items"
+    },
+    "contractDetail": {
+        "title": "Contract",
+        "subtitle": "Contract details",
+        "client": "Client",
+        "business": "From",
+        "scope": "Project Scope",
+        "terms": "Terms & Conditions",
+        "noScope": "No scope items defined",
+        "noTerms": "No terms defined",
+        "created": "Created",
+        "updated": "Updated",
+        "notFound": "Contract not found",
+        "editDisabled": "Coming in S6-C",
+        "editorNotice": "Contract editor (scope builder) coming in S6-C"
+    }
+}

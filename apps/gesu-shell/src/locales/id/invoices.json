@@ -1,0 +1,95 @@
+{
+    "nav": {
+        "pricelist": "Daftar Harga",
+        "invoices": "Faktur",
+        "contracts": "Kontrak"
+    },
+    "pricelist": {
+        "title": "Daftar Harga",
+        "subtitle": "Kelola katalog layanan dan harga Anda",
+        "searchPlaceholder": "Cari item...",
+        "allCategories": "Semua Kategori",
+        "add": "Tambah Item",
+        "addTitle": "Tambah Item Baru",
+        "editTitle": "Edit Item",
+        "name": "Nama",
+        "description": "Deskripsi",
+        "unit": "Satuan",
+        "price": "Harga",
+        "category": "Kategori",
+        "noItems": "Belum ada item. Tambahkan layanan pertama Anda!",
+        "noResults": "Item tidak ditemukan",
+        "nameRequired": "Nama wajib diisi",
+        "deleteConfirm": "Hapus item ini?"
+    },
+    "list": {
+        "title": "Faktur",
+        "subtitle": "Kelola dan lacak faktur Anda",
+        "searchPlaceholder": "Cari berdasar nomor atau klien...",
+        "create": "Faktur Baru",
+        "all": "Semua",
+        "draft": "Draf",
+        "sent": "Terkirim",
+        "paid": "Lunas",
+        "cancelled": "Dibatalkan",
+        "noInvoices": "Belum ada faktur. Buat faktur pertama Anda!",
+        "noResults": "Faktur tidak ditemukan",
+        "noClient": "Tanpa klien"
+    },
+    "status": {
+        "draft": "Draf",
+        "sent": "Terkirim",
+        "paid": "Lunas",
+        "signed": "Ditandatangani",
+        "cancelled": "Dibatalkan"
+    },
+    "detail": {
+        "title": "Faktur",
+        "subtitle": "Detail faktur",
+        "client": "Klien",
+        "business": "Dari",
+        "summary": "Ringkasan",
+        "items": "item",
+        "created": "Dibuat",
+        "updated": "Diperbarui",
+        "notFound": "Faktur tidak ditemukan",
+        "editDisabled": "Segera hadir di S6-C",
+        "editorNotice": "Editor faktur (grid item) segera hadir di S6-C"
+    },
+    "editor": {
+        "lineItems": "Item Baris",
+        "subtotal": "Subtotal",
+        "adjustments": "Penyesuaian",
+        "total": "Total"
+    },
+    "contracts": {
+        "title": "Kontrak",
+        "subtitle": "Kelola kontrak proyek Anda",
+        "searchPlaceholder": "Cari berdasar nomor atau klien...",
+        "create": "Kontrak Baru",
+        "all": "Semua",
+        "draft": "Draf",
+        "sent": "Terkirim",
+        "signed": "Ditandatangani",
+        "cancelled": "Dibatalkan",
+        "noContracts": "Belum ada kontrak. Buat kontrak pertama Anda!",
+        "noResults": "Kontrak tidak ditemukan",
+        "noClient": "Tanpa klien",
+        "scopeItems": "item lingkup"
+    },
+    "contractDetail": {
+        "title": "Kontrak",
+        "subtitle": "Detail kontrak",
+        "client": "Klien",
+        "business": "Dari",
+        "scope": "Lingkup Proyek",
+        "terms": "Syarat & Ketentuan",
+        "noScope": "Belum ada item lingkup",
+        "noTerms": "Belum ada ketentuan",
+        "created": "Dibuat",
+        "updated": "Diperbarui",
+        "notFound": "Kontrak tidak ditemukan",
+        "editDisabled": "Segera hadir di S6-C",
+        "editorNotice": "Editor kontrak (pembuat lingkup) segera hadir di S6-C"
+    }
+}

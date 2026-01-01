@@ -19,6 +19,8 @@ import enMediasuite from '../locales/en/mediasuite.json';
 import enLogin from '../locales/en/login.json';
 import enFocus from '../locales/en/focus.json';
 import enModals from '../locales/en/modals.json';
+import enBusiness from '../locales/en/business.json';
+import enInvoices from '../locales/en/invoices.json';
 
 // Import translations - Indonesian
 import idCommon from '../locales/id/common.json';
@@ -32,6 +34,8 @@ import idMediasuite from '../locales/id/mediasuite.json';
 import idLogin from '../locales/id/login.json';
 import idFocus from '../locales/id/focus.json';
 import idModals from '../locales/id/modals.json';
+import idBusiness from '../locales/id/business.json';
+import idInvoices from '../locales/id/invoices.json';
 
 const resources = {
     en: {
@@ -46,6 +50,8 @@ const resources = {
         login: enLogin,
         focus: enFocus,
         modals: enModals,
+        business: enBusiness,
+        invoices: enInvoices,
     },
     id: {
         common: idCommon,
@@ -59,6 +65,8 @@ const resources = {
         login: idLogin,
         focus: idFocus,
         modals: idModals,
+        business: idBusiness,
+        invoices: idInvoices,
     },
 };
 
@@ -69,7 +77,7 @@ i18n
         resources,
         fallbackLng: 'en',
         defaultNS: 'common',
-        ns: ['common', 'dashboard', 'compass', 'settings', 'activity', 'initiator', 'refocus', 'mediasuite', 'login', 'focus', 'modals'],
+        ns: ['common', 'dashboard', 'compass', 'settings', 'activity', 'initiator', 'refocus', 'mediasuite', 'login', 'focus', 'modals', 'business'],
         
         interpolation: {
             escapeValue: false, // React already escapes

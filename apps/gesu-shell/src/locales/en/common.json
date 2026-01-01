@@ -21,7 +21,12 @@
         "search": "Search...",
         "coreGroup": "Core",
         "toolsGroup": "Tools",
-        "extrasGroup": "Extras"
+        "extrasGroup": "Extras",
+        "clients": "Clients",
+        "businessSettings": "Business",
+        "pricelist": "Pricelist",
+        "invoices": "Invoices",
+        "contracts": "Contracts"
     },
     "persona": {
         "personal": "Personal",
@@ -93,7 +98,9 @@
         "exportJson": "Export JSON",
         "addFromTemplates": "Add from templates",
         "setAsFocus": "Set as today's focus",
-        "goToCompass": "Go to Compass"
+        "goToCompass": "Go to Compass",
+        "update": "Update",
+        "create": "Create"
     },
     "status": {
         "loading": "Loading...",

@@ -21,6 +21,12 @@ import { useGesuSettings } from './lib/gesuSettings';
 import { BusinessSettingsPage } from './pages/BusinessSettingsPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { ClientDetailPage } from './pages/ClientDetailPage';
+// S6-B: Invoice & Contract pages
+import { PricelistPage } from './pages/PricelistPage';
+import { InvoicesPage } from './pages/InvoicesPage';
+import { InvoiceDetailPage } from './pages/InvoiceDetailPage';
+import { ContractsPage } from './pages/ContractsPage';
+import { ContractDetailPage } from './pages/ContractDetailPage';
 
 function App() {
     const { settings } = useGesuSettings();
@@ -86,6 +92,12 @@ function App() {
                     <Route path="business-settings" element={<BusinessSettingsPage />} />
                     <Route path="clients" element={<ClientsPage />} />
                     <Route path="clients/:id" element={<ClientDetailPage />} />
+                    {/* S6-B: Invoice & Contract routes */}
+                    <Route path="pricelist" element={<PricelistPage />} />
+                    <Route path="invoices" element={<InvoicesPage />} />
+                    <Route path="invoices/:id" element={<InvoiceDetailPage />} />
+                    <Route path="contracts" element={<ContractsPage />} />
+                    <Route path="contracts/:id" element={<ContractDetailPage />} />
                 </Route>
             </Routes>
         </AuthProvider>

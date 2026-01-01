@@ -2,19 +2,97 @@
 
 ## Current Status (Single Source of Truth)
 
-- Previous Sprint: **S4 — Workflow Polish** ✅ COMPLETE (2026-01-01)
-- Current Sprint: **S5 — Business Toolkit Foundation**
+- Previous Sprint: **S5 — Business Toolkit Foundation** ✅ COMPLETE (2026-01-02)
+- Current Sprint: **S6 — Invoices & Contracts**
+- In Progress: **S6-A — Stores + Numbering** ✅ DONE (2026-01-02)
 - Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)
 - Completed: **S5-2 — Clients Store + Pages** ✅ DONE (2026-01-01)
 - Completed: **S5-3 — Projects clientId + Client Linking** ✅ DONE (2026-01-01)
+- Completed: **S5-4 — i18n Complete (EN/ID)** ✅ DONE (2026-01-02)
+- Completed: **S5-5 — Client Dropdown in Project Hub** ✅ DONE (2026-01-02)
 
-> **S5 Implementation**: Business foundations complete.
+> **S5 Implementation COMPLETE**: Business foundations with full i18n support.
 >
-> - New stores: `businessProfileStore.ts`, `clientStore.ts`
-> - Project schema v4: added `clientId` field
-> - New pages: BusinessSettingsPage, ClientsPage, ClientDetailPage
-> - Routes and navigation wired for BUSINESS persona  
->   See [Sprint S5 Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md)
+> **Data Stores**:
+>
+> - `businessProfileStore.ts` — Business identity, payment methods, numbering config
+> - `clientStore.ts` — Client CRM with search and subscription patterns
+> - `projectStore.ts` v4 — Added `clientId` field with migration from v3
+>
+> **UI Pages**:
+>
+> - `BusinessSettingsPage.tsx` — Business identity, payments, numbering, terms
+> - `ClientsPage.tsx` — Client list/search with CRUD operations
+> - `ClientDetailPage.tsx` — Client details + linked projects + Link Project dropdown
+> - `InitiatorPage.tsx` — Client dropdown (replaces text input) with "Add Client" button
+>
+> **i18n Coverage**:
+>
+> - EN/ID locale files: `business.json` (96 keys), `common.json` (nav keys)
+> - All pages fully translated (forms, labels, buttons, empty states, tooltips)
+> - Registered `business` namespace in `i18n.ts`
+>
+> **Features**:
+>
+> - Project↔Client linking/unlinking with dropdown UI
+> - Client dropdown in Project Hub generator (BUSINESS persona only)
+> - Click-outside-to-close for Link Project dropdown
+> - Persona-based navigation (Clients/Business Settings in sidebar)
+>
+> See [Sprint S5 Walkthrough](file:///C:/Users/Surya/.gemini/antigravity/brain/ff9d2e4e-9cbe-467a-b21d-3eb397fcf4b8/walkthrough.md)
+
+---
+
+## S6 — Invoices & Contracts
+
+### S6-A — Stores + Numbering — ✅ DONE (2026-01-02)
+
+**Scope**: Data foundation for invoices/contracts with snapshot-safe persistence
+
+**Files Created**:
+
+- `stores/serviceCatalogStore.ts` — Pricelist CRUD + search + category filter (schemaVersion=1)
+- `stores/invoiceStore.ts` — Invoice + line items with snapshot values, freeze rule (schemaVersion=1)
+- `stores/contractStore.ts` — Contract with scope[], terms, snapshot (schemaVersion=1)
+- `services/documentNumberingService.ts` — Token replacement + sequence increment
+
+**Numbering Tokens Supported**:
+
+- `{YYYY}` — 4-digit year
+- `{YY}` — 2-digit year
+- `{MM}` — 2-digit month
+- `{DD}` — 2-digit day
+- `{####}` — 4-digit sequence
+- `{###}` — 3-digit sequence
+
+**Default Formats** (from BusinessProfile):
+
+- Invoice: `GC-INV-{YY}{MM}{DD}-{####}`
+- Contract: `GCL/BRD/{MM}/{###}/{YYYY}`
+
+**Freeze Rules**:
+
+- Invoice: if `status !== 'draft'` → content edits blocked, only status transitions allowed
+- Contract: same freeze rule
+
+**Snapshot Safety**:
+
+- Line items store snapshot values (itemName, unitPrice) not references
+- Invoice/contract store client + businessProfile snapshot at creation time
+- Edits to pricelist or profile do NOT affect historical documents
+
+**QA Results (DevTools)**:
+
+| Test                                                                           | Result  |
+| ------------------------------------------------------------------------------ | ------- |
+| Create invoice → number generated                                              | ✅ PASS |
+| Second invoice → seq increments                                                | ✅ PASS |
+| Create pricelist item → invoice created → modify pricelist → invoice unchanged | ✅ PASS |
+| Mark invoice sent → attempt update → blocked                                   | ✅ PASS |
+| Create contract → number format correct                                        | ✅ PASS |
+| Contract freeze rule                                                           | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors, 1 pre-existing warning in ActivityPage.tsx)
 
 ---
 

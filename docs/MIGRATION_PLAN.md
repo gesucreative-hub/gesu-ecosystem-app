@@ -6,6 +6,7 @@
 - Current Sprint: **S6 — Invoices & Contracts**
 - Completed: **S6-A — Stores + Numbering** ✅ DONE (2026-01-02)
 - Completed: **S6-B — Nav + List Pages** ✅ DONE (2026-01-02)
+- Completed: **S6-C — Invoice Editor + Contract Builder** ✅ DONE (2026-01-02)
 - Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)
 - Completed: **S5-2 — Clients Store + Pages** ✅ DONE (2026-01-01)
 - Completed: **S5-3 — Projects clientId + Client Linking** ✅ DONE (2026-01-01)
@@ -139,6 +140,45 @@
 | ContractsPage: New Contract → number generated      | ✅ PASS |
 | PERSONAL: Nav items hidden                          | ✅ PASS |
 | PERSONAL: Direct /invoices → redirect to /compass   | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
+
+### S6-C — Invoice Editor + Contract Builder — ✅ DONE (2026-01-02)
+
+**Scope**: Full editors for draft documents, freeze rule for non-draft
+
+**Pages Modified**:
+
+- `pages/InvoiceDetailPage.tsx` — Full line items grid editor with:
+  - Add/remove/edit/reorder line items
+  - Pricelist integration (select → autofill name+unitPrice snapshot)
+  - Reactive totals (subtotal/adjustments/total)
+  - Status transitions: Draft→Sent→Paid
+  - Freeze rule: read-only for non-draft
+- `pages/ContractDetailPage.tsx` — Full scope + terms editor with:
+  - Add/remove/reorder scope items
+  - Terms textarea editor
+  - Status transitions: Draft→Sent→Signed
+  - Freeze rule: read-only for non-draft
+
+**i18n Updates**:
+
+- Added ~30 new keys to `locales/en/invoices.json` (editor, contractEditor sections)
+- Added ~30 new keys to `locales/id/invoices.json` (matching Indonesian translations)
+
+**QA Results**:
+
+| Test                                                                        | Result  |
+| --------------------------------------------------------------------------- | ------- |
+| Invoice: Create draft → open editor → add 10 items → totals correct         | ✅ PASS |
+| Invoice: Select from pricelist → name+price autofilled                      | ✅ PASS |
+| Invoice: Change pricelist item price → reopen invoice → old price unchanged | ✅ PASS |
+| Invoice: Set status sent → editor becomes read-only                         | ✅ PASS |
+| Invoice: Mark as paid (from sent)                                           | ✅ PASS |
+| Contract: Create draft → edit scope + terms                                 | ✅ PASS |
+| Contract: Reorder scope items (up/down)                                     | ✅ PASS |
+| Contract: Set sent → signed → frozen                                        | ✅ PASS |
+| PERSONAL persona: Routes redirect to /compass                               | ✅ PASS |
 
 **Build**: ✅ Passing (0 new errors)
 

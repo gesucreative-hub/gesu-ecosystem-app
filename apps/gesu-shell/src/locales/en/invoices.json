@@ -60,7 +60,23 @@
         "lineItems": "Line Items",
         "subtotal": "Subtotal",
         "adjustments": "Adjustments",
-        "total": "Total"
+        "total": "Total",
+        "addItem": "Add Item",
+        "noItems": "No line items. Click \"Add Item\" to start.",
+        "item": "Item",
+        "qty": "Qty",
+        "price": "Unit Price",
+        "lineTotal": "Total",
+        "selectFromPricelist": "-- From Pricelist --",
+        "itemName": "Item name",
+        "description": "Description (optional)",
+        "notes": "Notes",
+        "notesPlaceholder": "Additional notes...",
+        "send": "Mark as Sent",
+        "markPaid": "Mark as Paid",
+        "errorNoItems": "Add at least one line item",
+        "errorInvalidQty": "All quantities must be greater than 0",
+        "frozenNotice": "This invoice is locked and cannot be edited."
     },
     "contracts": {
         "title": "Contracts",
@@ -91,5 +107,17 @@
         "notFound": "Contract not found",
         "editDisabled": "Coming in S6-C",
         "editorNotice": "Contract editor (scope builder) coming in S6-C"
+    },
+    "contractEditor": {
+        "addScope": "Add Scope Item",
+        "noScope": "No scope items. Click \"Add Scope Item\" to start.",
+        "scopePlaceholder": "Enter scope item...",
+        "termsPlaceholder": "Enter terms and conditions...",
+        "notes": "Internal Notes",
+        "notesPlaceholder": "Internal notes (not shown to client)...",
+        "send": "Mark as Sent",
+        "markSigned": "Mark as Signed",
+        "errorNoScope": "Add at least one scope item",
+        "frozenNotice": "This contract is locked and cannot be edited."
     }
 }

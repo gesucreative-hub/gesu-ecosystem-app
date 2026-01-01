@@ -60,7 +60,23 @@
         "lineItems": "Item Baris",
         "subtotal": "Subtotal",
         "adjustments": "Penyesuaian",
-        "total": "Total"
+        "total": "Total",
+        "addItem": "Tambah Item",
+        "noItems": "Belum ada item baris. Klik \"Tambah Item\" untuk mulai.",
+        "item": "Item",
+        "qty": "Jml",
+        "price": "Harga Satuan",
+        "lineTotal": "Total",
+        "selectFromPricelist": "-- Dari Daftar Harga --",
+        "itemName": "Nama item",
+        "description": "Deskripsi (opsional)",
+        "notes": "Catatan",
+        "notesPlaceholder": "Catatan tambahan...",
+        "send": "Tandai Terkirim",
+        "markPaid": "Tandai Lunas",
+        "errorNoItems": "Tambahkan minimal satu item baris",
+        "errorInvalidQty": "Semua jumlah harus lebih dari 0",
+        "frozenNotice": "Faktur ini terkunci dan tidak dapat diedit."
     },
     "contracts": {
         "title": "Kontrak",
@@ -91,5 +107,17 @@
         "notFound": "Kontrak tidak ditemukan",
         "editDisabled": "Segera hadir di S6-C",
         "editorNotice": "Editor kontrak (pembuat lingkup) segera hadir di S6-C"
+    },
+    "contractEditor": {
+        "addScope": "Tambah Item Lingkup",
+        "noScope": "Belum ada item lingkup. Klik \"Tambah Item Lingkup\" untuk mulai.",
+        "scopePlaceholder": "Masukkan item lingkup...",
+        "termsPlaceholder": "Masukkan syarat dan ketentuan...",
+        "notes": "Catatan Internal",
+        "notesPlaceholder": "Catatan internal (tidak ditampilkan ke klien)...",
+        "send": "Tandai Terkirim",
+        "markSigned": "Tandai Ditandatangani",
+        "errorNoScope": "Tambahkan minimal satu item lingkup",
+        "frozenNotice": "Kontrak ini terkunci dan tidak dapat diedit."
     }
 }

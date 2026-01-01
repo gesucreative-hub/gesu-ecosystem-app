@@ -2,9 +2,8 @@
 
 ## Current Status (Single Source of Truth)
 
-- Previous Sprint: **S5 — Business Toolkit Foundation** ✅ COMPLETE (2026-01-02)
-- Current Sprint: **S6 — Invoices & Contracts**
-- Completed: **S6-A — Stores + Numbering** ✅ DONE (2026-01-02)
+- Previous Sprint: **S6 — Invoices & Contracts** ✅ COMPLETE (2026-01-02)
+- Next Sprint: **S7 — Payments, Deliverables, Finance Snapshot** — PLANNED
 - Completed: **S6-B — Nav + List Pages** ✅ DONE (2026-01-02)
 - Completed: **S6-C — Invoice Editor + Contract Builder** ✅ DONE (2026-01-02)
 - Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)
@@ -181,6 +180,102 @@
 | PERSONAL persona: Routes redirect to /compass                               | ✅ PASS |
 
 **Build**: ✅ Passing (0 new errors)
+
+---
+
+## S7 — Payments, Deliverables, Finance Snapshot — PLANNED
+
+**Status**: PLANNED  
+**Scope**: BUSINESS persona only  
+**Dependencies**: S6 complete
+
+### Overview
+
+Enable payment tracking against invoices, deliverable management per project, and a finance snapshot dashboard.
+
+### S7-A: Payment Store + Recording — ✅ DONE (2026-01-02)
+
+**Files Created**:
+
+- `stores/paymentStore.ts` — Payment CRUD with invoice linking, getTotalPaid, getRemaining, isFullyPaid
+
+**Files Modified**:
+
+- `stores/invoiceStore.ts` — Added `dueDate?` field, isOverdue, getEffectiveDueDate, setDueDate, getOverdueInvoices
+- `pages/InvoiceDetailPage.tsx` — Payment recording UI (modal, payments list, due date picker, overdue badge)
+- `locales/en/invoices.json` — Added payments section (+25 keys)
+- `locales/id/invoices.json` — Added payments section (+25 keys)
+
+**QA Results**:
+
+| Test                                        | Result  |
+| ------------------------------------------- | ------- |
+| Create invoice → mark sent → record payment | ✅ PASS |
+| Partial payment → outstanding correct       | ✅ PASS |
+| Full payment → "Mark as Paid" suggestion    | ✅ PASS |
+| Due date picker → set → persists            | ✅ PASS |
+| Overdue badge for past due sent invoice     | ✅ PASS |
+| Delete payment → totals recalculate         | ✅ PASS |
+| TypeScript build passes                     | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
+
+**Next smallest step**: S7-B (Deliverables System)
+
+### S7-B: Deliverables System
+
+**Files to Create**:
+
+- `stores/deliverableTemplateStore.ts`
+- `stores/deliverablePackStore.ts`
+- `pages/DeliverableTemplatesPage.tsx`
+- `pages/ProjectDeliverablesPage.tsx`
+- `locales/en/deliverables.json`, `locales/id/deliverables.json`
+
+**Planned Commits**:
+
+- `S7-B-1: deliverableTemplateStore + deliverablePackStore`
+- `S7-B-2: DeliverableTemplatesPage with CRUD`
+- `S7-B-3: ProjectDeliverablesPage with status tracking`
+
+### S7-C: Finance Snapshot
+
+**Files to Create**:
+
+- `services/financeSnapshotService.ts`
+- `pages/FinanceSnapshotPage.tsx`
+- `locales/en/finance.json`, `locales/id/finance.json`
+
+**Files to Modify**:
+
+- `components/Layout.tsx` — Add Finance, Templates nav
+- `App.tsx` — Add routes
+
+**Planned Commits**:
+
+- `S7-C-1: financeSnapshotService aggregation`
+- `S7-C-2: FinanceSnapshotPage with summary cards`
+- `S7-C-3: nav/routing updates + i18n`
+
+### QA Checklist (Planned)
+
+| Test                                                     | Status |
+| -------------------------------------------------------- | ------ |
+| Create invoice → record payments → outstanding correct   | ☐      |
+| Invoice overdue after 30 days (sent, unpaid)             | ☐      |
+| Deliverable template → add to project → track completion | ☐      |
+| Finance snapshot shows correct totals                    | ☐      |
+| PERSONAL persona: No access to S7 pages                  | ☐      |
+| i18n: All labels translate                               | ☐      |
+| Persistence: All data survives reload                    | ☐      |
+
+### Backlog (Not in S7)
+
+- PDF payment receipts
+- Email payment reminders
+- Payment gateway integration
+- Multi-currency support
+- Advanced finance reports
 
 ---
 

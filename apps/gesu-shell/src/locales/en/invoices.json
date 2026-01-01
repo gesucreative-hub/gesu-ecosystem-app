@@ -119,5 +119,28 @@
         "markSigned": "Mark as Signed",
         "errorNoScope": "Add at least one scope item",
         "frozenNotice": "This contract is locked and cannot be edited."
+    },
+    "payments": {
+        "title": "Payments",
+        "record": "Record Payment",
+        "recordTitle": "Record Payment",
+        "paid": "Paid",
+        "remaining": "Remaining",
+        "overdue": "Overdue",
+        "dueDate": "Due Date",
+        "noPayments": "No payments recorded yet",
+        "fullyPaidSuggestion": "Invoice is fully paid!",
+        "deleteConfirm": "Delete this payment?",
+        "amount": "Amount (IDR)",
+        "date": "Payment Date",
+        "method": "Payment Method",
+        "notes": "Notes (optional)",
+        "notesPlaceholder": "e.g. Partial payment, DP...",
+        "save": "Save Payment",
+        "methods": {
+            "transfer": "Bank Transfer",
+            "cash": "Cash",
+            "other": "Other"
+        }
     }
 }

@@ -1,6 +1,6 @@
-// Invoice Detail Page - S6-C: Full editor for BUSINESS workspace
+// Invoice Detail Page - S6-C + S7-A: Full editor for BUSINESS workspace
 // Draft: editable grid; Non-draft: read-only view (freeze)
-// Supports: add/remove/edit line items, pricelist integration, status transitions
+// S7-A: Payment recording, overdue detection
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -13,7 +13,7 @@ import { Badge } from '../components/Badge';
 import { Select } from '../components/Select';
 import { 
     ArrowLeft, Save, Send, DollarSign, Plus, 
-    Trash2, FileText, Building2, User, ChevronUp, ChevronDown 
+    Trash2, FileText, Building2, User, ChevronUp, ChevronDown, AlertTriangle, Calendar, X
 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
@@ -22,10 +22,23 @@ import {
     markInvoiceSent,
     markInvoicePaid,
     subscribe,
+    isOverdue,
+    getEffectiveDueDate,
+    setDueDate,
     type Invoice, 
     type InvoiceStatus
 } from '../stores/invoiceStore';
 import { listItems, type ServiceCatalogItem } from '../stores/serviceCatalogStore';
+import {
+    listByInvoiceId,
+    createPayment,
+    deletePayment,
+    getTotalPaid,
+    getRemaining,
+    subscribe as subscribePayments,
+    type Payment,
+    type PaymentMethod
+} from '../stores/paymentStore';
 
 const STATUS_COLORS: Record<InvoiceStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -33,6 +46,12 @@ const STATUS_COLORS: Record<InvoiceStatus, 'neutral' | 'brand' | 'success' | 'wa
     paid: 'success',
     cancelled: 'warning'
 };
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+    { value: 'transfer', label: 'Bank Transfer' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'other', label: 'Other' }
+];
 
 // Local line item for editing (without computed fields)
 interface EditableLineItem {
@@ -56,6 +75,15 @@ export function InvoiceDetailPage() {
     const [catalogItems, setCatalogItems] = useState<ServiceCatalogItem[]>([]);
     const [hasChanges, setHasChanges] = useState(false);
 
+    // S7-A: Payment state
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentAmount, setPaymentAmount] = useState<number>(0);
+    const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer');
+    const [paymentNotes, setPaymentNotes] = useState<string>('');
+    const [localDueDate, setLocalDueDate] = useState<string>('');
+
     // Redirect if not business persona
     useEffect(() => {
         if (activePersona !== 'business') {
@@ -63,7 +91,7 @@ export function InvoiceDetailPage() {
         }
     }, [activePersona, navigate]);
 
-    // Load invoice and catalog
+    // Load invoice, catalog, and payments
     const loadData = useCallback(() => {
         if (id) {
             const inv = getInvoiceById(id);
@@ -78,6 +106,8 @@ export function InvoiceDetailPage() {
                 })));
                 setAdjustments(inv.adjustments);
                 setNotes(inv.notes);
+                setLocalDueDate(getEffectiveDueDate(inv));
+                setPayments(listByInvoiceId(inv.id));
             }
         }
         setCatalogItems(listItems());
@@ -85,8 +115,9 @@ export function InvoiceDetailPage() {
 
     useEffect(() => {
         loadData();
-        const unsub = subscribe(loadData);
-        return unsub;
+        const unsub1 = subscribe(loadData);
+        const unsub2 = subscribePayments(loadData);
+        return () => { unsub1(); unsub2(); };
     }, [loadData]);
 
     const isDraft = invoice?.status === 'draft';
@@ -194,6 +225,46 @@ export function InvoiceDetailPage() {
         if (markInvoicePaid(invoice.id)) {
             loadData();
         }
+    };
+
+    // --- S7-A: Payment Handlers ---
+
+    const totalPaid = invoice ? getTotalPaid(invoice.id) : 0;
+    const remaining = invoice ? getRemaining(invoice.total, invoice.id) : 0;
+    const invoiceIsOverdue = invoice ? isOverdue(invoice) : false;
+
+    const openPaymentModal = () => {
+        setPaymentAmount(remaining > 0 ? remaining : 0);
+        setPaymentDate(new Date().toISOString().split('T')[0]);
+        setPaymentMethod('transfer');
+        setPaymentNotes('');
+        setShowPaymentModal(true);
+    };
+
+    const handleRecordPayment = () => {
+        if (!invoice || paymentAmount <= 0) return;
+        createPayment({
+            invoiceId: invoice.id,
+            amount: paymentAmount,
+            paidAt: paymentDate,
+            method: paymentMethod,
+            notes: paymentNotes
+        });
+        setShowPaymentModal(false);
+        loadData();
+    };
+
+    const handleDeletePayment = (paymentId: string) => {
+        if (confirm(t('invoices:payments.deleteConfirm', 'Delete this payment?'))) {
+            deletePayment(paymentId);
+            loadData();
+        }
+    };
+
+    const handleDueDateChange = (newDate: string) => {
+        if (!invoice) return;
+        setLocalDueDate(newDate);
+        setDueDate(invoice.id, newDate);
     };
 
     // --- Formatting ---
@@ -459,9 +530,152 @@ export function InvoiceDetailPage() {
                             <span>{t('invoices:editor.total', 'Total')}</span>
                             <span className="font-mono text-tokens-brand-DEFAULT">{formatPrice(total)}</span>
                         </div>
+                        {/* S7-A: Payment Summary */}
+                        {!isDraft && (
+                            <div className="border-t border-tokens-border mt-3 pt-3 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-tokens-muted">{t('invoices:payments.paid', 'Paid')}</span>
+                                    <span className="font-mono text-green-600">{formatPrice(totalPaid)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span>{t('invoices:payments.remaining', 'Remaining')}</span>
+                                    <span className={`font-mono ${remaining > 0 ? 'text-orange-500' : 'text-green-600'}`}>
+                                        {formatPrice(remaining)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </Card>
+
+            {/* S7-A: Payments Section (only for non-draft) */}
+            {!isDraft && (
+                <Card className="mb-6">
+                    <div className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2 text-tokens-muted">
+                                <DollarSign size={16} />
+                                <span className="text-sm font-medium">{t('invoices:payments.title', 'Payments')}</span>
+                                <Badge variant="neutral">{payments.length}</Badge>
+                                {invoiceIsOverdue && (
+                                    <Badge variant="error" className="ml-2">
+                                        <AlertTriangle size={12} className="mr-1" />
+                                        {t('invoices:payments.overdue', 'Overdue')}
+                                    </Badge>
+                                )}
+                            </div>
+                            {invoice?.status === 'sent' && (
+                                <Button variant="outline" size="sm" icon={<Plus size={14} />} onClick={openPaymentModal}>
+                                    {t('invoices:payments.record', 'Record Payment')}
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Due Date */}
+                        <div className="flex items-center gap-2 mb-4 text-sm">
+                            <Calendar size={14} className="text-tokens-muted" />
+                            <span className="text-tokens-muted">{t('invoices:payments.dueDate', 'Due Date')}:</span>
+                            <Input
+                                type="date"
+                                value={localDueDate}
+                                onChange={(e) => handleDueDateChange(e.target.value)}
+                                className="w-40 text-sm"
+                            />
+                        </div>
+
+                        {/* Payments List */}
+                        {payments.length === 0 ? (
+                            <p className="text-tokens-muted text-sm text-center py-4">
+                                {t('invoices:payments.noPayments', 'No payments recorded yet')}
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {payments.map((p) => (
+                                    <div key={p.id} className="flex items-center justify-between p-3 bg-tokens-panel2 rounded-lg">
+                                        <div>
+                                            <div className="font-mono font-medium text-green-600">{formatPrice(p.amount)}</div>
+                                            <div className="text-xs text-tokens-muted">
+                                                {formatDate(p.paidAt)} • {p.method}
+                                                {p.notes && ` • ${p.notes}`}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeletePayment(p.id)}
+                                            className="p-1.5 text-tokens-muted hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Fully Paid Suggestion */}
+                        {remaining <= 0 && invoice?.status === 'sent' && (
+                            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                                <span className="text-sm text-green-700">
+                                    {t('invoices:payments.fullyPaidSuggestion', 'Invoice is fully paid!')}
+                                </span>
+                                <Button size="sm" onClick={handleMarkPaid}>
+                                    {t('invoices:editor.markPaid', 'Mark as Paid')}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+            )}
+
+            {/* Payment Modal */}
+            {showPaymentModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <Card className="w-full max-w-md mx-4">
+                        <div className="p-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold">{t('invoices:payments.recordTitle', 'Record Payment')}</h3>
+                                <button onClick={() => setShowPaymentModal(false)} className="text-tokens-muted hover:text-tokens-fg">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <Input
+                                    label={t('invoices:payments.amount', 'Amount (IDR)')}
+                                    type="number"
+                                    value={paymentAmount}
+                                    onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                                    min={1}
+                                />
+                                <Input
+                                    label={t('invoices:payments.date', 'Payment Date')}
+                                    type="date"
+                                    value={paymentDate}
+                                    onChange={(e) => setPaymentDate(e.target.value)}
+                                />
+                                <Select
+                                    label={t('invoices:payments.method', 'Payment Method')}
+                                    value={paymentMethod}
+                                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                                    options={PAYMENT_METHODS.map(m => ({ value: m.value, label: t(`invoices:payments.methods.${m.value}`, m.label) }))}
+                                />
+                                <Input
+                                    label={t('invoices:payments.notes', 'Notes (optional)')}
+                                    value={paymentNotes}
+                                    onChange={(e) => setPaymentNotes(e.target.value)}
+                                    placeholder={t('invoices:payments.notesPlaceholder', 'e.g. Partial payment, DP...')}
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-6">
+                                <Button variant="ghost" onClick={() => setShowPaymentModal(false)}>
+                                    {t('common:buttons.cancel', 'Cancel')}
+                                </Button>
+                                <Button onClick={handleRecordPayment} disabled={paymentAmount <= 0}>
+                                    {t('invoices:payments.save', 'Save Payment')}
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* Notes */}
             <Card className="mb-6">

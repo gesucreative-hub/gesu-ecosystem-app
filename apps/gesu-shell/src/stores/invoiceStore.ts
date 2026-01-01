@@ -49,6 +49,7 @@ export interface Invoice {
     subtotal: number;           // Sum of all line item totals
     adjustments: number;        // Discount or additions (can be negative)
     total: number;              // subtotal + adjustments
+    dueDate?: string;           // S7-A: ISO date string, optional (default: createdAt + 30 days)
     notes: string;
     snapshot: InvoiceSnapshot;
     createdAt: string;          // ISO timestamp
@@ -382,6 +383,50 @@ export function getInvoiceCount(): number {
     return ensureLoaded().invoices.length;
 }
 
+// --- Overdue Detection (S7-A) ---
+
+/**
+ * Get effective due date. If not set, defaults to createdAt + 30 days.
+ */
+export function getEffectiveDueDate(invoice: Invoice): string {
+    if (invoice.dueDate) return invoice.dueDate;
+    const created = new Date(invoice.createdAt);
+    created.setDate(created.getDate() + 30);
+    return created.toISOString().split('T')[0];
+}
+
+/**
+ * Check if invoice is overdue: status=sent AND today > dueDate
+ */
+export function isOverdue(invoice: Invoice): boolean {
+    if (invoice.status !== 'sent') return false;
+    const dueDate = getEffectiveDueDate(invoice);
+    const today = new Date().toISOString().split('T')[0];
+    return today > dueDate;
+}
+
+/**
+ * Update invoice due date. Allowed on any status (due date is informational).
+ */
+export function setDueDate(id: string, dueDate: string): Invoice | null {
+    const current = ensureLoaded();
+    const invoice = current.invoices.find(i => i.id === id);
+    if (!invoice) return null;
+    
+    invoice.dueDate = dueDate;
+    invoice.updatedAt = new Date().toISOString();
+    saveState();
+    console.log('[invoiceStore] Set due date:', id, dueDate);
+    return { ...invoice };
+}
+
+/**
+ * Get all overdue invoices (status=sent, past due date).
+ */
+export function getOverdueInvoices(): Invoice[] {
+    return ensureLoaded().invoices.filter(isOverdue);
+}
+
 // --- Numbering ---
 
 /**
@@ -424,6 +469,11 @@ if (import.meta.env?.DEV && typeof window !== 'undefined') {
         markInvoicePaid,
         cancelInvoice,
         deleteInvoice,
-        formatDocumentNumber
+        formatDocumentNumber,
+        isOverdue,
+        getEffectiveDueDate,
+        setDueDate,
+        getOverdueInvoices
     };
 }
+

@@ -119,5 +119,28 @@
         "markSigned": "Tandai Ditandatangani",
         "errorNoScope": "Tambahkan minimal satu item lingkup",
         "frozenNotice": "Kontrak ini terkunci dan tidak dapat diedit."
+    },
+    "payments": {
+        "title": "Pembayaran",
+        "record": "Catat Pembayaran",
+        "recordTitle": "Catat Pembayaran",
+        "paid": "Dibayar",
+        "remaining": "Sisa",
+        "overdue": "Jatuh Tempo",
+        "dueDate": "Tanggal Jatuh Tempo",
+        "noPayments": "Belum ada pembayaran tercatat",
+        "fullyPaidSuggestion": "Faktur sudah lunas!",
+        "deleteConfirm": "Hapus pembayaran ini?",
+        "amount": "Jumlah (IDR)",
+        "date": "Tanggal Pembayaran",
+        "method": "Metode Pembayaran",
+        "notes": "Catatan (opsional)",
+        "notesPlaceholder": "mis. Pembayaran parsial, DP...",
+        "save": "Simpan Pembayaran",
+        "methods": {
+            "transfer": "Transfer Bank",
+            "cash": "Tunai",
+            "other": "Lainnya"
+        }
     }
 }

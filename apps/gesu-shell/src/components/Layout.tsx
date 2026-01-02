@@ -17,9 +17,8 @@ import { UserMenu } from './auth/UserMenu';
 import { SchemaWarningBanner } from './SchemaWarningBanner';
 import { DailyCheckInBanner } from './DailyCheckInBanner';
 
-import { Tabs } from './Tabs';
-
 // NavItem Component matching Reference (Pill shape, Left indicator/Rail)
+import { Tabs } from './Tabs';
 interface NavItemProps {
     to: string;
     icon: React.ReactNode;
@@ -163,18 +162,15 @@ const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     // Full: Segmented control
     return (
         <div className="relative">
-            {/* Persona Switcher (Tabs) */}
-            <div className="px-3 pb-3">
-                 <Tabs
-                     activeTab={activePersona}
-                     onChange={(id) => handleSwitch(id as 'personal' | 'business')}
-                     tabs={[
-                         { id: 'personal', label: t('persona.personal'), icon: <User size={14} /> },
-                         { id: 'business', label: t('persona.business'), icon: <Briefcase size={14} /> }
-                     ]}
-                     className="w-full"
-                 />
-            </div>
+            <Tabs
+                tabs={[
+                    { id: 'personal', label: t('persona.personal'), icon: <User size={14} /> },
+                    { id: 'business', label: t('persona.business'), icon: <Briefcase size={14} /> }
+                ]}
+                activeTab={activePersona}
+                onChange={(id) => handleSwitch(id as 'personal' | 'business')}
+                className="w-full justify-center"
+            />
             {showBlockedToast && <PersonaBlockedToast />}
         </div>
     );

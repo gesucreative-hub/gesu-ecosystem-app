@@ -77,7 +77,7 @@ export function BusinessSettingsPage() {
     };
 
     const handleRemovePaymentMethod = (id: string) => {
-        if (confirm('Remove this payment method?')) {
+        if (confirm(t('business:settings.payment.removeConfirm', 'Remove this payment method?'))) {
             removePaymentMethod(id);
             setPaymentMethods(getPaymentMethods());
         }
@@ -187,14 +187,14 @@ export function BusinessSettingsPage() {
                             onClick={() => setShowAddPayment(!showAddPayment)}
                             icon={<Plus size={14} />}
                         >
-                            Add
+                            {t('business:settings.payment.add', 'Add')}
                         </Button>
                     }
                 >
                     <div className="space-y-3">
                         {paymentMethods.length === 0 ? (
                             <p className="text-tokens-muted text-sm italic text-center py-4">
-                                No payment methods configured
+                                {t('business:settings.payment.noPayment', 'No payment methods configured')}
                             </p>
                         ) : (
                             paymentMethods.map((pm) => (
@@ -205,7 +205,7 @@ export function BusinessSettingsPage() {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-medium text-tokens-fg">{pm.label || pm.bankName}</span>
-                                            {pm.isDefault && <Badge variant="brand">Default</Badge>}
+                                            {pm.isDefault && <Badge variant="brand">{t('business:settings.payment.default', 'Default')}</Badge>}
                                         </div>
                                         <div className="text-xs text-tokens-muted">
                                             {pm.bankName} - {pm.accountNumber}
@@ -226,28 +226,28 @@ export function BusinessSettingsPage() {
                         {showAddPayment && (
                             <div className="mt-4 p-4 bg-tokens-panel2/50 rounded-lg border border-tokens-border space-y-3">
                                 <Input
-                                    label="Label (optional)"
+                                    label={t('business:settings.payment.label', 'Label (optional)')}
                                     value={newPayment.label}
                                     onChange={(e) => setNewPayment(p => ({ ...p, label: e.target.value }))}
-                                    placeholder="e.g., BCA - Main"
+                                    placeholder={t('business:settings.payment.labelPlaceholder', 'e.g., BCA - Main')}
                                 />
                                 <Input
-                                    label="Bank Name"
+                                    label={t('business:settings.payment.bankName', 'Bank Name')}
                                     value={newPayment.bankName}
                                     onChange={(e) => setNewPayment(p => ({ ...p, bankName: e.target.value }))}
-                                    placeholder="Bank Central Asia"
+                                    placeholder={t('business:settings.payment.bankNamePlaceholder', 'Bank Central Asia')}
                                 />
                                 <Input
-                                    label="Account Number"
+                                    label={t('business:settings.payment.accountNumber', 'Account Number')}
                                     value={newPayment.accountNumber}
                                     onChange={(e) => setNewPayment(p => ({ ...p, accountNumber: e.target.value }))}
-                                    placeholder="1234567890"
+                                    placeholder={t('business:settings.payment.accountNumberPlaceholder', '1234567890')}
                                 />
                                 <Input
-                                    label="Account Holder"
+                                    label={t('business:settings.payment.accountHolder', 'Account Holder')}
                                     value={newPayment.accountHolder}
                                     onChange={(e) => setNewPayment(p => ({ ...p, accountHolder: e.target.value }))}
-                                    placeholder="PT Gesu Creative"
+                                    placeholder={t('business:settings.payment.accountHolderPlaceholder', 'PT Gesu Creative')}
                                 />
                                 <label className="flex items-center gap-2 text-sm text-tokens-fg">
                                     <input
@@ -256,14 +256,14 @@ export function BusinessSettingsPage() {
                                         onChange={(e) => setNewPayment(p => ({ ...p, isDefault: e.target.checked }))}
                                         className="rounded"
                                     />
-                                    Set as default
+                                    {t('business:settings.payment.setDefault', 'Set as default')}
                                 </label>
                                 <div className="flex gap-2 justify-end">
                                     <Button size="sm" variant="secondary" onClick={() => setShowAddPayment(false)}>
-                                        Cancel
+                                        {t('common:buttons.cancel', 'Cancel')}
                                     </Button>
                                     <Button size="sm" variant="primary" onClick={handleAddPaymentMethod}>
-                                        Add
+                                        {t('common:buttons.add', 'Add')}
                                     </Button>
                                 </div>
                             </div>
@@ -288,7 +288,7 @@ export function BusinessSettingsPage() {
                                 onChange={(e) => handleProfileChange('invoiceNumberFormat', e.target.value)}
                             />
                             <p className="text-xs text-tokens-muted mt-1">
-                                Tokens: {'{YYYY}'}, {'{YY}'}, {'{MM}'}, {'{DD}'}, {'{####}'}
+                                {t('business:settings.numbering.tokenHelp', 'Tokens: {YYYY}, {YY}, {MM}, {DD}, {####}')}
                             </p>
                         </div>
                         <Input
@@ -305,7 +305,7 @@ export function BusinessSettingsPage() {
                                 onChange={(e) => handleProfileChange('contractNumberFormat', e.target.value)}
                             />
                             <p className="text-xs text-tokens-muted mt-1">
-                                Example: GCL/BRD/{'{MM}'}/{'{###}'}/{'{YYYY}'}
+                                {t('business:settings.numbering.example', 'Example')}: GCL/BRD/{'{MM}'}/{'{###}'}/{'{YYYY}'}
                             </p>
                         </div>
                         <Input

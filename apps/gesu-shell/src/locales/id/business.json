@@ -12,12 +12,19 @@
         },
         "payment": {
             "title": "Metode Pembayaran",
+            "add": "Tambah",
+            "noPayment": "Belum ada metode pembayaran",
+            "default": "Default",
+            "removeConfirm": "Hapus metode pembayaran ini?",
+            "label": "Label (opsional)",
+            "labelPlaceholder": "cth., BCA - Utama",
             "bankName": "Nama Bank",
+            "bankNamePlaceholder": "Bank Central Asia",
             "accountNumber": "Nomor Rekening",
+            "accountNumberPlaceholder": "1234567890",
             "accountHolder": "Pemilik Rekening",
-            "setDefault": "Jadikan default",
-            "addPayment": "Tambah Metode Pembayaran",
-            "noPayment": "Belum ada metode pembayaran"
+            "accountHolderPlaceholder": "PT Gesu Creative",
+            "setDefault": "Jadikan default"
         },
         "numbering": {
             "title": "Penomoran Dokumen",
@@ -25,7 +32,8 @@
             "contractFormat": "Format Nomor Kontrak",
             "nextInvoice": "Urutan Invoice Berikutnya",
             "nextContract": "Urutan Kontrak Berikutnya",
-            "tokenHelp": "Token: {YYYY}, {YY}, {MM}, {DD}, {####}"
+            "tokenHelp": "Token: {YYYY}, {YY}, {MM}, {DD}, {####}",
+            "example": "Contoh"
         },
         "terms": {
             "title": "Syarat Default",
@@ -40,16 +48,46 @@
         "searchPlaceholder": "Cari klien...",
         "noClients": "Belum ada klien. Tambahkan klien pertama Anda!",
         "noResults": "Tidak ada klien yang cocok dengan pencarian",
-        "deleteConfirm": "Hapus klien ini?",
-        "deleteWithProjects": "Hapus \"{name}\"? Ini akan melepas tautan {count} proyek."
+        "deleteConfirm": "Hapus \"{{name}}\"?",
+        "deleteWithProjects": "Hapus \"{{name}}\"? Ini akan melepas tautan {{count}} proyek.",
+        "projectCount": "{{count}} proyek",
+        "form": {
+            "addTitle": "Tambah Klien Baru",
+            "editTitle": "Edit Klien",
+            "name": "Nama",
+            "namePlaceholder": "Nama kontak",
+            "nameRequired": "Nama klien wajib diisi",
+            "company": "Perusahaan",
+            "companyPlaceholder": "Perusahaan atau organisasi",
+            "email": "Email",
+            "emailPlaceholder": "email@example.com",
+            "phone": "Telepon",
+            "phonePlaceholder": "+62 812 3456 789",
+            "address": "Alamat",
+            "addressPlaceholder": "Alamat lengkap",
+            "notes": "Catatan",
+            "notesPlaceholder": "Catatan tambahan..."
+        }
     },
     "clientDetail": {
         "contactInfo": "Informasi Kontak",
+        "email": "Email",
+        "phone": "Telepon",
+        "address": "Alamat",
+        "noContact": "Tidak ada informasi kontak",
         "notes": "Catatan",
+        "noNotes": "Tidak ada catatan",
         "details": "Detail",
+        "created": "Dibuat",
+        "updated": "Diperbarui",
+        "projects": "Proyek",
         "linkedProjects": "Proyek Terhubung",
         "noProjects": "Belum ada proyek terhubung ke klien ini",
-        "linkFromProjects": "Hubungkan proyek dari halaman Proyek"
+        "linkFromProjects": "Hubungkan proyek dari halaman Proyek",
+        "linkProject": "Hubungkan Proyek",
+        "noAvailableProjects": "Tidak ada proyek tersedia",
+        "clickLinkProject": "Klik \"Hubungkan Proyek\" di atas untuk menghubungkan proyek",
+        "unlinkConfirm": "Lepaskan proyek ini dari klien?"
     },
     "nav": {
         "clients": "Klien",

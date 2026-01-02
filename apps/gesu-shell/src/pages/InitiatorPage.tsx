@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -13,7 +13,7 @@ import { ProjectSearch } from '../components/ProjectSearch'; // NEW
 import { BlueprintFilter } from '../components/BlueprintFilter'; // NEW
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { FolderTemplateEditorModal } from '../components/FolderTemplateEditorModal';
-import { Zap, FileText, Settings } from 'lucide-react';
+import { Zap, FileText, Settings, Plus, Users } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
 import {
     listProjects,
@@ -26,6 +26,7 @@ import {
     validateProjectExists,
     Project,
 } from '../stores/projectStore';
+import { listClients, type Client } from '../stores/clientStore';
 import { scaffoldingService } from '../services/scaffoldingService';
 import { StandardsTab } from './StandardsTab';
 import {
@@ -79,7 +80,11 @@ function ProjectGeneratorForm({
     const [name, setName] = useState('');
     const [type, setType] = useState<'client' | 'gesu-creative' | 'other'>('client');
     const [clientName, setClientName] = useState('');  // Sprint 21.3: Client name for folder naming
+    const [selectedClientId, setSelectedClientId] = useState<string>('');  // S5: Client dropdown selection
+    const [clients, setClients] = useState<Client[]>([]);  // S5: Available clients for dropdown
     const [description, setDescription] = useState('');
+    const navigate = useNavigate();  // S5: For Add Client button
+    const { activePersona } = usePersona();
 
     // UI - Polished Alert
     const { alert, AlertDialogComponent } = useAlertDialog();
@@ -138,6 +143,8 @@ function ProjectGeneratorForm({
             const extendedTemplates = data.templates.map(t => migrateFlatTemplate(t));
             setFolderTemplatesData(extendedTemplates);
         });
+        // S5: Load clients for dropdown
+        setClients(listClients());
     }, []);
 
     // Load projects without blueprints when in 'exist' mode
@@ -431,14 +438,41 @@ function ProjectGeneratorForm({
                                         ]}
                                     />
 
-                                    {/* Sprint 21.3: Conditional Client Name field */}
+                                    {/* Sprint 21.3 -> S5: Client Dropdown with Add button (BUSINESS persona only) */}
                                     {isClientProject && (
-                                        <Input
-                                            label={t('initiator:generator.clientName', 'Client Name')}
-                                            placeholder={t('initiator:placeholders.clientName', 'Enter client name...')}
-                                            value={clientName}
-                                            onChange={(e) => setClientName(e.target.value)}
-                                        />
+                                        <div className="flex items-end gap-2">
+                                            <div className="flex-1">
+                                                <SelectDropdown
+                                                    label={t('initiator:generator.clientName', 'Client Name')}
+                                                    value={selectedClientId}
+                                                    onChange={(clientId) => {
+                                                        setSelectedClientId(clientId);
+                                                        // Set clientName for folder naming from selected client
+                                                        const client = clients.find(c => c.id === clientId);
+                                                        setClientName(client?.name || '');
+                                                    }}
+                                                    options={[
+                                                        { value: '', label: t('initiator:placeholders.selectClient', 'Select Client...') },
+                                                        ...clients.map(c => ({
+                                                            value: c.id,
+                                                            label: c.company ? `${c.name} (${c.company})` : c.name
+                                                        }))
+                                                    ]}
+                                                />
+                                            </div>
+                                            {activePersona === 'business' && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => navigate('/clients')}
+                                                    icon={<Plus size={14} />}
+                                                    title={t('initiator:generator.addClient', 'Add new client')}
+                                                    className="mb-0.5"
+                                                >
+                                                    <Users size={14} />
+                                                </Button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 

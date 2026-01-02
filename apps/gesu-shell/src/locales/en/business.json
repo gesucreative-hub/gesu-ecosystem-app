@@ -12,12 +12,19 @@
         },
         "payment": {
             "title": "Payment Methods",
+            "add": "Add",
+            "noPayment": "No payment methods configured",
+            "default": "Default",
+            "removeConfirm": "Remove this payment method?",
+            "label": "Label (optional)",
+            "labelPlaceholder": "e.g., BCA - Main",
             "bankName": "Bank Name",
+            "bankNamePlaceholder": "Bank Central Asia",
             "accountNumber": "Account Number",
+            "accountNumberPlaceholder": "1234567890",
             "accountHolder": "Account Holder",
-            "setDefault": "Set as default",
-            "addPayment": "Add Payment Method",
-            "noPayment": "No payment methods configured"
+            "accountHolderPlaceholder": "PT Gesu Creative",
+            "setDefault": "Set as default"
         },
         "numbering": {
             "title": "Document Numbering",
@@ -25,7 +32,8 @@
             "contractFormat": "Contract Number Format",
             "nextInvoice": "Next Invoice Sequence",
             "nextContract": "Next Contract Sequence",
-            "tokenHelp": "Tokens: {YYYY}, {YY}, {MM}, {DD}, {####}"
+            "tokenHelp": "Tokens: {YYYY}, {YY}, {MM}, {DD}, {####}",
+            "example": "Example"
         },
         "terms": {
             "title": "Default Terms",
@@ -40,16 +48,46 @@
         "searchPlaceholder": "Search clients...",
         "noClients": "No clients yet. Add your first client!",
         "noResults": "No clients found matching your search",
-        "deleteConfirm": "Delete this client?",
-        "deleteWithProjects": "Delete \"{name}\"? This will unlink {count} project(s)."
+        "deleteConfirm": "Delete \"{{name}}\"?",
+        "deleteWithProjects": "Delete \"{{name}}\"? This will unlink {{count}} project(s).",
+        "projectCount": "{{count}} project(s)",
+        "form": {
+            "addTitle": "Add New Client",
+            "editTitle": "Edit Client",
+            "name": "Name",
+            "namePlaceholder": "Contact person name",
+            "nameRequired": "Client name is required",
+            "company": "Company",
+            "companyPlaceholder": "Company or organization",
+            "email": "Email",
+            "emailPlaceholder": "email@example.com",
+            "phone": "Phone",
+            "phonePlaceholder": "+62 812 3456 789",
+            "address": "Address",
+            "addressPlaceholder": "Full address",
+            "notes": "Notes",
+            "notesPlaceholder": "Additional notes..."
+        }
     },
     "clientDetail": {
         "contactInfo": "Contact Information",
+        "email": "Email",
+        "phone": "Phone",
+        "address": "Address",
+        "noContact": "No contact information",
         "notes": "Notes",
+        "noNotes": "No notes",
         "details": "Details",
+        "created": "Created",
+        "updated": "Updated",
+        "projects": "Projects",
         "linkedProjects": "Linked Projects",
         "noProjects": "No projects linked to this client yet",
-        "linkFromProjects": "Link projects from the Projects page"
+        "linkFromProjects": "Link projects from the Projects page",
+        "linkProject": "Link Project",
+        "noAvailableProjects": "No available projects",
+        "clickLinkProject": "Click \"Link Project\" above to connect projects",
+        "unlinkConfirm": "Unlink this project from the client?"
     },
     "nav": {
         "clients": "Clients",

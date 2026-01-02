@@ -37,7 +37,7 @@ export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
             <div
                 ref={containerRef}
                 className="relative flex items-center gap-1 p-1 rounded-full 
-                           bg-white dark:bg-[#1a1a1a]
+                           bg-tokens-panel2
                            border border-tokens-border/50
                            shadow-sm"
             >
@@ -64,7 +64,7 @@ export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
                                 transition-colors duration-300 flex items-center gap-2
                                 ${isActive
                                     ? 'text-white'
-                                    : 'text-tokens-muted hover:text-tokens-fg'
+                                    : 'text-tokens-fg/60 hover:text-tokens-fg'
                                 }
                             `}
                         >

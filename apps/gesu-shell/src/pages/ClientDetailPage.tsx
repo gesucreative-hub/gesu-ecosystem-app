@@ -1,17 +1,17 @@
 // Client Detail Page - S5-2: View client info and linked projects
 // BUSINESS workspace only
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
-import { ArrowLeft, Building2, Mail, Phone, MapPin, FileText, FolderOpen, Unlink, Edit } from 'lucide-react';
+import { ArrowLeft, Building2, Mail, Phone, MapPin, FileText, FolderOpen, Unlink, Edit, Link as LinkIcon, Plus, ChevronDown } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { getClientById, type Client } from '../stores/clientStore';
-import { getProjectsByClientId, unlinkProjectFromClient, type Project } from '../stores/projectStore';
+import { getProjectsByClientId, unlinkProjectFromClient, linkProjectToClient, listProjectsByPersona, type Project } from '../stores/projectStore';
 
 export function ClientDetailPage() {
     const { t } = useTranslation(['business', 'common']);
@@ -28,23 +28,58 @@ export function ClientDetailPage() {
 
     const [client, setClient] = useState<Client | null>(null);
     const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
+    const [showLinkDropdown, setShowLinkDropdown] = useState(false);
+    const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+    const dropdownRef = useRef<HTMLDivElement>(null);  // S5: For click-outside-to-close
 
+    // Load client and projects
     useEffect(() => {
         if (id) {
             const c = getClientById(id);
             setClient(c);
             if (c) {
-                setLinkedProjects(getProjectsByClientId(c.id));
+                refreshProjects(c.id);
             }
         }
     }, [id]);
 
+    const refreshProjects = (clientId: string) => {
+        setLinkedProjects(getProjectsByClientId(clientId));
+        // Get all BUSINESS projects that aren't linked to any client
+        const allBusiness = listProjectsByPersona('business');
+        const unlinked = allBusiness.filter(p => !p.clientId);
+        setAvailableProjects(unlinked);
+    };
+
+    // S5: Click-outside-to-close for dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowLinkDropdown(false);
+            }
+        };
+        if (showLinkDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showLinkDropdown]);
+
     const handleUnlinkProject = (projectId: string) => {
-        if (confirm('Unlink this project from the client?')) {
+        if (confirm(t('business:clientDetail.unlinkConfirm', 'Unlink this project from the client?'))) {
             unlinkProjectFromClient(projectId);
             if (client) {
-                setLinkedProjects(getProjectsByClientId(client.id));
+                refreshProjects(client.id);
             }
+        }
+    };
+
+    const handleLinkProject = (projectId: string) => {
+        if (client) {
+            linkProjectToClient(projectId, client.id);
+            refreshProjects(client.id);
+            setShowLinkDropdown(false);
         }
     };
 
@@ -93,7 +128,7 @@ export function ClientDetailPage() {
                         onClick={() => navigate(`/clients?edit=${client.id}`)}
                         icon={<Edit size={16} />}
                     >
-                        Edit
+                        {t('common:buttons.edit', 'Edit')}
                     </Button>
                 </div>
             </div>
@@ -113,7 +148,7 @@ export function ClientDetailPage() {
                             <div className="flex items-center gap-3">
                                 <Mail size={18} className="text-tokens-muted" />
                                 <div>
-                                    <div className="text-xs text-tokens-muted">Email</div>
+                                    <div className="text-xs text-tokens-muted">{t('business:clientDetail.email', 'Email')}</div>
                                     <a href={`mailto:${client.email}`} className="text-tokens-fg hover:text-tokens-brand-DEFAULT">
                                         {client.email}
                                     </a>
@@ -124,7 +159,7 @@ export function ClientDetailPage() {
                             <div className="flex items-center gap-3">
                                 <Phone size={18} className="text-tokens-muted" />
                                 <div>
-                                    <div className="text-xs text-tokens-muted">Phone</div>
+                                    <div className="text-xs text-tokens-muted">{t('business:clientDetail.phone', 'Phone')}</div>
                                     <a href={`tel:${client.phone}`} className="text-tokens-fg hover:text-tokens-brand-DEFAULT">
                                         {client.phone}
                                     </a>
@@ -135,13 +170,13 @@ export function ClientDetailPage() {
                             <div className="flex items-start gap-3">
                                 <MapPin size={18} className="text-tokens-muted mt-0.5" />
                                 <div>
-                                    <div className="text-xs text-tokens-muted">Address</div>
+                                    <div className="text-xs text-tokens-muted">{t('business:clientDetail.address', 'Address')}</div>
                                     <div className="text-tokens-fg">{client.address}</div>
                                 </div>
                             </div>
                         )}
                         {!client.email && !client.phone && !client.address && (
-                            <p className="text-tokens-muted text-sm italic">No contact information</p>
+                            <p className="text-tokens-muted text-sm italic">{t('business:clientDetail.noContact', 'No contact information')}</p>
                         )}
                     </div>
                 </Card>
@@ -158,7 +193,7 @@ export function ClientDetailPage() {
                     {client.notes ? (
                         <p className="text-tokens-fg text-sm whitespace-pre-line">{client.notes}</p>
                     ) : (
-                        <p className="text-tokens-muted text-sm italic">No notes</p>
+                        <p className="text-tokens-muted text-sm italic">{t('business:clientDetail.noNotes', 'No notes')}</p>
                     )}
                 </Card>
 
@@ -172,15 +207,15 @@ export function ClientDetailPage() {
                 >
                     <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-tokens-muted">Created</span>
+                            <span className="text-tokens-muted">{t('business:clientDetail.created', 'Created')}</span>
                             <span className="text-tokens-fg">{new Date(client.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-tokens-muted">Updated</span>
+                            <span className="text-tokens-muted">{t('business:clientDetail.updated', 'Updated')}</span>
                             <span className="text-tokens-fg">{new Date(client.updatedAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-tokens-muted">Projects</span>
+                            <span className="text-tokens-muted">{t('business:clientDetail.projects', 'Projects')}</span>
                             <Badge variant="brand">{linkedProjects.length}</Badge>
                         </div>
                     </div>
@@ -196,6 +231,43 @@ export function ClientDetailPage() {
                         <Badge variant="neutral">{linkedProjects.length}</Badge>
                     </div>
                 }
+                headerAction={
+                    <div className="relative" ref={dropdownRef}>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowLinkDropdown(!showLinkDropdown)}
+                            icon={<Plus size={14} />}
+                            disabled={availableProjects.length === 0}
+                        >
+                            {t('business:clientDetail.linkProject', 'Link Project')}
+                            <ChevronDown size={14} className="ml-1" />
+                        </Button>
+                        {showLinkDropdown && (
+                            <div className="absolute right-0 top-full mt-1 w-64 bg-tokens-panel border border-tokens-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                                {availableProjects.length === 0 ? (
+                                    <p className="p-3 text-tokens-muted text-sm text-center">
+                                        {t('business:clientDetail.noAvailableProjects', 'No available projects')}
+                                    </p>
+                                ) : (
+                                    availableProjects.map(p => (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => handleLinkProject(p.id)}
+                                            className="w-full text-left px-3 py-2 hover:bg-tokens-panel2 text-tokens-fg text-sm flex items-center gap-2"
+                                        >
+                                            <LinkIcon size={14} className="text-tokens-brand-DEFAULT" />
+                                            <div>
+                                                <div className="font-medium">{p.name}</div>
+                                                <div className="text-xs text-tokens-muted">{p.type}</div>
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+                }
             >
                 {linkedProjects.length === 0 ? (
                     <div className="text-center py-8">
@@ -204,7 +276,7 @@ export function ClientDetailPage() {
                             {t('business:clientDetail.noProjects', 'No projects linked to this client yet')}
                         </p>
                         <p className="text-tokens-muted text-xs mt-1">
-                            Link projects from the Projects page
+                            {t('business:clientDetail.clickLinkProject', 'Click "Link Project" above to connect projects')}
                         </p>
                     </div>
                 ) : (

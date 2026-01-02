@@ -330,15 +330,15 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                             <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">{t('initiator:workflow.legend', 'Legend')}</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-success flex-shrink-0" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.done', 'Done')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-warning flex-shrink-0 animate-pulse" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.inProgress')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-gray-400 flex-shrink-0" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-muted flex-shrink-0" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.toDo')}</span>
                                 </div>
                             </div>
@@ -347,7 +347,7 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                             {progress.percent > 0 && (
                                 <button
                                     onClick={handleClearProgress}
-                                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-colors"
+                                    className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs text-tokens-error hover:bg-tokens-error/10 rounded-lg border border-tokens-error/20 hover:border-tokens-error/40 transition-colors"
                                     title={t('initiator:tooltips.clearProgress', 'Clear all progress')}
                                 >
                                     <RotateCcw size={12} />
@@ -432,8 +432,8 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="px-8 py-6 rounded-xl border-2 border-dashed border-tokens-border bg-tokens-panel/80 backdrop-blur-sm max-w-sm text-center">
                                 {blueprintError ? (
-                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center">
-                                        <FileWarning className="text-amber-500" size={24} />
+                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-tokens-warning/10 flex items-center justify-center">
+                                        <FileWarning className="text-tokens-warning" size={24} />
                                     </div>
                                 ) : (
                                     <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-tokens-brand-DEFAULT/10 flex items-center justify-center">
@@ -473,7 +473,7 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                                                     window.location.reload();
                                                 }
                                             }}
-                                            className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-medium rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1"
+                                            className="px-4 py-2 bg-tokens-error/10 text-tokens-error border border-tokens-error/20 text-xs font-medium rounded-lg hover:bg-tokens-error/20 transition-colors flex items-center gap-1"
                                             title={t('initiator:tooltips.deleteProject', 'Delete this project permanently')}
                                         >
                                             <Trash2 size={12} />
@@ -528,8 +528,8 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                                                 {phaseNodes.map((node: WorkflowNode, index: number) => {
                                                     const statusColors: Record<NodeStatus, string> = {
                                                         'todo': 'border-tokens-border/50 bg-tokens-panel',
-                                                        'in-progress': 'border-amber-400/60 bg-amber-500/5',
-                                                        'done': 'border-emerald-400/60 bg-emerald-500/5',
+                                                        'in-progress': 'border-tokens-warning/60 bg-tokens-warning/5',
+                                                        'done': 'border-tokens-success/60 bg-tokens-success/5',
                                                     };
 
                                                     return (
@@ -557,13 +557,13 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                                                                     </span>
                                                                     {/* Status Dot */}
                                                                     <div className="flex items-center gap-1">
-                                                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${node.status === 'done' ? 'bg-emerald-500' :
-                                                                            node.status === 'in-progress' ? 'bg-amber-500 animate-pulse' :
-                                                                                'bg-gray-400'
+                                                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${node.status === 'done' ? 'bg-tokens-success' :
+                                                                            node.status === 'in-progress' ? 'bg-tokens-warning animate-pulse' :
+                                                                                'bg-tokens-muted'
                                                                             }`} />
-                                                                        <span className={`text-[9px] font-medium uppercase ${node.status === 'done' ? 'text-emerald-500' :
-                                                                            node.status === 'in-progress' ? 'text-amber-500' :
-                                                                                'text-gray-400'
+                                                                        <span className={`text-[9px] font-medium uppercase ${node.status === 'done' ? 'text-tokens-success' :
+                                                                            node.status === 'in-progress' ? 'text-tokens-warning' :
+                                                                                'text-tokens-muted'
                                                                             }`}>
                                                                             {node.status === 'in-progress' ? 'WiP' : node.status === 'done' ? 'Done' : 'Todo'}
                                                                         </span>

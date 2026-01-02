@@ -10,6 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
+import { SelectDropdown } from '../components/Dropdown';
 import { 
     ArrowLeft, Save, Send, CheckCircle, Plus, 
     Trash2, FileText, Building2, User, List, ChevronUp, ChevronDown 
@@ -24,6 +25,8 @@ import {
     type Contract, 
     type ContractStatus
 } from '../stores/contractStore';
+import { listClients, type Client } from '../stores/clientStore';
+import { listProjects, getProjectsByClientId, type Project } from '../stores/projectStore';
 
 const STATUS_COLORS: Record<ContractStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -49,6 +52,8 @@ export function ContractDetailPage() {
     const [terms, setTerms] = useState<string>('');
     const [notes, setNotes] = useState<string>('');
     const [hasChanges, setHasChanges] = useState(false);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
 
     // Redirect if not business persona
     useEffect(() => {
@@ -71,6 +76,7 @@ export function ContractDetailPage() {
                 setNotes(ctr.notes);
             }
         }
+        setClients(listClients());
     }, [id]);
 
     useEffect(() => {
@@ -234,12 +240,34 @@ export function ContractDetailPage() {
                             <User size={16} />
                             <span className="text-sm font-medium">{t('invoices:contractDetail.client', 'Client')}</span>
                         </div>
-                        <div className="font-semibold">{contract.snapshot.clientName || '-'}</div>
-                        {contract.snapshot.clientCompany && (
-                            <div className="text-sm text-tokens-muted">{contract.snapshot.clientCompany}</div>
-                        )}
-                        {contract.snapshot.clientAddress && (
-                            <div className="text-sm text-tokens-muted mt-1">{contract.snapshot.clientAddress}</div>
+                        {isDraft && clients.length > 0 ? (
+                            <SelectDropdown
+                                value={contract.clientId}
+                                onChange={(value) => {
+                                    updateContract(contract.id, { clientId: value });
+                                    // Update available projects based on client
+                                    if (value) {
+                                        setProjects(getProjectsByClientId(value));
+                                    } else {
+                                        setProjects(listProjects());
+                                    }
+                                    loadData();
+                                }}
+                                options={[
+                                    { value: '', label: t('invoices:detail.selectClient', '-- Select Client --') },
+                                    ...clients.map(c => ({ value: c.id, label: c.company ? `${c.name} (${c.company})` : c.name }))
+                                ]}
+                            />
+                        ) : (
+                            <>
+                                <div className="font-semibold">{contract.snapshot.clientName || '-'}</div>
+                                {contract.snapshot.clientCompany && (
+                                    <div className="text-sm text-tokens-muted">{contract.snapshot.clientCompany}</div>
+                                )}
+                                {contract.snapshot.clientAddress && (
+                                    <div className="text-sm text-tokens-muted mt-1">{contract.snapshot.clientAddress}</div>
+                                )}
+                            </>
                         )}
                     </div>
                 </Card>
@@ -257,6 +285,37 @@ export function ContractDetailPage() {
                         )}
                     </div>
                 </Card>
+
+                {/* Project Selector (Draft only) */}
+                {isDraft && (
+                    <Card>
+                        <div className="p-4">
+                            <div className="flex items-center gap-2 mb-3 text-tokens-muted">
+                                <FileText size={16} />
+                                <span className="text-sm font-medium">{t('invoices:contractDetail.project', 'Project')}</span>
+                            </div>
+                            <SelectDropdown
+                                value={contract.projectId || ''}
+                                onChange={(value) => {
+                                    updateContract(contract.id, { projectId: value || undefined });
+                                    loadData();
+                                }}
+                                options={[
+                                    { value: '', label: t('invoices:detail.selectProject', '-- No Project --') },
+                                    ...(contract.clientId ? getProjectsByClientId(contract.clientId) : projects).map(p => ({ 
+                                        value: p.id, 
+                                        label: p.name 
+                                    }))
+                                ]}
+                            />
+                            {!contract.clientId && (
+                                <div className="text-xs text-tokens-muted mt-2">
+                                    {t('invoices:contractDetail.selectClientFirst', 'Select a client to filter projects')}
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                )}
             </div>
 
             {/* Scope Editor / Viewer */}

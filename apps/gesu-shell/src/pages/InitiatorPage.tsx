@@ -282,6 +282,8 @@ function ProjectGeneratorForm({
                         categoryId: selectedBlueprint.categoryId || '',
                         blueprintId: selectedBlueprint?.id || DEFAULT_BLUEPRINT_ID,
                         blueprintVersion: selectedBlueprint?.version || 1,
+                        // S5-3: Link to client if selected
+                        clientId: isClientProject && selectedClientId ? selectedClientId : undefined,
                     };
 
                     // Import and set active

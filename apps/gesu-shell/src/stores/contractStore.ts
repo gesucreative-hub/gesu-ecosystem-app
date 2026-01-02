@@ -245,6 +245,8 @@ export function updateContract(id: string, updates: {
     scope?: string[];       // Replace all scope items
     terms?: string;
     notes?: string;
+    clientId?: string;      // Allow client update on draft contracts
+    projectId?: string;     // Allow project update on draft contracts
 }): Contract | null {
     const current = ensureLoaded();
     const contract = current.contracts.find(c => c.id === id);
@@ -273,6 +275,18 @@ export function updateContract(id: string, updates: {
     
     if (updates.notes !== undefined) {
         contract.notes = updates.notes;
+    }
+    
+    // Update client if provided
+    if (updates.clientId !== undefined) {
+        contract.clientId = updates.clientId;
+        // Re-snapshot client data
+        contract.snapshot = createSnapshot(updates.clientId);
+    }
+    
+    // Update project if provided
+    if (updates.projectId !== undefined) {
+        contract.projectId = updates.projectId;
     }
     
     contract.updatedAt = new Date().toISOString();

@@ -6,6 +6,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
+import { Select } from '../components/Select';
 import { Badge } from '../components/Badge';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Save, Search, Loader2, CheckCircle, AlertCircle, Globe, Download, RefreshCw, Info, X } from 'lucide-react';
@@ -856,19 +857,19 @@ export function SettingsPage() {
                                     <div className="text-sm font-medium text-tokens-fg mb-1">{t('settings:ai.provider')}</div>
                                     <div className="text-xs text-tokens-muted">{t('settings:ai.providerDesc')}</div>
                                 </div>
-                                <select
+                                <Select
                                     value={loadedSettings?.ai?.provider || 'none'}
                                     onChange={(e) => {
                                         const currentAi = loadedSettings?.ai || { enabled: false, provider: 'none', endpoint: 'http://localhost:11434', model: 'llama3.2' };
                                         saveSettings({ ...loadedSettings!, ai: { ...currentAi, provider: e.target.value as 'none' | 'ollama' | 'mock' } });
                                         setIsDirty(true);
                                     }}
-                                    className="bg-tokens-panel border border-tokens-border rounded-lg px-3 py-1.5 text-sm text-tokens-fg focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/30"
-                                >
-                                    <option value="none">{t('settings:ai.providerNone')}</option>
-                                    <option value="ollama">{t('settings:ai.providerOllama')}</option>
-                                    <option value="mock">{t('settings:ai.providerMock')}</option>
-                                </select>
+                                    options={[
+                                        { value: 'none', label: t('settings:ai.providerNone') },
+                                        { value: 'ollama', label: t('settings:ai.providerOllama') },
+                                        { value: 'mock', label: t('settings:ai.providerMock') }
+                                    ]}
+                                />
                             </div>
 
                             {/* Endpoint & Model (only for Ollama) */}

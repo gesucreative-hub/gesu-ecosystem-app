@@ -10,6 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
+import { Select } from '../components/Select';
 import { Badge } from '../components/Badge';
 import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronUp, ChevronRight, Trash2, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
@@ -1735,18 +1736,14 @@ export function StandardsTab() {
 
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-tokens-muted uppercase">{t('initiator:standards.reassignTo')}</label>
-                            <select
+                            <Select
                                 value={migrationTargetId}
                                 onChange={(e) => setMigrationTargetId(e.target.value)}
-                                className="w-full bg-tokens-panel2 border border-tokens-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT"
-                            >
-                                {data?.blueprints
+                                options={data?.blueprints
                                     .filter(b => b.id !== migrationDialog.blueprintId)
-                                    .map(b => (
-                                        <option key={b.id} value={b.id}>{b.name}</option>
-                                    ))
-                                }
-                            </select>
+                                    .map(b => ({ value: b.id, label: b.name })) || []}
+                                fullWidth
+                            />
                         </div>
 
                         <div className="flex items-center justify-end gap-3 pt-2">

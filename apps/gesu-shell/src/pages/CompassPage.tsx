@@ -7,6 +7,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
+import { Select } from '../components/Select';
 import { Tabs } from '../components/Tabs';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { useAlertDialog } from '../components/AlertDialog';
@@ -888,35 +889,33 @@ export function CompassPage() {
                                             {focusFirstMode === 'select' && (
                                                 <div className="space-y-2">
                                                     {/* Project selection */}
-                                                    <select
+                                                    <Select
                                                         value={selectedFocusType === 'project' ? selectedRefId : ''}
                                                         onChange={(e) => {
                                                             setSelectedFocusType('project');
                                                             setSelectedRefId(e.target.value);
                                                         }}
-                                                        className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg"
-                                                    >
-                                                        <option value="">{t('compass:focusFirst.selectProject')}</option>
-                                                        {activeProjects.map(p => (
-                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                        ))}
-                                                    </select>
+                                                        options={[
+                                                            { value: '', label: t('compass:focusFirst.selectProject') },
+                                                            ...activeProjects.map(p => ({ value: p.id, label: p.name }))
+                                                        ]}
+                                                        fullWidth
+                                                    />
 
                                                     {/* Task selection (for WIP limit case) */}
                                                     {projectHubTasks.filter(t => !t.done).length > 0 && (
-                                                        <select
+                                                        <Select
                                                             value={selectedFocusType === 'task' ? selectedRefId : ''}
                                                             onChange={(e) => {
                                                                 setSelectedFocusType('task');
                                                                 setSelectedRefId(e.target.value);
                                                             }}
-                                                            className="w-full px-3 py-2 text-sm bg-tokens-bg border border-tokens-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tokens-ring text-tokens-fg"
-                                                        >
-                                                            <option value="">{t('compass:focusFirst.selectTask')}</option>
-                                                            {projectHubTasks.filter(t => !t.done).map(task => (
-                                                                <option key={task.id} value={task.id}>{task.title}</option>
-                                                            ))}
-                                                        </select>
+                                                            options={[
+                                                                { value: '', label: t('compass:focusFirst.selectTask') },
+                                                                ...projectHubTasks.filter(t => !t.done).map(task => ({ value: task.id, label: task.title }))
+                                                            ]}
+                                                            fullWidth
+                                                        />
                                                     )}
                                                 </div>
                                             )}

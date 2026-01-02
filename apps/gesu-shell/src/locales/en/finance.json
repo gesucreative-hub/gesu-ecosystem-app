@@ -1,0 +1,13 @@
+{
+    "title": "Finance Snapshot",
+    "subtitle": "Monthly billing overview",
+    "invoiced": "Invoiced",
+    "paid": "Paid",
+    "outstanding": "Outstanding",
+    "overdue": "Overdue",
+    "invoiceCount": "{{count}} invoices in selected month",
+    "overdueInvoices": "Overdue Invoices",
+    "noOverdue": "No overdue invoices — great job!",
+    "noInvoices": "No invoices in this month",
+    "dueOn": "Due"
+}

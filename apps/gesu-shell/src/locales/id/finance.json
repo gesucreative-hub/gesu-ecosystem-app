@@ -1,0 +1,13 @@
+{
+    "title": "Snapshot Keuangan",
+    "subtitle": "Ringkasan tagihan bulanan",
+    "invoiced": "Ditagihkan",
+    "paid": "Dibayar",
+    "outstanding": "Belum Dibayar",
+    "overdue": "Jatuh Tempo",
+    "invoiceCount": "{{count}} faktur di bulan ini",
+    "overdueInvoices": "Faktur Jatuh Tempo",
+    "noOverdue": "Tidak ada faktur jatuh tempo — kerja bagus!",
+    "noInvoices": "Tidak ada faktur di bulan ini",
+    "dueOn": "Jatuh tempo"
+}

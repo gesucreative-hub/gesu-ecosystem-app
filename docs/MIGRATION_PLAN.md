@@ -254,24 +254,36 @@ Enable payment tracking against invoices, deliverable management per project, an
 
 **Next smallest step**: S7-C (Finance Snapshot)
 
-### S7-C: Finance Snapshot
+### S7-C: Finance Snapshot — ✅ DONE (2026-01-02)
 
-**Files to Create**:
+**Files Created**:
 
-- `services/financeSnapshotService.ts`
-- `pages/FinanceSnapshotPage.tsx`
-- `locales/en/finance.json`, `locales/id/finance.json`
+- `services/financeSnapshotService.ts` — Monthly aggregation (150 lines)
+- `pages/FinanceSnapshotPage.tsx` — Dashboard UI (210 lines)
+- `locales/en/finance.json`, `locales/id/finance.json` — 12 keys each
 
-**Files to Modify**:
+**Files Modified**:
 
-- `components/Layout.tsx` — Add Finance, Templates nav
-- `App.tsx` — Add routes
+- `config/i18n.ts` — Registered finance namespace
+- `App.tsx` — Added route `/finance`
+- `Layout.tsx` — Added "Finance" nav item + persona guard
 
-**Planned Commits**:
+**QA Results**:
 
-- `S7-C-1: financeSnapshotService aggregation`
-- `S7-C-2: FinanceSnapshotPage with summary cards`
-- `S7-C-3: nav/routing updates + i18n`
+| Test                                     | Result  |
+| ---------------------------------------- | ------- |
+| Finance page loads with summary cards    | ✅ PASS |
+| Invoiced/Paid/Outstanding totals correct | ✅ PASS |
+| Overdue total for overdue invoices       | ✅ PASS |
+| Overdue list shows invoices with links   | ✅ PASS |
+| Month selector changes data              | ✅ PASS |
+| Empty state for no invoices              | ✅ PASS |
+| Persona guard (nav hidden + redirect)    | ✅ PASS |
+| TypeScript build passes                  | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
+
+**Sprint S7 Complete!** All slices: S7-A (Payments) ✅, S7-B (Deliverables) ✅, S7-C (Finance) ✅
 
 ### QA Checklist (Planned)
 

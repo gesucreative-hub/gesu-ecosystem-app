@@ -30,6 +30,8 @@ import { ContractDetailPage } from './pages/ContractDetailPage';
 // S7-B: Deliverables pages
 import { DeliverableTemplatesPage } from './pages/DeliverableTemplatesPage';
 import { ProjectDeliverablesPage } from './pages/ProjectDeliverablesPage';
+// S7-C: Finance page
+import { FinanceSnapshotPage } from './pages/FinanceSnapshotPage';
 
 function App() {
     const { settings } = useGesuSettings();
@@ -104,6 +106,8 @@ function App() {
                     {/* S7-B: Deliverables routes */}
                     <Route path="deliverable-templates" element={<DeliverableTemplatesPage />} />
                     <Route path="deliverables" element={<ProjectDeliverablesPage />} />
+                    {/* S7-C: Finance route */}
+                    <Route path="finance" element={<FinanceSnapshotPage />} />
                 </Route>
             </Routes>
         </AuthProvider>

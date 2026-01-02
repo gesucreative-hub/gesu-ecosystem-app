@@ -40,6 +40,7 @@ import {
     type PaymentMethod
 } from '../stores/paymentStore';
 import { listClients, type Client } from '../stores/clientStore';
+import { listProjects, getProjectsByClientId, type Project } from '../stores/projectStore';
 
 const STATUS_COLORS: Record<InvoiceStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -388,6 +389,37 @@ export function InvoiceDetailPage() {
                         )}
                     </div>
                 </Card>
+
+                {/* Project Selector (Draft only) */}
+                {isDraft && (
+                    <Card>
+                        <div className="p-4">
+                            <div className="flex items-center gap-2 mb-3 text-tokens-muted">
+                                <FileText size={16} />
+                                <span className="text-sm font-medium">{t('invoices:detail.project', 'Project')}</span>
+                            </div>
+                            <SelectDropdown
+                                value={invoice.projectId || ''}
+                                onChange={(value) => {
+                                    updateInvoice(invoice.id, { projectId: value || undefined });
+                                    loadData();
+                                }}
+                                options={[
+                                    { value: '', label: t('invoices:detail.selectProject', '-- No Project --') },
+                                    ...(invoice.clientId ? getProjectsByClientId(invoice.clientId) : listProjects()).map((p: Project) => ({ 
+                                        value: p.id, 
+                                        label: p.name 
+                                    }))
+                                ]}
+                            />
+                            {!invoice.clientId && (
+                                <div className="text-xs text-tokens-muted mt-2">
+                                    {t('invoices:detail.selectClientFirst', 'Select a client to filter projects')}
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                )}
             </div>
 
             {/* Line Items Editor / Viewer */}

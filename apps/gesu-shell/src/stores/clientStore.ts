@@ -1,6 +1,10 @@
 // Client Store - Manages client records for BUSINESS workspace
 // S5-2: CRUD clients, scoped to BUSINESS workspace only
 
+import { getProjectsByClientId } from './projectStore';
+import { getInvoicesByClientId } from './invoiceStore';
+import { getContractsByClientId } from './contractStore';
+
 export interface Client {
     id: string;
     name: string;               // Contact person name
@@ -180,6 +184,23 @@ export function deleteClient(id: string): boolean {
 
 export function getClientCount(): number {
     return ensureLoaded().clients.length;
+}
+
+/**
+ * Get count of entities linked to a client (projects, invoices, contracts)
+ * Used for cascade deletion warning
+ */
+export function getLinkedEntityCount(clientId: string): { projects: number; invoices: number; contracts: number; total: number } {
+    const projects = getProjectsByClientId(clientId).length;
+    const invoices = getInvoicesByClientId(clientId).length;
+    const contracts = getContractsByClientId(clientId).length;
+    
+    return {
+        projects,
+        invoices,
+        contracts,
+        total: projects + invoices + contracts
+    };
 }
 
 // --- Dev Helper ---

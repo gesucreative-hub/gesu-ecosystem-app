@@ -20,9 +20,10 @@ import {
     deleteClient,
     searchClients,
     subscribe,
+    getLinkedEntityCount,
     type Client
 } from '../stores/clientStore';
-import { getProjectsByClientId, unlinkAllProjectsFromClient } from '../stores/projectStore';
+import { unlinkAllProjectsFromClient } from '../stores/projectStore';
 
 export function ClientsPage() {
     const { t } = useTranslation(['business', 'common']);
@@ -96,12 +97,23 @@ export function ClientsPage() {
     };
 
     const handleDelete = (client: Client) => {
-        const linkedProjects = getProjectsByClientId(client.id);
-        const message = linkedProjects.length > 0
-            ? t('business:clients.deleteWithProjects', 'Delete "{{name}}"? This will unlink {{count}} project(s).', { name: client.name, count: linkedProjects.length })
-            : t('business:clients.deleteConfirm', 'Delete "{{name}}"?', { name: client.name });
+        // Check for linked entities
+        const linkedCounts = getLinkedEntityCount(client.id);
+        
+        // Build warning message
+        let message = `Delete "${client.name}"?`;
+        
+        if (linkedCounts.total > 0) {
+            const parts: string[] = [];
+            if (linkedCounts.projects > 0) parts.push(`${linkedCounts.projects} project(s)`);
+            if (linkedCounts.invoices > 0) parts.push(`${linkedCounts.invoices} invoice(s)`);
+            if (linkedCounts.contracts > 0) parts.push(`${linkedCounts.contracts} contract(s)`);
+            
+            message += `\n\nThis client has ${parts.join(', ')} linked. These will be unlinked but NOT deleted.`;
+        }
         
         if (confirm(message)) {
+            // Unlink all entities
             unlinkAllProjectsFromClient(client.id);
             deleteClient(client.id);
         }

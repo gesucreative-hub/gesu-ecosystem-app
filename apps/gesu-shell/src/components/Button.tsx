@@ -95,24 +95,24 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                     border-2 border-gray-200 dark:border-tokens-border
                     text-gray-700 dark:text-tokens-fg
                     
-                    hover:bg-primary-700/10 dark:hover:bg-secondary-300/10
-                    hover:border-primary-700/20 dark:hover:border-secondary-300/40
+                    hover:bg-tokens-brand-DEFAULT/10 dark:hover:bg-tokens-brand-DEFAULT/10
+                    hover:border-tokens-brand-DEFAULT/20 dark:hover:border-tokens-brand-DEFAULT/40
                     
-                    active:bg-primary-700 dark:active:bg-secondary-300
-                    active:border-primary-700 dark:active:border-secondary-300
-                    active:text-white dark:active:text-secondary-950
+                    active:bg-tokens-brand-DEFAULT dark:active:bg-tokens-brand-DEFAULT
+                    active:border-tokens-brand-DEFAULT dark:active:border-tokens-brand-DEFAULT
+                    active:text-white dark:active:text-tokens-brand-foreground
                 `;
             } else {
                 // Primary WITHOUT icon (or icon in left/right position)
                 return `
                     bg-white dark:bg-transparent
-                    border-2 border-primary-700 dark:border-secondary-300
-                    text-primary-700 dark:text-secondary-300
+                    border-2 border-tokens-brand-DEFAULT dark:border-tokens-brand-DEFAULT
+                    text-tokens-brand-DEFAULT dark:text-tokens-brand-DEFAULT
                     
-                    hover:bg-primary-700/10 dark:hover:bg-secondary-300/20
+                    hover:bg-tokens-brand-DEFAULT/10 dark:hover:bg-tokens-brand-DEFAULT/20
                     
-                    active:bg-primary-700 dark:active:bg-secondary-300
-                    active:text-white dark:active:text-secondary-950
+                    active:bg-tokens-brand-DEFAULT dark:active:bg-tokens-brand-DEFAULT
+                    active:text-white dark:active:text-tokens-brand-foreground
                 `;
             }
         }
@@ -123,8 +123,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 border-2 border-tokens-border
                 text-tokens-fg
                 
-                hover:bg-tokens-panel hover:border-primary-700/30 dark:hover:border-secondary-300/30
-                active:bg-primary-700/20 dark:active:bg-secondary-300/20
+                hover:bg-tokens-panel hover:border-tokens-brand-DEFAULT/30 dark:hover:border-tokens-brand-DEFAULT/30
+                active:bg-tokens-brand-DEFAULT/20 dark:active:bg-tokens-brand-DEFAULT/20
             `;
         }
 
@@ -134,8 +134,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 border-2 border-tokens-border
                 text-tokens-fg
                 
-                hover:bg-tokens-panel2 hover:border-primary-700/50 dark:hover:border-secondary-300/50
-                active:bg-primary-700/10 dark:active:bg-secondary-300/10
+                hover:bg-tokens-panel2 hover:border-tokens-brand-DEFAULT/50 dark:hover:border-tokens-brand-DEFAULT/50
+                active:bg-tokens-brand-DEFAULT/10 dark:active:bg-tokens-brand-DEFAULT/10
             `;
         }
 
@@ -145,7 +145,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
                 text-tokens-muted
                 
                 hover:text-tokens-fg hover:bg-tokens-panel2
-                active:bg-primary-700/10 dark:active:bg-secondary-300/10
+                active:bg-tokens-brand-DEFAULT/10 dark:active:bg-tokens-brand-DEFAULT/10
             `;
         }
 
@@ -166,14 +166,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
             transition-all duration-200
             ${getCircleSize()}
             
-            bg-primary-700 dark:bg-secondary-300
-            text-white dark:text-secondary-950
+            bg-tokens-brand-DEFAULT dark:bg-tokens-brand-DEFAULT
+            text-white dark:text-tokens-brand-foreground
             
             group-hover/btn:bg-gray-700 dark:group-hover/btn:bg-gray-700
             group-hover/btn:text-white dark:group-hover/btn:text-white
             
-            group-active/btn:bg-gray-700 dark:group-active/btn:bg-secondary-300
-            group-active/btn:text-white dark:group-active/btn:text-secondary-950
+            group-active/btn:bg-gray-700 dark:group-active/btn:bg-tokens-brand-DEFAULT
+            group-active/btn:text-white dark:group-active/btn:text-tokens-brand-foreground
         `;
     };
 

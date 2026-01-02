@@ -23,7 +23,7 @@ import {
     getLinkedEntityCount,
     type Client
 } from '../stores/clientStore';
-import { unlinkAllProjectsFromClient } from '../stores/projectStore';
+import { unlinkAllProjectsFromClient, getProjectsByClientId } from '../stores/projectStore';
 
 export function ClientsPage() {
     const { t } = useTranslation(['business', 'common']);

@@ -43,6 +43,7 @@ export function ContractsPage() {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<ContractStatus | ''>('');
+    const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
@@ -63,6 +64,11 @@ export function ContractsPage() {
             );
         }
         
+        // Phase 3: Apply unlinked filter
+        if (showUnlinkedOnly) {
+            result = result.filter(ctr => !ctr.clientId);
+        }
+        
         setContracts(result);
     };
 
@@ -70,7 +76,7 @@ export function ContractsPage() {
         loadData();
         const unsub = subscribe(loadData);
         return unsub;
-    }, [searchQuery, statusFilter]);
+    }, [searchQuery, statusFilter, showUnlinkedOnly]);
 
     // Create new contract
     const handleNewContract = () => {
@@ -133,6 +139,17 @@ export function ContractsPage() {
                     </button>
                 ))}
             </div>
+
+            {/* Unlinked Filter Checkbox */}
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={showUnlinkedOnly}
+                    onChange={(e) => setShowUnlinkedOnly(e.target.checked)}
+                    className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/50"
+                />
+                <span className="text-sm text-tokens-muted">{t('invoices:contracts.showUnlinked', 'Show unlinked only')}</span>
+            </label>
 
             {/* Contracts List */}
             {contracts.length === 0 ? (

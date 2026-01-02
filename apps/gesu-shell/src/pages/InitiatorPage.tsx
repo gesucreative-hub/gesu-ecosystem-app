@@ -783,6 +783,7 @@ export function ProjectHubPage() {
     const [blueprintFilter, setBlueprintFilter] = useState<string>('all');
     const [statusFilters, setStatusFilters] = useState<string[]>([]); // Sprint 6.8: Status filtering
     const [typeFilters, setTypeFilters] = useState<string[]>([]); // Project type filtering
+    const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Show unlinked projects only
 
 
     // Sprint 20.1: Auto-load disk projects on mount
@@ -927,8 +928,13 @@ export function ProjectHubPage() {
             result = result.filter(project => typeFilters.includes(project.type));
         }
 
+        // 5. Filter unlinked (no client) - Phase 3
+        if (showUnlinkedOnly) {
+            result = result.filter(project => !project.clientId);
+        }
+
         return result;
-    }, [projects, activePersona, blueprintFilter, statusFilters, typeFilters, blueprintData]);
+    }, [projects, activePersona, blueprintFilter, statusFilters, typeFilters, showUnlinkedOnly, blueprintData]);
 
 
 

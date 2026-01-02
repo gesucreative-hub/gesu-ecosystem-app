@@ -44,6 +44,7 @@ export function InvoicesPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
+    const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
@@ -64,6 +65,11 @@ export function InvoicesPage() {
             );
         }
         
+        // Phase 3: Apply unlinked filter
+        if (showUnlinkedOnly) {
+            result = result.filter(inv => !inv.clientId);
+        }
+        
         setInvoices(result);
     };
 
@@ -71,7 +77,7 @@ export function InvoicesPage() {
         loadData();
         const unsub = subscribe(loadData);
         return unsub;
-    }, [searchQuery, statusFilter]);
+    }, [searchQuery, statusFilter, showUnlinkedOnly]);
 
     // Create new invoice
     const handleNewInvoice = () => {
@@ -138,6 +144,17 @@ export function InvoicesPage() {
                     </button>
                 ))}
             </div>
+
+            {/* Unlinked Filter Checkbox */}
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={showUnlinkedOnly}
+                    onChange={(e) => setShowUnlinkedOnly(e.target.checked)}
+                    className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/50"
+                />
+                <span className="text-sm text-tokens-muted">{t('invoices:list.showUnlinked', 'Show unlinked only')}</span>
+            </label>
 
             {/* Invoices List */}
             {invoices.length === 0 ? (

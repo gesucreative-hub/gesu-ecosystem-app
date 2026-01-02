@@ -9,8 +9,9 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronUp, ChevronRight, Trash2, Search, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
+import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronUp, ChevronRight, Trash2, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import {
@@ -899,16 +900,12 @@ export function StandardsTab() {
             {/* Left Column: Blueprints - Redesigned to match Folder Template Manager */}
             <div className="space-y-3">
                 {/* Search Bar */}
-                <div className="relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
-                    <input
-                        type="text"
-                        placeholder={t('initiator:standards.searchPlaceholder', 'Search blueprints...')}
-                        value={blueprintSearch}
-                        onChange={(e) => setBlueprintSearch(e.target.value)}
-                        className="w-full bg-tokens-panel2 border border-tokens-border rounded-lg pl-9 pr-4 py-2.5 text-sm text-tokens-fg placeholder:text-tokens-muted/50 focus:outline-none focus:ring-1 focus:ring-tokens-brand-DEFAULT/50"
-                    />
-                </div>
+                <SearchInput
+                    placeholder={t('initiator:standards.searchPlaceholder', 'Search blueprints...')}
+                    value={blueprintSearch}
+                    onChange={(e) => setBlueprintSearch(e.target.value)}
+                    className="bg-tokens-panel2 py-2.5 rounded-lg focus:ring-1"
+                />
 
                 {/* Blueprint Cards */}
                 <div className="space-y-1.5">

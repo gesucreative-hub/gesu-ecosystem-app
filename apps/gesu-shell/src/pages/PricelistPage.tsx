@@ -8,8 +8,9 @@ import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { SearchInput } from '../components/SearchInput';
 import { Select } from '../components/Select';
-import { Plus, Search, Edit2, Trash2, Tag, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, X, Check } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listItems, 
@@ -144,13 +145,12 @@ export function PricelistPage() {
             </div>
             {/* Search + Filter + Add */}
             <div className="flex flex-wrap gap-3 mb-6">
-                <div className="flex-1 min-w-[200px] relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
-                    <Input
+                <div className="flex-1 min-w-[200px]">
+                    <SearchInput
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t('invoices:pricelist.searchPlaceholder', 'Search items...')}
-                        className="pl-9"
+                        fullWidth
                     />
                 </div>
                 <Select

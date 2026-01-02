@@ -8,8 +8,9 @@ import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Plus, Edit2, Trash2, FileStack, ChevronUp, ChevronDown, X, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, FileStack, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
     listTemplates,
@@ -163,15 +164,11 @@ export function DeliverableTemplatesPage() {
                     </div>
                     
                     {/* Search */}
-                    <div className="relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
-                        <Input
-                            placeholder={t('common:search', 'Search...')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9"
-                        />
-                    </div>
+                    <SearchInput
+                        placeholder={t('common:search', 'Search...')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
             </Card>
 

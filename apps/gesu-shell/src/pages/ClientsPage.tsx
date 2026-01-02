@@ -1,3 +1,4 @@
+
 // Clients Page - S5-2: Client list with CRUD operations
 // BUSINESS workspace only
 
@@ -8,8 +9,9 @@ import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Users, Plus, Search, Trash2, Edit, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Trash2, Edit, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
     listClients,
@@ -68,7 +70,7 @@ export function ClientsPage() {
 
     const handleSubmit = () => {
         if (!formData.name.trim()) {
-            alert('Client name is required');
+            alert(t('business:clients.form.nameRequired', 'Client name is required'));
             return;
         }
 
@@ -96,8 +98,8 @@ export function ClientsPage() {
     const handleDelete = (client: Client) => {
         const linkedProjects = getProjectsByClientId(client.id);
         const message = linkedProjects.length > 0
-            ? `Delete "${client.name}"? This will unlink ${linkedProjects.length} project(s).`
-            : `Delete "${client.name}"?`;
+            ? t('business:clients.deleteWithProjects', 'Delete "{{name}}"? This will unlink {{count}} project(s).', { name: client.name, count: linkedProjects.length })
+            : t('business:clients.deleteConfirm', 'Delete "{{name}}"?', { name: client.name });
         
         if (confirm(message)) {
             unlinkAllProjectsFromClient(client.id);
@@ -145,72 +147,67 @@ export function ClientsPage() {
             </div>
 
             {/* Search */}
-            <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t('business:clients.searchPlaceholder', 'Search clients...')}
-                    className="w-full pl-10 pr-4 py-3 bg-tokens-panel border border-tokens-border rounded-xl text-tokens-fg focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
-                />
-            </div>
+            <SearchInput
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('business:clients.searchPlaceholder', 'Search clients...')}
+            />
 
             {/* Add/Edit Form */}
             {showAddForm && (
                 <Card
-                    title={editingClient ? 'Edit Client' : 'Add New Client'}
+                    title={editingClient ? t('business:clients.form.editTitle', 'Edit Client') : t('business:clients.form.addTitle', 'Add New Client')}
                     className="border-tokens-brand-DEFAULT/30"
                 >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input
-                            label="Name *"
+                            label={t('business:clients.form.name', 'Name') + ' *'}
                             value={formData.name}
                             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                            placeholder="Contact person name"
+                            placeholder={t('business:clients.form.namePlaceholder', 'Contact person name')}
                         />
                         <Input
-                            label="Company"
+                            label={t('business:clients.form.company', 'Company')}
                             value={formData.company}
                             onChange={(e) => setFormData(f => ({ ...f, company: e.target.value }))}
-                            placeholder="Company or organization"
+                            placeholder={t('business:clients.form.companyPlaceholder', 'Company or organization')}
                         />
                         <Input
-                            label="Email"
+                            label={t('business:clients.form.email', 'Email')}
                             value={formData.email}
                             onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
-                            placeholder="email@example.com"
+                            placeholder={t('business:clients.form.emailPlaceholder', 'email@example.com')}
                         />
                         <Input
-                            label="Phone"
+                            label={t('business:clients.form.phone', 'Phone')}
                             value={formData.phone}
                             onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))}
-                            placeholder="+62 812 3456 789"
+                            placeholder={t('business:clients.form.phonePlaceholder', '+62 812 3456 789')}
                         />
                         <div className="md:col-span-2">
                             <Input
-                                label="Address"
+                                label={t('business:clients.form.address', 'Address')}
                                 value={formData.address}
                                 onChange={(e) => setFormData(f => ({ ...f, address: e.target.value }))}
-                                placeholder="Full address"
+                                placeholder={t('business:clients.form.addressPlaceholder', 'Full address')}
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-tokens-fg mb-2">Notes</label>
+                            <label className="block text-sm font-medium text-tokens-fg mb-2">{t('business:clients.form.notes', 'Notes')}</label>
                             <textarea
                                 value={formData.notes}
                                 onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))}
                                 className="w-full h-20 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
-                                placeholder="Additional notes..."
+                                placeholder={t('business:clients.form.notesPlaceholder', 'Additional notes...')}
                             />
                         </div>
                     </div>
                     <div className="flex gap-2 justify-end mt-4">
                         <Button variant="secondary" onClick={resetForm}>
-                            Cancel
+                            {t('common:buttons.cancel', 'Cancel')}
                         </Button>
                         <Button variant="primary" onClick={handleSubmit}>
-                            {editingClient ? 'Update' : 'Create'}
+                            {editingClient ? t('common:buttons.update', 'Update') : t('common:buttons.create', 'Create')}
                         </Button>
                     </div>
                 </Card>
@@ -222,7 +219,7 @@ export function ClientsPage() {
                     <Card className="py-12 text-center">
                         <Users size={48} className="mx-auto text-tokens-muted mb-4 opacity-50" />
                         <p className="text-tokens-muted">
-                            {searchQuery ? 'No clients found matching your search' : 'No clients yet. Add your first client!'}
+                            {searchQuery ? t('business:clients.noResults', 'No clients found matching your search') : t('business:clients.noClients', 'No clients yet. Add your first client!')}
                         </p>
                     </Card>
                 ) : (
@@ -259,7 +256,7 @@ export function ClientsPage() {
                                                 </span>
                                             )}
                                             {projectCount > 0 && (
-                                                <Badge variant="brand">{projectCount} project{projectCount !== 1 ? 's' : ''}</Badge>
+                                                <Badge variant="brand">{t('business:clients.projectCount', '{{count}} project(s)', { count: projectCount })}</Badge>
                                             )}
                                         </div>
                                     </div>

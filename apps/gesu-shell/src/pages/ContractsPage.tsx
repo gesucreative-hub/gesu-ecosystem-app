@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
+import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Plus, Search, FileSignature, ChevronRight } from 'lucide-react';
+import { Plus, FileSignature, ChevronRight } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listContracts, 
@@ -104,13 +104,12 @@ export function ContractsPage() {
             </div>
             {/* Search + Add */}
             <div className="flex flex-wrap gap-3 mb-4">
-                <div className="flex-1 min-w-[200px] relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-tokens-muted" />
-                    <Input
+                <div className="flex-1 min-w-[200px]">
+                    <SearchInput
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t('invoices:contracts.searchPlaceholder', 'Search by number or client...')}
-                        className="pl-9"
+                        fullWidth
                     />
                 </div>
                 <Button onClick={handleNewContract} icon={<Plus size={16} />}>

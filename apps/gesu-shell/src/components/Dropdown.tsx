@@ -97,10 +97,10 @@ export function Dropdown({
                 className={`
                     inline-flex items-center justify-between gap-2 
                     px-4 py-2.5 rounded-xl
-                    bg-white dark:bg-[#1a1a1a]
-                    border border-gray-200 dark:border-gray-700
-                    text-gray-900 dark:text-gray-100
-                    hover:bg-gray-50 dark:hover:bg-[#222]
+                    bg-tokens-panel
+                    border border-tokens-border
+                    text-tokens-fg
+                    hover:bg-tokens-panel2
                     transition-colors duration-150
                     focus:outline-none focus:ring-2 focus:ring-tokens-ring
                     ${triggerClassName}
@@ -119,8 +119,7 @@ export function Dropdown({
                     className={`
                         absolute z-50 mt-2 ${alignClasses[align]} ${widthClasses[width]}
                         py-2 rounded-2xl
-                        bg-white dark:bg-[#1a1a1a]
-                        border border-gray-200/80 dark:border-gray-700/50
+                        bg-tokens-panel border border-tokens-border
                         shadow-xl shadow-black/10 dark:shadow-black/30
                         animate-in fade-in slide-in-from-top-2 duration-200
                     `}
@@ -129,7 +128,7 @@ export function Dropdown({
                         <div key={sectionIndex}>
                             {/* Section Divider */}
                             {sectionIndex > 0 && (
-                                <div className="my-2 mx-3 h-px bg-gray-200 dark:bg-gray-700" />
+                                <div className="my-2 mx-3 h-px bg-tokens-border/50" />
                             )}
 
                             {/* Menu Items */}
@@ -152,15 +151,15 @@ export function Dropdown({
                                             : 'cursor-pointer'
                                         }
                                         ${item.danger
-                                            ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                            : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                            ? 'text-tokens-error hover:bg-tokens-error/10'
+                                            : 'text-tokens-fg hover:bg-tokens-panel2'
                                         }
                                     `}
                                 >
                                     {/* Left side: Icon + Label */}
                                     <span className="flex items-center gap-3">
                                         {item.icon && (
-                                            <span className="text-gray-500 dark:text-gray-400">
+                                            <span className="text-tokens-muted">
                                                 {item.icon}
                                             </span>
                                         )}
@@ -254,18 +253,18 @@ export function SelectDropdown({
                     className={`
                         w-full flex items-center justify-between gap-2 
                         px-4 py-2.5 rounded-xl
-                        bg-white dark:bg-[#1a1a1a]
-                        border border-gray-200 dark:border-gray-700
+                        bg-tokens-panel
+                        border border-tokens-border
                         text-left
                         transition-colors duration-150
                         focus:outline-none focus:ring-2 focus:ring-tokens-ring
                         ${disabled
                             ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-gray-50 dark:hover:bg-[#222] cursor-pointer'
+                            : 'hover:bg-tokens-panel2 cursor-pointer'
                         }
                     `}
                 >
-                    <span className={`flex items-center gap-2 ${selectedOption ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
+                    <span className={`flex items-center gap-2 ${selectedOption ? 'text-tokens-fg' : 'text-tokens-muted'}`}>
                         {selectedOption?.icon}
                         {selectedOption?.label || placeholder}
                     </span>
@@ -281,8 +280,7 @@ export function SelectDropdown({
                         className={`
                             absolute z-50 mt-2 left-0 right-0
                             py-2 rounded-2xl max-h-60 overflow-y-auto
-                            bg-white dark:bg-[#1a1a1a]
-                            border border-gray-200/80 dark:border-gray-700/50
+                            bg-tokens-panel border border-tokens-border
                             shadow-xl shadow-black/10 dark:shadow-black/30
                             animate-in fade-in slide-in-from-top-2 duration-200
                         `}
@@ -299,13 +297,13 @@ export function SelectDropdown({
                                     px-4 py-2.5 text-left text-sm
                                     transition-colors duration-100 cursor-pointer
                                     ${option.value === value
-                                        ? 'bg-[#4141b9]/10 dark:bg-[#7cb342]/20 text-[#4141b9] dark:text-[#7cb342] font-medium'
-                                        : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        ? 'bg-tokens-brand-DEFAULT/10 text-tokens-brand-DEFAULT font-medium'
+                                        : 'text-tokens-fg hover:bg-tokens-panel2'
                                     }
                                 `}
                             >
                                 {option.icon && (
-                                    <span className={option.value === value ? '' : 'text-gray-500 dark:text-gray-400'}>
+                                    <span className={option.value === value ? '' : 'text-tokens-muted'}>
                                         {option.icon}
                                     </span>
                                 )}

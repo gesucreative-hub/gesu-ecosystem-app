@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, CheckCircle2, Target } from 'lucide-react';
 import { WorkflowNode, WORKFLOW_PHASES } from './workflowData';
 import { Button } from '../components/Button';
+import { Badge } from '../components/Badge';
 import {
     isDodItemAlreadySentToday,
     addTaskToToday,
@@ -230,23 +231,20 @@ export function StepDetailPanel({
                 {/* Status Badge */}
                 <div className="flex items-center gap-2">
                     {selectedNode.status === 'done' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                       bg-tokens-success/20 text-tokens-success">
+                        <Badge variant="success" size="sm">
                             <Check size={12} />
                             {t('common:status.completed', 'Done')}
-                        </span>
+                        </Badge>
                     )}
                     {selectedNode.status === 'in-progress' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                       bg-tokens-warning/20 text-tokens-warning">
+                        <Badge variant="warning" size="sm">
                             WIP
-                        </span>
+                        </Badge>
                     )}
                     {selectedNode.status === 'todo' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                       bg-tokens-muted/20 text-tokens-muted">
+                        <Badge variant="neutral" size="sm">
                             Todo
-                        </span>
+                        </Badge>
                     )}
                 </div>
             </div>

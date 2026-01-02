@@ -11,9 +11,10 @@ interface TabsProps {
     activeTab: string;
     onChange: (id: string) => void;
     className?: string;
+    size?: 'sm' | 'md';
 }
 
-export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
+export function Tabs({ tabs, activeTab, onChange, className = '', size = 'md' }: TabsProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
 
@@ -60,8 +61,9 @@ export function Tabs({ tabs, activeTab, onChange, className = '' }: TabsProps) {
                             data-tab-id={tab.id}
                             onClick={() => onChange(tab.id)}
                             className={`
-                                relative z-10 px-4 py-2 text-sm font-medium rounded-full
-                                transition-colors duration-300 flex items-center gap-2
+                                relative z-10 font-medium rounded-full
+                                transition-colors duration-300 flex items-center
+                                ${size === 'sm' ? 'px-3 py-1.5 text-xs gap-1.5' : 'px-4 py-2 text-sm gap-2'}
                                 ${isActive
                                     ? 'text-white'
                                     : 'text-tokens-fg/60 hover:text-tokens-fg'

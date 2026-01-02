@@ -169,6 +169,7 @@ const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
                 ]}
                 activeTab={activePersona}
                 onChange={(id) => handleSwitch(id as 'personal' | 'business')}
+                size="sm"
                 className="w-full justify-center"
             />
             {showBlockedToast && <PersonaBlockedToast />}

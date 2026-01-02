@@ -9,7 +9,7 @@ import gesuLogo from '../assets/icons/gcl-logo.ico';
 import { FocusTimerPill } from './focus/FocusTimerPill';
 import { DistractionGuard } from './focus/DistractionGuard';
 import { CommandPaletteModal } from './CommandPaletteModal';
-import { GamificationCard } from './GamificationCard';
+import { GamificationBadge } from './GamificationBadge';
 import { AchievementToast } from './AchievementToast';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginButton } from './auth/LoginButton';
@@ -367,9 +367,6 @@ export function Layout() {
                     {/* Bottom Controls */}
                     <div className="p-4 border-t border-tokens-sidebar-border flex flex-col gap-2 ${isCollapsed ? 'items-center' : ''}">
 
-                        {/* Gamification Card - Only show when logged in */}
-                        {user && <GamificationCard isCollapsed={isCollapsed} />}
-
                     {/* S2-3: Persona Toggle */}
                     <PersonaToggle isCollapsed={isCollapsed} />
 
@@ -385,6 +382,7 @@ export function Layout() {
                 <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-tokens-panel ml-3 rounded-2xl scrollbar-hide">
                     {/* Global Timer Header */}
                     <div className="sticky top-0 z-10 flex items-center justify-end gap-2 px-6 py-3 rounded-t-2xl">
+                        {user && <GamificationBadge />}
                         <FocusTimerPill />
                     </div>
                     {/* Daily Check-in Banner - Non-blocking prompt if no check-in today */}

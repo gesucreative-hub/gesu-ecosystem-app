@@ -39,6 +39,7 @@ import {
     type Payment,
     type PaymentMethod
 } from '../stores/paymentStore';
+import { listClients, type Client } from '../stores/clientStore';
 
 const STATUS_COLORS: Record<InvoiceStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -83,6 +84,7 @@ export function InvoiceDetailPage() {
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer');
     const [paymentNotes, setPaymentNotes] = useState<string>('');
     const [localDueDate, setLocalDueDate] = useState<string>('');
+    const [clients, setClients] = useState<Client[]>([]);
 
     // Redirect if not business persona
     useEffect(() => {
@@ -111,6 +113,7 @@ export function InvoiceDetailPage() {
             }
         }
         setCatalogItems(listItems());
+        setClients(listClients());
     }, [id]);
 
     useEffect(() => {
@@ -346,12 +349,28 @@ export function InvoiceDetailPage() {
                             <User size={16} />
                             <span className="text-sm font-medium">{t('invoices:detail.client', 'Client')}</span>
                         </div>
-                        <div className="font-semibold">{invoice.snapshot.clientName || '-'}</div>
-                        {invoice.snapshot.clientCompany && (
-                            <div className="text-sm text-tokens-muted">{invoice.snapshot.clientCompany}</div>
-                        )}
-                        {invoice.snapshot.clientAddress && (
-                            <div className="text-sm text-tokens-muted mt-1">{invoice.snapshot.clientAddress}</div>
+                        {isDraft && clients.length > 0 ? (
+                            <SelectDropdown
+                                value={invoice.clientId}
+                                onChange={(value) => {
+                                    updateInvoice(invoice.id, { clientId: value });
+                                    loadData();
+                                }}
+                                options={[
+                                    { value: '', label: t('invoices:detail.selectClient', '-- Select Client --') },
+                                    ...clients.map(c => ({ value: c.id, label: c.company ? `${c.name} (${c.company})` : c.name }))
+                                ]}
+                            />
+                        ) : (
+                            <>
+                                <div className="font-semibold">{invoice.snapshot.clientName || '-'}</div>
+                                {invoice.snapshot.clientCompany && (
+                                    <div className="text-sm text-tokens-muted">{invoice.snapshot.clientCompany}</div>
+                                )}
+                                {invoice.snapshot.clientAddress && (
+                                    <div className="text-sm text-tokens-muted mt-1">{invoice.snapshot.clientAddress}</div>
+                                )}
+                            </>
                         )}
                     </div>
                 </Card>

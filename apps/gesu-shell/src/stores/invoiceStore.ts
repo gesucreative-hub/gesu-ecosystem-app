@@ -265,6 +265,7 @@ export function updateInvoice(id: string, updates: {
     lineItems?: Omit<InvoiceLineItem, 'id' | 'total'>[];
     adjustments?: number;
     notes?: string;
+    clientId?: string; // Allow client update on draft invoices
 }): Invoice | null {
     const current = ensureLoaded();
     const invoice = current.invoices.find(i => i.id === id);
@@ -295,6 +296,13 @@ export function updateInvoice(id: string, updates: {
     
     if (updates.notes !== undefined) {
         invoice.notes = updates.notes;
+    }
+    
+    // Update client if provided
+    if (updates.clientId !== undefined) {
+        invoice.clientId = updates.clientId;
+        // Re-snapshot client data
+        invoice.snapshot = createSnapshot(updates.clientId);
     }
     
     // Recalculate total

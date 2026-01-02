@@ -9,7 +9,6 @@ import gesuLogo from '../assets/icons/gcl-logo.ico';
 import { FocusTimerPill } from './focus/FocusTimerPill';
 import { DistractionGuard } from './focus/DistractionGuard';
 import { CommandPaletteModal } from './CommandPaletteModal';
-import { GamificationBadge } from './GamificationBadge';
 import { AchievementToast } from './AchievementToast';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginButton } from './auth/LoginButton';
@@ -211,7 +210,6 @@ export function Layout() {
     const location = useLocation();
     const navigate = useNavigate();
     const p = location.pathname;
-    const { user } = useAuth();
     const { t } = useTranslation('common');
     const { activePersona } = usePersona();
 
@@ -382,7 +380,6 @@ export function Layout() {
                 <main className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden relative bg-tokens-panel ml-3 rounded-2xl scrollbar-hide">
                     {/* Global Timer Header */}
                     <div className="sticky top-0 z-10 flex items-center justify-end gap-2 px-6 py-3 rounded-t-2xl">
-                        {user && <GamificationBadge />}
                         <FocusTimerPill />
                     </div>
                     {/* Daily Check-in Banner - Non-blocking prompt if no check-in today */}

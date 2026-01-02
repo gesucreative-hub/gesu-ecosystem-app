@@ -9,6 +9,7 @@ import { useFocusTimer } from '../../hooks/useFocusTimer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { Timer, Search } from 'lucide-react';
+import { GamificationBadge } from '../GamificationBadge';
 
 export function WelcomeHeader() {
     const { state } = useFocusTimer();
@@ -64,8 +65,11 @@ export function WelcomeHeader() {
                 <span className="text-[10px] font-mono opacity-50 ml-4 border border-tokens-border rounded px-1">Ctrl+K</span>
             </button>
 
-            {/* Right: Profile Badge + Focus Status */}
+            {/* Right: Gamification Badge + Focus Status + Profile */}
             <div className="flex items-center gap-3">
+                {/* Gamification Badge - Dashboard only */}
+                <GamificationBadge />
+
                 {/* Focus Session Status */}
                 {state.sessionActive && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-tokens-success/10 border border-tokens-success/20 rounded-lg">

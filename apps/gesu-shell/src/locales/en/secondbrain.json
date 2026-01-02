@@ -1,0 +1,25 @@
+{
+    "title": "Second Brain",
+    "subtitle": "Capture and organize your thoughts",
+    "inbox": "inbox",
+    "capture": "Capture",
+    "export": "Export",
+    "titlePlaceholder": "Title (optional)",
+    "contentPlaceholder": "What's on your mind? (Ctrl+Enter to save)",
+    "all": "All",
+    "empty": "Your Second Brain is empty. Start capturing!",
+    "emptyFilter": "No items in this category",
+    "deleteConfirm": "Delete this item?",
+    "para": {
+        "inbox": "Inbox",
+        "projects": "Projects",
+        "areas": "Areas",
+        "resources": "Resources",
+        "archives": "Archives"
+    },
+    "stages": {
+        "inbox": "Inbox",
+        "processed": "Processed",
+        "archived": "Archived"
+    }
+}

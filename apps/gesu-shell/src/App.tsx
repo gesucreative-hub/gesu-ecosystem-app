@@ -32,6 +32,8 @@ import { DeliverableTemplatesPage } from './pages/DeliverableTemplatesPage';
 import { ProjectDeliverablesPage } from './pages/ProjectDeliverablesPage';
 // S7-C: Finance page
 import { FinanceSnapshotPage } from './pages/FinanceSnapshotPage';
+// S8: Second Brain page
+import { SecondBrainPage } from './pages/SecondBrainPage';
 
 function App() {
     const { settings } = useGesuSettings();
@@ -108,6 +110,8 @@ function App() {
                     <Route path="deliverables" element={<ProjectDeliverablesPage />} />
                     {/* S7-C: Finance route */}
                     <Route path="finance" element={<FinanceSnapshotPage />} />
+                    {/* S8: Second Brain route (PERSONAL) */}
+                    <Route path="second-brain" element={<SecondBrainPage />} />
                 </Route>
             </Routes>
         </AuthProvider>

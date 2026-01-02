@@ -285,6 +285,53 @@ Enable payment tracking against invoices, deliverable management per project, an
 
 **Sprint S7 Complete!** All slices: S7-A (Payments) ✅, S7-B (Deliverables) ✅, S7-C (Finance) ✅
 
+---
+
+### S8: Second Brain Light Integration — ✅ DONE (2026-01-02)
+
+**Files Created**:
+
+- `stores/secondBrainStore.ts` — Inbox CRUD + PARA assignment + export (260 lines)
+- `pages/SecondBrainPage.tsx` — Quick capture UI + items list + filter (265 lines)
+- `locales/en/secondbrain.json`, `locales/id/secondbrain.json` — 25 keys each
+
+**Files Modified**:
+
+- `config/i18n.ts` — Registered secondbrain namespace
+- `App.tsx` — Added route `/second-brain`
+- `Layout.tsx` — Added "Second Brain" nav item (PERSONAL only) + persona guard
+
+**Features**:
+
+- Quick capture with optional title (Ctrl+Enter to save)
+- PARA bucket assignment (Projects/Areas/Resources/Archives)
+- Filter by PARA bucket
+- Export to Markdown (grouped by PARA)
+- localStorage persistence with schemaVersion
+
+**QA Results**:
+
+| Test                               | Result  |
+| ---------------------------------- | ------- |
+| Quick capture (with/without title) | ✅ PASS |
+| PARA bucket assignment             | ✅ PASS |
+| Filter by bucket                   | ✅ PASS |
+| Export to Markdown                 | ✅ PASS |
+| Delete item                        | ✅ PASS |
+| Persistence after reload           | ✅ PASS |
+| Persona guard (nav hidden)         | ✅ PASS |
+| Persona guard (URL redirect)       | ✅ PASS |
+| TypeScript build passes            | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
+
+**Known Limitations (Backlog)**:
+
+- No Electron file-backed persistence (localStorage only)
+- No WorkflowRoot export integration
+- No Notion/Obsidian sync
+- No attachments or backlinks
+
 ### QA Checklist (Planned)
 
 | Test                                                     | Status |

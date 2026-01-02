@@ -1,0 +1,25 @@
+{
+    "title": "Second Brain",
+    "subtitle": "Tangkap dan organisir pikiranmu",
+    "inbox": "inbox",
+    "capture": "Tangkap",
+    "export": "Ekspor",
+    "titlePlaceholder": "Judul (opsional)",
+    "contentPlaceholder": "Apa yang ada di pikiranmu? (Ctrl+Enter untuk simpan)",
+    "all": "Semua",
+    "empty": "Second Brain-mu kosong. Mulai tangkap ide!",
+    "emptyFilter": "Tidak ada item di kategori ini",
+    "deleteConfirm": "Hapus item ini?",
+    "para": {
+        "inbox": "Inbox",
+        "projects": "Proyek",
+        "areas": "Area",
+        "resources": "Sumber Daya",
+        "archives": "Arsip"
+    },
+    "stages": {
+        "inbox": "Inbox",
+        "processed": "Diproses",
+        "archived": "Diarsipkan"
+    }
+}

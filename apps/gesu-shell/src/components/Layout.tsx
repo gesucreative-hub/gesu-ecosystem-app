@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert, Users, Building2, Receipt, FileSignature, Tag, Package, FileStack, TrendingUp } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert, Users, Building2, Receipt, FileSignature, Tag, Package, FileStack, TrendingUp, Brain } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { isSessionActive } from '../stores/focusTimerStore';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
@@ -263,8 +263,8 @@ export function Layout() {
     useEffect(() => {
         const path = location.pathname;
         
-        // Personal routes
-        const personalRoutes = ['/compass', '/activity', '/refocus'];
+        // Personal routes (S8: added second-brain)
+        const personalRoutes = ['/compass', '/activity', '/refocus', '/second-brain'];
         // Business routes (S5 + S6 + S7: clients, settings, pricelist, invoices, contracts, deliverables, finance)
         const businessRoutes = ['/initiator', '/clients', '/business-settings', '/pricelist', '/invoices', '/contracts', '/deliverable-templates', '/deliverables', '/finance'];
         
@@ -352,6 +352,7 @@ export function Layout() {
                         <NavItem to="/dashboard" icon={<Home strokeWidth={1.5} size={20} />} label={t('nav.dashboard')} isActive={p === '/' || p === '/dashboard'} isCollapsed={isCollapsed} />
                         {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
                         {activePersona === 'personal' && <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'personal' && <NavItem to="/second-brain" icon={<Brain strokeWidth={1.5} size={20} />} label={t('nav.secondBrain', 'Second Brain')} isActive={p.startsWith('/second-brain')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/clients" icon={<Users strokeWidth={1.5} size={20} />} label={t('nav.clients', 'Clients')} isActive={p.startsWith('/clients')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/invoices" icon={<Receipt strokeWidth={1.5} size={20} />} label={t('nav.invoices', 'Invoices')} isActive={p.startsWith('/invoices')} isCollapsed={isCollapsed} />}

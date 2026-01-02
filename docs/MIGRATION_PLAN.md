@@ -222,21 +222,37 @@ Enable payment tracking against invoices, deliverable management per project, an
 
 **Next smallest step**: S7-B (Deliverables System)
 
-### S7-B: Deliverables System
+### S7-B: Deliverables System — ✅ DONE (2026-01-02)
 
-**Files to Create**:
+**Files Created**:
 
-- `stores/deliverableTemplateStore.ts`
-- `stores/deliverablePackStore.ts`
-- `pages/DeliverableTemplatesPage.tsx`
-- `pages/ProjectDeliverablesPage.tsx`
-- `locales/en/deliverables.json`, `locales/id/deliverables.json`
+- `stores/deliverableTemplateStore.ts` — Template CRUD (215 lines)
+- `stores/deliverablePackStore.ts` — Pack instances with item tracking (358 lines)
+- `pages/DeliverableTemplatesPage.tsx` — Templates CRUD UI (328 lines)
+- `pages/ProjectDeliverablesPage.tsx` — Project deliverables UI (350 lines)
+- `locales/en/deliverables.json`, `locales/id/deliverables.json` — 60 keys each
 
-**Planned Commits**:
+**Files Modified**:
 
-- `S7-B-1: deliverableTemplateStore + deliverablePackStore`
-- `S7-B-2: DeliverableTemplatesPage with CRUD`
-- `S7-B-3: ProjectDeliverablesPage with status tracking`
+- `config/i18n.ts` — Registered deliverables namespace
+- `App.tsx` — Added routes `/deliverable-templates`, `/deliverables`
+- `Layout.tsx` — Added nav items + persona guard
+
+**QA Results**:
+
+| Test                                  | Result  |
+| ------------------------------------- | ------- |
+| Create template with 5 items          | ✅ PASS |
+| Reorder items → order preserved       | ✅ PASS |
+| Create pack from template             | ✅ PASS |
+| Toggle item status → persists         | ✅ PASS |
+| Add file links → persists             | ✅ PASS |
+| Persona guard (nav hidden + redirect) | ✅ PASS |
+| TypeScript build passes               | ✅ PASS |
+
+**Build**: ✅ Passing (0 new errors)
+
+**Next smallest step**: S7-C (Finance Snapshot)
 
 ### S7-C: Finance Snapshot
 

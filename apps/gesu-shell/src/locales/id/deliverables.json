@@ -1,0 +1,58 @@
+{
+    "nav": {
+        "templates": "Template",
+        "deliverables": "Deliverables"
+    },
+    "templates": {
+        "title": "Template Deliverable",
+        "subtitle": "Buat checklist yang dapat digunakan kembali",
+        "create": "Template Baru",
+        "createTitle": "Buat Template",
+        "editTitle": "Edit Template",
+        "name": "Nama Template",
+        "namePlaceholder": "mis. Paket Desain Brand",
+        "description": "Deskripsi",
+        "descriptionPlaceholder": "Apa yang termasuk dalam template ini...",
+        "items": "Item Checklist",
+        "itemTitle": "Judul Item",
+        "itemTitlePlaceholder": "mis. Desain Logo",
+        "itemDescription": "Deskripsi (opsional)",
+        "addItem": "Tambah Item",
+        "noItems": "Belum ada item. Tambahkan item checklist pertama!",
+        "noTemplates": "Belum ada template. Buat template pertama Anda!",
+        "itemsCount": "{{count}} item",
+        "deleteConfirm": "Hapus template ini?",
+        "errorNoName": "Nama template wajib diisi",
+        "errorNoItems": "Tambahkan minimal satu item"
+    },
+    "packs": {
+        "title": "Deliverables Proyek",
+        "subtitle": "Lacak deliverables untuk proyek Anda",
+        "selectProject": "Pilih proyek",
+        "createFromTemplate": "Buat dari Template",
+        "createCustom": "Paket Kustom",
+        "noPacks": "Belum ada paket deliverable untuk proyek ini",
+        "noProjects": "Tidak ada proyek ditemukan",
+        "packName": "Nama Paket",
+        "items": "Item",
+        "progress": "{{done}}/{{total}} selesai",
+        "deleteConfirm": "Hapus paket deliverable ini?",
+        "addItem": "Tambah Item",
+        "itemTitle": "Judul Item"
+    },
+    "item": {
+        "todo": "Belum Selesai",
+        "done": "Selesai",
+        "markDone": "Tandai Selesai",
+        "markTodo": "Tandai Belum Selesai",
+        "fileLinks": "Link File",
+        "addLink": "Tambah Link",
+        "linkPlaceholder": "https://... atau path file",
+        "notes": "Catatan",
+        "notesPlaceholder": "Catatan tambahan..."
+    },
+    "status": {
+        "todo": "Belum Selesai",
+        "done": "Selesai"
+    }
+}

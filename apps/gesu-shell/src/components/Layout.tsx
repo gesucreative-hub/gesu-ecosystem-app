@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert, Users, Building2, Receipt, FileSignature, Tag } from 'lucide-react';
+import { Home, Film, Compass, Target, Zap, Moon, Sun, ChevronRight, ChevronLeft, Search, BarChart2, User, Briefcase, ShieldAlert, Users, Building2, Receipt, FileSignature, Tag, Package, FileStack } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { isSessionActive } from '../stores/focusTimerStore';
 import gesuLogo from '../assets/icons/gcl-logo.ico';
@@ -265,8 +265,8 @@ export function Layout() {
         
         // Personal routes
         const personalRoutes = ['/compass', '/activity', '/refocus'];
-        // Business routes (S5 + S6: clients, settings, pricelist, invoices, contracts)
-        const businessRoutes = ['/initiator', '/clients', '/business-settings', '/pricelist', '/invoices', '/contracts'];
+        // Business routes (S5 + S6 + S7-B: clients, settings, pricelist, invoices, contracts, deliverables)
+        const businessRoutes = ['/initiator', '/clients', '/business-settings', '/pricelist', '/invoices', '/contracts', '/deliverable-templates', '/deliverables'];
         
         if (activePersona === 'business' && personalRoutes.some(r => path.startsWith(r))) {
             navigate('/initiator', { replace: true });
@@ -357,6 +357,8 @@ export function Layout() {
                         {activePersona === 'business' && <NavItem to="/invoices" icon={<Receipt strokeWidth={1.5} size={20} />} label={t('nav.invoices', 'Invoices')} isActive={p.startsWith('/invoices')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/contracts" icon={<FileSignature strokeWidth={1.5} size={20} />} label={t('nav.contracts', 'Contracts')} isActive={p.startsWith('/contracts')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/pricelist" icon={<Tag strokeWidth={1.5} size={20} />} label={t('nav.pricelist', 'Pricelist')} isActive={p.startsWith('/pricelist')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/deliverables" icon={<Package strokeWidth={1.5} size={20} />} label={t('nav.deliverables', 'Deliverables')} isActive={p.startsWith('/deliverables')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/deliverable-templates" icon={<FileStack strokeWidth={1.5} size={20} />} label={t('nav.deliverableTemplates', 'Templates')} isActive={p.startsWith('/deliverable-templates')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/business-settings" icon={<Building2 strokeWidth={1.5} size={20} />} label={t('nav.businessSettings', 'Business')} isActive={p.startsWith('/business-settings')} isCollapsed={isCollapsed} />}
 
                         {/* TOOLS Group */}

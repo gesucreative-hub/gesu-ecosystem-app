@@ -1,0 +1,58 @@
+{
+    "nav": {
+        "templates": "Templates",
+        "deliverables": "Deliverables"
+    },
+    "templates": {
+        "title": "Deliverable Templates",
+        "subtitle": "Create reusable checklists for your projects",
+        "create": "New Template",
+        "createTitle": "Create Template",
+        "editTitle": "Edit Template",
+        "name": "Template Name",
+        "namePlaceholder": "e.g. Brand Design Package",
+        "description": "Description",
+        "descriptionPlaceholder": "What this template includes...",
+        "items": "Checklist Items",
+        "itemTitle": "Item Title",
+        "itemTitlePlaceholder": "e.g. Logo Design",
+        "itemDescription": "Description (optional)",
+        "addItem": "Add Item",
+        "noItems": "No items yet. Add your first checklist item!",
+        "noTemplates": "No templates yet. Create your first template!",
+        "itemsCount": "{{count}} items",
+        "deleteConfirm": "Delete this template?",
+        "errorNoName": "Template name is required",
+        "errorNoItems": "Add at least one item"
+    },
+    "packs": {
+        "title": "Project Deliverables",
+        "subtitle": "Track deliverables for your projects",
+        "selectProject": "Select a project",
+        "createFromTemplate": "Create from Template",
+        "createCustom": "Custom Pack",
+        "noPacks": "No deliverable packs for this project",
+        "noProjects": "No projects found",
+        "packName": "Pack Name",
+        "items": "Items",
+        "progress": "{{done}}/{{total}} completed",
+        "deleteConfirm": "Delete this deliverable pack?",
+        "addItem": "Add Item",
+        "itemTitle": "Item Title"
+    },
+    "item": {
+        "todo": "To Do",
+        "done": "Done",
+        "markDone": "Mark as Done",
+        "markTodo": "Mark as To Do",
+        "fileLinks": "File Links",
+        "addLink": "Add Link",
+        "linkPlaceholder": "https://... or file path",
+        "notes": "Notes",
+        "notesPlaceholder": "Additional notes..."
+    },
+    "status": {
+        "todo": "To Do",
+        "done": "Done"
+    }
+}

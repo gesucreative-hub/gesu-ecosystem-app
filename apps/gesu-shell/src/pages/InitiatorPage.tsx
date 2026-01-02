@@ -24,6 +24,8 @@ import {
     importFromDisk,
     refreshFromDisk,
     validateProjectExists,
+    linkProjectToClient,
+    unlinkProjectFromClient,
     Project,
 } from '../stores/projectStore';
 import { listClients, type Client } from '../stores/clientStore';
@@ -629,6 +631,32 @@ function ProjectGeneratorForm({
                                                 })) || [])
                                         ]}
                                     />
+
+                                    {/* Client Linking for Existing Projects */}
+                                    {selectedExistingFolder && (
+                                        <SelectDropdown
+                                            label={t('initiator:generator.linkToClient', 'Link to Client (Optional)')}
+                                            value={projects.find(p => p.id === selectedExistingFolder)?.clientId || ''}
+                                            onChange={(clientId) => {
+                                                if (selectedExistingFolder) {
+                                                    if (clientId) {
+                                                        linkProjectToClient(selectedExistingFolder, clientId);
+                                                    } else {
+                                                        unlinkProjectFromClient(selectedExistingFolder);
+                                                    }
+                                                    // Refresh projects list from parent
+                                                    onRefresh();
+                                                }
+                                            }}
+                                            options={[
+                                                { value: '', label: t('initiator:placeholders.noClient', '-- No Client --') },
+                                                ...clients.map(c => ({ 
+                                                    value: c.id, 
+                                                    label: c.company ? `${c.name} (${c.company})` : c.name 
+                                                }))
+                                            ]}
+                                        />
+                                    )}
                                 </div>
 
                                 {error && (

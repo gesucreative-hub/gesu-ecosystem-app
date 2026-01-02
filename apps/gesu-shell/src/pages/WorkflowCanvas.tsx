@@ -25,6 +25,7 @@ import { markAllTasksDoneForStep, markAllTasksUndoneForStep, toggleTaskForDoDIte
 import { isFinishModeForStep, markAllActionsDone, markAllActionsUndone, setActionDone } from '../stores/finishModeStore';
 import { FolderOpen, Search, FileWarning, Trash2, RotateCcw } from 'lucide-react';
 import { useConfirmDialog } from '../components/ConfirmDialog';
+import { StatusDot } from '../components/StatusDot';
 
 interface WorkflowCanvasProps {
     project?: Project;
@@ -330,15 +331,15 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                             <h3 className="text-xs font-semibold text-tokens-muted uppercase tracking-wider mb-3">{t('initiator:workflow.legend', 'Legend')}</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-success flex-shrink-0" />
+                                    <StatusDot status="done" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.done', 'Done')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-warning flex-shrink-0 animate-pulse" />
+                                    <StatusDot status="in-progress" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.inProgress')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-tokens-muted flex-shrink-0" />
+                                    <StatusDot status="pending" />
                                     <span className="text-xs text-tokens-fg">{t('initiator:workflow.toDo')}</span>
                                 </div>
                             </div>
@@ -557,10 +558,10 @@ export function WorkflowCanvas({ project }: WorkflowCanvasProps) {
                                                                     </span>
                                                                     {/* Status Dot */}
                                                                     <div className="flex items-center gap-1">
-                                                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${node.status === 'done' ? 'bg-tokens-success' :
-                                                                            node.status === 'in-progress' ? 'bg-tokens-warning animate-pulse' :
-                                                                                'bg-tokens-muted'
-                                                                            }`} />
+                                                                        <StatusDot 
+                                                                            status={node.status === 'done' ? 'done' : node.status === 'in-progress' ? 'in-progress' : 'todo'}
+                                                                            size="md"
+                                                                        />
                                                                         <span className={`text-[9px] font-medium uppercase ${node.status === 'done' ? 'text-tokens-success' :
                                                                             node.status === 'in-progress' ? 'text-tokens-warning' :
                                                                                 'text-tokens-muted'

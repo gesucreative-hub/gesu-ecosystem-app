@@ -10,7 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { Badge } from '../components/Badge';
 import { Save, Check, Plus, X, Wrench, ListChecks, ChevronDown, ChevronUp, ChevronRight, Trash2, Settings as SettingsIcon, GripVertical, Edit2, Copy, Download, ChevronsDownUp, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
@@ -1736,13 +1736,12 @@ export function StandardsTab() {
 
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-tokens-muted uppercase">{t('initiator:standards.reassignTo')}</label>
-                            <Select
+                            <SelectDropdown
                                 value={migrationTargetId}
-                                onChange={(e) => setMigrationTargetId(e.target.value)}
+                                onChange={(value) => setMigrationTargetId(value)}
                                 options={data?.blueprints
                                     .filter(b => b.id !== migrationDialog.blueprintId)
                                     .map(b => ({ value: b.id, label: b.name })) || []}
-                                fullWidth
                             />
                         </div>
 

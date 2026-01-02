@@ -10,7 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { 
     ArrowLeft, Save, Send, DollarSign, Plus, 
     Trash2, FileText, Building2, User, ChevronUp, ChevronDown, AlertTriangle, Calendar, X
@@ -431,14 +431,13 @@ export function InvoiceDetailPage() {
                                                 {isDraft ? (
                                                     <div className="space-y-1">
                                                         {catalogItems.length > 0 && (
-                                                            <Select
+                                                            <SelectDropdown
                                                                 value=""
-                                                                onChange={(e) => selectCatalogItem(li.id, e.target.value)}
+                                                                onChange={(value) => selectCatalogItem(li.id, value)}
                                                                 options={[
                                                                     { value: '', label: t('invoices:editor.selectFromPricelist', '-- From Pricelist --') },
                                                                     ...catalogItems.map(c => ({ value: c.id, label: `${c.name} (${formatPrice(c.unitPrice)})` }))
                                                                 ]}
-                                                                className="text-xs"
                                                             />
                                                         )}
                                                         <Input
@@ -651,10 +650,10 @@ export function InvoiceDetailPage() {
                                     value={paymentDate}
                                     onChange={(e) => setPaymentDate(e.target.value)}
                                 />
-                                <Select
+                                <SelectDropdown
                                     label={t('invoices:payments.method', 'Payment Method')}
                                     value={paymentMethod}
-                                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                                    onChange={(value) => setPaymentMethod(value as PaymentMethod)}
                                     options={PAYMENT_METHODS.map(m => ({ value: m.value, label: t(`invoices:payments.methods.${m.value}`, m.label) }))}
                                 />
                                 <Input

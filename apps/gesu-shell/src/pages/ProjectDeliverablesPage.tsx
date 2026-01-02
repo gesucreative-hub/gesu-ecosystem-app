@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { 
     Plus, Trash2, CheckSquare, Square, Package, Link as LinkIcon, 
     ChevronDown, ChevronRight, FileStack, X 
@@ -85,8 +85,8 @@ export function ProjectDeliverablesPage() {
     }, [loadData]);
 
     // Handlers
-    const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedProjectId(e.target.value);
+    const handleProjectChange = (value: string) => {
+        setSelectedProjectId(value);
         setExpandedPackId(null);
     };
 
@@ -273,7 +273,7 @@ export function ProjectDeliverablesPage() {
                     
                     {/* Project Selector */}
                     <div className="flex items-center gap-4">
-                        <Select
+                        <SelectDropdown
                             label={t('deliverables:packs.selectProject', 'Select a project')}
                             value={selectedProjectId}
                             onChange={handleProjectChange}
@@ -281,7 +281,6 @@ export function ProjectDeliverablesPage() {
                                 { value: '', label: t('deliverables:packs.selectProject', 'Select a project') },
                                 ...projects.map(p => ({ value: p.id, label: p.name }))
                             ]}
-                            className="flex-1"
                         />
                         {selectedProjectId && (
                             <Button icon={<Plus size={16} />} onClick={openCreateModal}>
@@ -380,10 +379,10 @@ export function ProjectDeliverablesPage() {
                             </div>
 
                             <div className="space-y-4">
-                                <Select
+                                <SelectDropdown
                                     label={t('deliverables:nav.templates', 'Template')}
                                     value={selectedTemplateId}
-                                    onChange={(e) => setSelectedTemplateId(e.target.value)}
+                                    onChange={(value) => setSelectedTemplateId(value)}
                                     options={[
                                         { value: '', label: `-- ${t('deliverables:packs.createCustom', 'Custom Pack')} --` },
                                         ...templates.map(t => ({ value: t.id, label: `${t.name} (${t.items.length} items)` }))

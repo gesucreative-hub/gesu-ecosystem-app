@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { Plus, Edit2, Trash2, Tag, X, Check } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
@@ -153,14 +153,13 @@ export function PricelistPage() {
                         fullWidth
                     />
                 </div>
-                <Select
+                <SelectDropdown
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    onChange={(value) => setCategoryFilter(value)}
                     options={[
                         { value: '', label: t('invoices:pricelist.allCategories', 'All Categories') },
                         ...categories.map(c => ({ value: c, label: c }))
                     ]}
-                    className="w-40"
                 />
                 <Button onClick={openCreate} icon={<Plus size={16} />}>
                     {t('invoices:pricelist.add', 'Add Item')}
@@ -189,10 +188,10 @@ export function PricelistPage() {
                                 onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
                                 placeholder="Logo design and brand guidelines"
                             />
-                            <Select
+                            <SelectDropdown
                                 label={t('invoices:pricelist.unit', 'Unit')}
                                 value={formData.unit}
-                                onChange={(e) => setFormData(f => ({ ...f, unit: e.target.value as FormData['unit'] }))}
+                                onChange={(value) => setFormData(f => ({ ...f, unit: value as FormData['unit'] }))}
                                 options={UNIT_OPTIONS}
                             />
                             <Input

@@ -7,7 +7,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { Tabs } from '../components/Tabs';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { useAlertDialog } from '../components/AlertDialog';
@@ -889,32 +889,30 @@ export function CompassPage() {
                                             {focusFirstMode === 'select' && (
                                                 <div className="space-y-2">
                                                     {/* Project selection */}
-                                                    <Select
+                                                    <SelectDropdown
                                                         value={selectedFocusType === 'project' ? selectedRefId : ''}
-                                                        onChange={(e) => {
+                                                        onChange={(value) => {
                                                             setSelectedFocusType('project');
-                                                            setSelectedRefId(e.target.value);
+                                                            setSelectedRefId(value);
                                                         }}
                                                         options={[
                                                             { value: '', label: t('compass:focusFirst.selectProject') },
                                                             ...activeProjects.map(p => ({ value: p.id, label: p.name }))
                                                         ]}
-                                                        fullWidth
                                                     />
 
                                                     {/* Task selection (for WIP limit case) */}
                                                     {projectHubTasks.filter(t => !t.done).length > 0 && (
-                                                        <Select
+                                                        <SelectDropdown
                                                             value={selectedFocusType === 'task' ? selectedRefId : ''}
-                                                            onChange={(e) => {
+                                                            onChange={(value) => {
                                                                 setSelectedFocusType('task');
-                                                                setSelectedRefId(e.target.value);
+                                                                setSelectedRefId(value);
                                                             }}
                                                             options={[
                                                                 { value: '', label: t('compass:focusFirst.selectTask') },
                                                                 ...projectHubTasks.filter(t => !t.done).map(task => ({ value: task.id, label: task.title }))
                                                             ]}
-                                                            fullWidth
                                                         />
                                                     )}
                                                 </div>

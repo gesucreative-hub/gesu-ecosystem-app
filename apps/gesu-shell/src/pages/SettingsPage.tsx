@@ -6,7 +6,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { Badge } from '../components/Badge';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { Save, Search, Loader2, CheckCircle, AlertCircle, Globe, Download, RefreshCw, Info, X } from 'lucide-react';
@@ -857,11 +857,11 @@ export function SettingsPage() {
                                     <div className="text-sm font-medium text-tokens-fg mb-1">{t('settings:ai.provider')}</div>
                                     <div className="text-xs text-tokens-muted">{t('settings:ai.providerDesc')}</div>
                                 </div>
-                                <Select
+                                <SelectDropdown
                                     value={loadedSettings?.ai?.provider || 'none'}
-                                    onChange={(e) => {
+                                    onChange={(value) => {
                                         const currentAi = loadedSettings?.ai || { enabled: false, provider: 'none', endpoint: 'http://localhost:11434', model: 'llama3.2' };
-                                        saveSettings({ ...loadedSettings!, ai: { ...currentAi, provider: e.target.value as 'none' | 'ollama' | 'mock' } });
+                                        saveSettings({ ...loadedSettings!, ai: { ...currentAi, provider: value as 'none' | 'ollama' | 'mock' } });
                                         setIsDirty(true);
                                     }}
                                     options={[

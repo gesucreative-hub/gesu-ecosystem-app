@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { DollarSign, TrendingUp, AlertTriangle, Clock, Receipt, ChevronRight } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { subscribe as subscribeInvoices } from '../stores/invoiceStore';
@@ -111,11 +111,10 @@ export function FinanceSnapshotPage() {
                                 <p className="text-sm text-tokens-muted">{t('finance:subtitle', 'Monthly billing overview')}</p>
                             </div>
                         </div>
-                        <Select
+                        <SelectDropdown
                             value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            onChange={(value) => setSelectedMonth(value)}
                             options={months.map(m => ({ value: m.key, label: m.label }))}
-                            className="w-48"
                         />
                     </div>
                 </div>

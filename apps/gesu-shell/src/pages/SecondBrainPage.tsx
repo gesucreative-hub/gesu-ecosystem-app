@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { SelectDropdown } from '../components/Dropdown';
 import { 
     Brain, Plus, Trash2, Download, Inbox, FolderKanban, 
     Compass, BookOpen, Archive, Filter
@@ -239,14 +239,13 @@ export function SecondBrainPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Select
+                                    <SelectDropdown
                                         value={item.paraBucket || ''}
-                                        onChange={(e) => handleAssignBucket(item.id, (e.target.value || null) as ParaBucket)}
+                                        onChange={(value) => handleAssignBucket(item.id, (value || null) as ParaBucket)}
                                         options={PARA_OPTIONS.map(o => ({ 
                                             value: o.value || '', 
                                             label: t(`secondbrain:para.${o.value || 'inbox'}`, o.label) 
                                         }))}
-                                        className="w-32 text-sm"
                                     />
                                     <button
                                         onClick={() => handleDelete(item.id)}

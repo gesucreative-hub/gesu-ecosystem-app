@@ -95,22 +95,22 @@ export function GamificationCard({ isCollapsed }: GamificationCardProps) {
     return (
         <>
             {/* Redesigned pet card - centered layout with bottom gradient glow */}
-            <div className="mx-2 mb-2 rounded-xl border border-tokens-border/50 overflow-hidden relative bg-tokens-panel">
+            <div className="mx-2 mb-1 rounded-xl border border-tokens-border/50 overflow-hidden relative bg-tokens-panel">
                 {/* Bottom gradient glow - brand color at bottom */}
                 <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-tokens-brand-DEFAULT/30 via-tokens-brand-DEFAULT/10 to-transparent pointer-events-none" />
                 
                 {/* Main Content */}
                 <div 
-                    className="relative z-10 p-3 cursor-pointer"
+                    className="relative z-10 p-2 cursor-pointer"
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Centered Pet */}
-                    <div className="flex justify-center mb-2">
+                    <div className="flex justify-center mb-1.5">
                         <FocusPet mood={petMood} evolution={petEvolution} size="lg" cosmetics={equippedEmojis} />
                     </div>
                     
                     {/* Evolution Title */}
-                    <div className="text-center mb-2">
+                    <div className="text-center mb-1.5">
                         <div className="flex items-center justify-center gap-1">
                             <Sparkles size={12} className="text-tokens-brand-DEFAULT" />
                             <span className="text-sm font-bold text-tokens-fg">{t(`gamification.petEvolution.${petEvolution}`, petEvolution)}</span>
@@ -119,7 +119,7 @@ export function GamificationCard({ isCollapsed }: GamificationCardProps) {
                     </div>
                     
                     {/* Stats Row - Simple inline text with better contrast */}
-                    <div className="flex justify-center items-center gap-3 mb-3 text-[11px]">
+                    <div className="flex justify-center items-center gap-3 mb-2 text-[11px]">
                         <span className="flex items-center gap-1">
                             <Star size={12} className="text-yellow-600 dark:text-yellow-500" />
                             {isInitialSyncing ? (
@@ -177,7 +177,7 @@ export function GamificationCard({ isCollapsed }: GamificationCardProps) {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                         >
-                            <div className="relative z-10 px-3 pb-3 border-t border-tokens-border/50">
+                            <div className="relative z-10 px-2 pb-2 border-t border-tokens-border/50">
                                 {/* Controls Row */}
                                 <div className="flex justify-center gap-2 pt-2">
                                     <button

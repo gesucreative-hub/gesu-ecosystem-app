@@ -350,9 +350,10 @@ export function Layout() {
                         {activePersona === 'business' && <NavItem to="/finance" icon={<TrendingUp strokeWidth={1.5} size={20} />} label={t('nav.finance', 'Finance')} isActive={p.startsWith('/finance')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/business-settings" icon={<Building2 strokeWidth={1.5} size={20} />} label={t('nav.businessSettings', 'Business')} isActive={p.startsWith('/business-settings')} isCollapsed={isCollapsed} />}
 
-                        {/* TOOLS Group */}
-                        {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.toolsGroup', 'Tools')}</div>}
-                        {isCollapsed && <div className="h-4"></div>}
+
+                        {/* TOOLS Group - Only show when there are tools to display (personal persona) */}
+                        {activePersona === 'personal' && !isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.toolsGroup', 'Tools')}</div>}
+                        {activePersona === 'personal' && isCollapsed && <div className="h-4"></div>}
 
                         {activePersona === 'personal' && <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label={t('nav.refocus', 'Refocus')} isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />}
 

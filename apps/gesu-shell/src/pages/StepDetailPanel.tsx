@@ -231,14 +231,14 @@ export function StepDetailPanel({
                 <div className="flex items-center gap-2">
                     {selectedNode.status === 'done' && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                       bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                                       bg-tokens-success/20 text-tokens-success">
                             <Check size={12} />
                             {t('common:status.completed', 'Done')}
                         </span>
                     )}
                     {selectedNode.status === 'in-progress' && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                                       bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                                       bg-tokens-warning/20 text-tokens-warning">
                             WIP
                         </span>
                     )}
@@ -349,12 +349,12 @@ export function StepDetailPanel({
                 {/* Today's Focus Section (formerly Finish Mode) */}
                 <div className="border-t border-tokens-border pt-6">
                     <div className="flex items-center gap-2 mb-3">
-                        <Target size={16} className={allDoDDone ? 'text-emerald-500' : 'text-amber-500'} />
-                        <h3 className={`text-xs font-semibold uppercase tracking-wider ${allDoDDone ? 'text-emerald-500' : 'text-amber-500'}`}>
+                        <Target size={16} className={allDoDDone ? 'text-tokens-success' : 'text-tokens-warning'} />
+                        <h3 className={`text-xs font-semibold uppercase tracking-wider ${allDoDDone ? 'text-tokens-success' : 'text-tokens-warning'}`}>
                             {allDoDDone ? t('initiator:stepDetail.stepCompleted', 'Step Completed') : t('initiator:stepDetail.todaysFocus', "Today's Focus")}
                         </h3>
                         {isFinishModeActive && !allDoDDone && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-tokens-warning/20 text-tokens-warning">
                                 Active
                             </span>
                         )}
@@ -362,14 +362,14 @@ export function StepDetailPanel({
 
                     {/* State 1: All DoD items completed - show success */}
                     {allDoDDone ? (
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                        <div className="bg-tokens-success/10 border border-tokens-success/30 rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
-                                <CheckCircle2 size={18} className="text-emerald-500" />
-                                <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                <CheckCircle2 size={18} className="text-tokens-success" />
+                                <span className="text-sm font-medium text-tokens-success">
                                     {t('initiator:stepDetail.allTasksFinished', 'All tasks finished!')}
                                 </span>
                             </div>
-                            <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mb-3">
+                            <p className="text-xs text-tokens-success/80 mb-3">
                                 {t('initiator:stepDetail.allTasksFinishedDesc', 'You\'ve completed all {{count}} items in this step. Great work!', { count: totalCount })}
                             </p>
                             {onReopenNode && (
@@ -386,7 +386,7 @@ export function StepDetailPanel({
                         </div>
                     ) : isFinishModeActive ? (
                         /* State 2: Focus session is active */
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-400">
+                        <div className="bg-tokens-warning/10 border border-tokens-warning/20 rounded-lg p-3 text-xs text-tokens-warning">
                             {t('initiator:stepDetail.focusSessionActive', 'Focus session active. Go to Compass page to work on your tasks.')}
                         </div>
                     ) : (
@@ -408,8 +408,8 @@ export function StepDetailPanel({
                                                       ${isDisabled
                                                     ? 'opacity-50 cursor-not-allowed bg-tokens-panel border-tokens-border'
                                                     : isSelected
-                                                        ? 'bg-amber-500/10 border-amber-500/50 cursor-pointer'
-                                                        : 'bg-tokens-panel border-tokens-border hover:border-amber-500/30 cursor-pointer'}`}
+                                                        ? 'bg-tokens-warning/10 border-tokens-warning/50 cursor-pointer'
+                                                        : 'bg-tokens-panel border-tokens-border hover:border-tokens-warning/30 cursor-pointer'}`}
                                         >
                                             <input
                                                 type="checkbox"
@@ -417,9 +417,9 @@ export function StepDetailPanel({
                                                 onChange={() => !isDisabled && handleToggleFinishSelection(item.id)}
                                                 disabled={isDisabled}
                                                 className="rounded border-tokens-border bg-tokens-panel2
-                                                         text-amber-500 focus:ring-amber-500/40"
+                                                         text-tokens-warning focus:ring-tokens-warning/40"
                                             />
-                                            <span className={`text-xs flex-1 ${isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-tokens-fg'}`}>
+                                            <span className={`text-xs flex-1 ${isSelected ? 'text-tokens-warning' : 'text-tokens-fg'}`}>
                                                 {item.label}
                                             </span>
                                         </label>

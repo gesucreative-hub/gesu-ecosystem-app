@@ -17,6 +17,8 @@ import { UserMenu } from './auth/UserMenu';
 import { SchemaWarningBanner } from './SchemaWarningBanner';
 import { DailyCheckInBanner } from './DailyCheckInBanner';
 
+import { Tabs } from './Tabs';
+
 // NavItem Component matching Reference (Pill shape, Left indicator/Rail)
 interface NavItemProps {
     to: string;
@@ -161,29 +163,17 @@ const PersonaToggle = ({ isCollapsed }: { isCollapsed: boolean }) => {
     // Full: Segmented control
     return (
         <div className="relative">
-            <div className="flex gap-1 p-1 bg-tokens-panel2 rounded-lg">
-                <button
-                    onClick={() => handleSwitch('personal')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                        activePersona === 'personal'
-                            ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
-                            : 'text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel'
-                    }`}
-                >
-                    <User size={14} />
-                    {t('persona.personal')}
-                </button>
-                <button
-                    onClick={() => handleSwitch('business')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                        activePersona === 'business'
-                            ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
-                            : 'text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel'
-                    }`}
-                >
-                    <Briefcase size={14} />
-                    {t('persona.business')}
-                </button>
+            {/* Persona Switcher (Tabs) */}
+            <div className="px-3 pb-3">
+                 <Tabs
+                     activeTab={activePersona}
+                     onChange={(id) => handleSwitch(id as 'personal' | 'business')}
+                     tabs={[
+                         { id: 'personal', label: t('persona.personal'), icon: <User size={14} /> },
+                         { id: 'business', label: t('persona.business'), icon: <Briefcase size={14} /> }
+                     ]}
+                     className="w-full"
+                 />
             </div>
             {showBlockedToast && <PersonaBlockedToast />}
         </div>

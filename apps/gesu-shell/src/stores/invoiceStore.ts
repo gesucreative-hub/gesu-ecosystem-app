@@ -356,6 +356,27 @@ export function markInvoicePaid(id: string): Invoice | null {
     return { ...invoice };
 }
 
+/**
+ * Revert paid invoice back to sent status.
+ * Used for accidentally marked as paid invoices.
+ */
+export function revertToSent(id: string): Invoice | null {
+    const current = ensureLoaded();
+    const invoice = current.invoices.find(i => i.id === id);
+    if (!invoice) return null;
+    
+    if (invoice.status !== 'paid') {
+        console.warn('[invoiceStore] Can only revert paid invoices');
+        return null;
+    }
+    
+    invoice.status = 'sent';
+    invoice.updatedAt = new Date().toISOString();
+    saveState();
+    console.log('[invoiceStore] Invoice reverted to sent:', id);
+    return { ...invoice };
+}
+
 export function cancelInvoice(id: string): Invoice | null {
     const current = ensureLoaded();
     const invoice = current.invoices.find(i => i.id === id);

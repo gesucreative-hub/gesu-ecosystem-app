@@ -21,6 +21,7 @@ import {
     updateInvoice,
     markInvoiceSent,
     markInvoicePaid,
+    revertToSent,
     subscribe,
     isOverdue,
     getEffectiveDueDate,
@@ -231,6 +232,15 @@ export function InvoiceDetailPage() {
         }
     };
 
+    const handleRevertToSent = () => {
+        if (!invoice || invoice.status !== 'paid') return;
+        if (confirm(t('invoices:editor.undoPaidConfirm', 'Revert this invoice from Paid to Sent? This will NOT delete payment records.'))) {
+            if (revertToSent(invoice.id)) {
+                loadData();
+            }
+        }
+    };
+
     // --- S7-A: Payment Handlers ---
 
     const totalPaid = invoice ? getTotalPaid(invoice.id) : 0;
@@ -337,6 +347,16 @@ export function InvoiceDetailPage() {
                         onClick={handleMarkPaid}
                     >
                         {t('invoices:editor.markPaid', 'Mark as Paid')}
+                    </Button>
+                )}
+                
+                {invoice.status === 'paid' && (
+                    <Button 
+                        variant="outline"
+                        icon={<ArrowLeft size={16} />}
+                        onClick={handleRevertToSent}
+                    >
+                        {t('invoices:editor.undoPaid', 'Undo Paid')}
                     </Button>
                 )}
             </div>

@@ -5,16 +5,21 @@
  * Search bar opens the global CommandPaletteModal (same as Ctrl+K)
  */
 
+import { useState, useRef, useEffect } from 'react';
 import { useFocusTimer } from '../../hooks/useFocusTimer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { Timer, Search } from 'lucide-react';
+import { Timer, Search, X } from 'lucide-react';
 import { GamificationBadge } from '../GamificationBadge';
+import { GamificationCard } from '../GamificationCard';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export function WelcomeHeader() {
     const { state } = useFocusTimer();
     const { user } = useAuth();
     const { t, i18n } = useTranslation('dashboard');
+    const [showGamificationPopover, setShowGamificationPopover] = useState(false);
+    const popoverRef = useRef<HTMLDivElement>(null);
 
     // Get greeting based on time of day
     const hour = new Date().getHours();
@@ -43,6 +48,19 @@ export function WelcomeHeader() {
         }));
     };
 
+    // Close popover on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+                setShowGamificationPopover(false);
+            }
+        };
+        if (showGamificationPopover) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showGamificationPopover]);
+
     return (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-tokens-border/50">
             {/* Left: Greeting */}
@@ -67,8 +85,33 @@ export function WelcomeHeader() {
 
             {/* Right: Gamification Badge + Focus Status + Profile */}
             <div className="flex items-center gap-3">
-                {/* Gamification Badge - Dashboard only */}
-                <GamificationBadge />
+                {/* Gamification Badge with Popover */}
+                <div className="relative" ref={popoverRef}>
+                    <GamificationBadge onClick={() => setShowGamificationPopover(!showGamificationPopover)} />
+                    
+                    {/* Popover with GamificationCard */}
+                    <AnimatePresence>
+                        {showGamificationPopover && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-0 top-full mt-2 z-50 w-72 shadow-2xl rounded-xl border border-tokens-border bg-tokens-bg"
+                            >
+                                {/* Close button */}
+                                <button
+                                    onClick={() => setShowGamificationPopover(false)}
+                                    className="absolute top-2 right-2 z-10 p-1 rounded-lg hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                                {/* Full GamificationCard */}
+                                <GamificationCard isCollapsed={false} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {/* Focus Session Status */}
                 {state.sessionActive && (
@@ -90,3 +133,4 @@ export function WelcomeHeader() {
         </div>
     );
 }
+

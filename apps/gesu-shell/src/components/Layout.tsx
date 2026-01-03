@@ -269,7 +269,7 @@ export function Layout() {
 
                 {/* Sidebar - Floating Squircle Style */}
                 <aside
-                    className={`${isCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 bg-tokens-sidebar-bg rounded-2xl shadow-lg flex flex-col z-20 transition-[width] duration-300 ease-in-out overflow-hidden`}
+                    className={`${isCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 bg-tokens-sidebar-bg rounded-2xl shadow-lg flex flex-col z-20 transition-[width] duration-300 ease-in-out`}
                 >
                     {/* Logo Area */}
                     <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center' : 'px-6 justify-between'} border-b border-tokens-sidebar-border/50`}>

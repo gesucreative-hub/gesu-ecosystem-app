@@ -4,6 +4,7 @@
 import { getProjectsByClientId } from './projectStore';
 import { getInvoicesByClientId } from './invoiceStore';
 import { getContractsByClientId } from './contractStore';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 export interface Client {
     id: string;
@@ -22,8 +23,11 @@ interface ClientStoreState {
     clients: Client[];
 }
 
-const STORAGE_KEY = 'gesu-clients';
+const BASE_STORAGE_KEY = 'gesu-clients';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -52,7 +56,7 @@ function loadState(): ClientStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[clientStore] No stored clients, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, clients: [] };
@@ -85,7 +89,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[clientStore] Failed to save:', err);

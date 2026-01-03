@@ -8,6 +8,7 @@ import {
 } from './businessProfileStore';
 import { getClientById } from './clientStore';
 import { formatDocumentNumber } from './invoiceStore';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 // --- Types ---
 
@@ -51,7 +52,10 @@ interface ContractStoreState {
     contracts: Contract[];
 }
 
-const STORAGE_KEY = 'gesu-contracts';
+const BASE_STORAGE_KEY = 'gesu-contracts';
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 const CURRENT_SCHEMA_VERSION = 1;
 
 // --- Utility ---
@@ -85,7 +89,7 @@ function loadState(): ContractStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[contractStore] No stored contracts, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, contracts: [] };
@@ -118,7 +122,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[contractStore] Failed to save:', err);

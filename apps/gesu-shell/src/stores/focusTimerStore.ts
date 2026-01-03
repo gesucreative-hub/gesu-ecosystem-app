@@ -1,6 +1,7 @@
 // Focus Timer Store - Global Pomodoro timer with phase management
 // Single instance shared across the app, survives navigation
 import { startActivitySession, endActivitySession } from '../services/activityTrackingService';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 export type TimerPhase = 'idle' | 'focus' | 'shortBreak' | 'longBreak';
 
@@ -39,8 +40,11 @@ const DEFAULT_CONFIG: TimerConfig = {
     longBreakEvery: 4,
 };
 
-const STORAGE_KEY = 'gesu-focus-timer';
+const BASE_STORAGE_KEY = 'gesu-focus-timer';
 const SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 interface StoredState {
     schemaVersion: number;
@@ -69,7 +73,7 @@ const subscribers = new Set<() => void>();
 
 function loadState(): FocusTimerState | null {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) return null;
 
         const parsed: StoredState = JSON.parse(raw);
@@ -89,7 +93,7 @@ function saveState(): void {
         schemaVersion: SCHEMA_VERSION,
         state: state.sessionActive ? state : null,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(getStorageKey(), JSON.stringify(payload));
 }
 
 // --- Phase Transitions ---

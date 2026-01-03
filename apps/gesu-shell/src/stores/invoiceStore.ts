@@ -9,6 +9,7 @@ import {
     type PaymentMethod
 } from './businessProfileStore';
 import { getClientById } from './clientStore';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 // --- Types ---
 
@@ -61,7 +62,10 @@ interface InvoiceStoreState {
     invoices: Invoice[];
 }
 
-const STORAGE_KEY = 'gesu-invoices';
+const BASE_STORAGE_KEY = 'gesu-invoices';
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 const CURRENT_SCHEMA_VERSION = 1;
 
 // --- Utility ---
@@ -95,7 +99,7 @@ function loadState(): InvoiceStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[invoiceStore] No stored invoices, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, invoices: [] };
@@ -128,7 +132,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[invoiceStore] Failed to save:', err);

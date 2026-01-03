@@ -2,6 +2,8 @@
 // S5-1: Profile, payment methods, numbering rules, default terms
 // Scoped to BUSINESS workspace only
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 export interface PaymentMethod {
     id: string;
     label: string;              // e.g., "BCA - Main Business"
@@ -38,8 +40,11 @@ interface BusinessProfileStoreState {
     profile: BusinessProfile;
 }
 
-const STORAGE_KEY = 'gesu-business-profile';
+const BASE_STORAGE_KEY = 'gesu-business-profile';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -108,7 +113,7 @@ function loadState(): BusinessProfileStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[businessProfileStore] No stored profile, using defaults');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, profile: getDefaultProfile() };
@@ -144,7 +149,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
     } catch (err) {
         console.error('[businessProfileStore] Failed to save:', err);
     }

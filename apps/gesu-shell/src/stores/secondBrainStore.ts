@@ -1,6 +1,8 @@
 // Second Brain Store - S8: Inbox + PARA assignment for PERSONAL persona
 // Thin slice: quick capture, PARA buckets, export support
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 // --- Types ---
 
 export type SecondBrainStage = 'inbox' | 'processed' | 'archived';
@@ -21,8 +23,11 @@ interface SecondBrainStoreState {
     items: SecondBrainItem[];
 }
 
-const STORAGE_KEY = 'gesu-second-brain';
+const BASE_STORAGE_KEY = 'gesu-second-brain';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -51,7 +56,7 @@ function loadState(): SecondBrainStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[secondBrainStore] No stored items, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, items: [] };
@@ -83,7 +88,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[secondBrainStore] Failed to save:', err);

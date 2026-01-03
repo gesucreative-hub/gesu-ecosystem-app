@@ -9,7 +9,6 @@ import {
     stopRealtimeSync 
 } from '../services/gamificationSyncService';
 import { optInToLeaderboard } from '../services/leaderboardService';
-import { clearAllUserData } from '../utils/clearAllUserData';
 
 interface AuthContextType {
     user: GesuUser | null;
@@ -139,13 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const handleSignOut = async () => {
         try {
-            // Clear all user data BEFORE signing out to ensure data isolation
-            clearAllUserData();
-            
             await signOut();
             
-            // Force page reload to reinitialize all stores with empty state
-            // This ensures in-memory cached data is also cleared
+            // Force page reload to reinitialize all stores with new user's data
+            // Each store now uses user-scoped localStorage keys
             window.location.reload();
         } catch (error) {
             console.error('[AuthContext] Sign-out error:', error);

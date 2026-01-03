@@ -2,6 +2,8 @@
 // S7-B: Template CRUD with persistence
 // Templates contain items that can be instantiated as deliverable packs per project
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 // --- Types ---
 
 export interface DeliverableTemplateItem {
@@ -24,8 +26,11 @@ interface DeliverableTemplateStoreState {
     templates: DeliverableTemplate[];
 }
 
-const STORAGE_KEY = 'gesu-deliverable-templates';
+const BASE_STORAGE_KEY = 'gesu-deliverable-templates';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -58,7 +63,7 @@ function loadState(): DeliverableTemplateStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[deliverableTemplateStore] No stored templates, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, templates: [] };
@@ -90,7 +95,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[deliverableTemplateStore] Failed to save:', err);

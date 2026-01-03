@@ -3,6 +3,7 @@
 // Each pack contains items with todo/done status and file links
 
 import { getTemplateById } from './deliverableTemplateStore';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 // --- Types ---
 
@@ -32,8 +33,11 @@ interface DeliverablePackStoreState {
     packs: DeliverablePack[];
 }
 
-const STORAGE_KEY = 'gesu-deliverable-packs';
+const BASE_STORAGE_KEY = 'gesu-deliverable-packs';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -66,7 +70,7 @@ function loadState(): DeliverablePackStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[deliverablePackStore] No stored packs, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, packs: [] };
@@ -95,7 +99,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[deliverablePackStore] Failed to save:', err);

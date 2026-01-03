@@ -1,6 +1,8 @@
 // Project Store - Manages project identity and active project selection
 // Uses localStorage with schemaVersion for safe migrations
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 export type ProjectType = 'client' | 'gesu-creative' | 'other';
 
 export interface Project {
@@ -30,8 +32,11 @@ interface ProjectStoreState {
     activeProjectId: string | null;
 }
 
-const STORAGE_KEY = 'gesu-projects';
+const BASE_STORAGE_KEY = 'gesu-projects';
 const CURRENT_SCHEMA_VERSION = 4;  // S5-3: Bumped for clientId field
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -136,7 +141,7 @@ export function loadState(): ProjectStoreState {
     const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, projects: [], activeProjectId: null };
     
     try {
-        const raw = readRaw(STORAGE_KEY);
+        const raw = readRaw(getStorageKey());
         if (!raw) {
             return defaultState;
         }
@@ -146,9 +151,9 @@ export function loadState(): ProjectStoreState {
         if (!parseResult.success) {
             // CORRUPT: Create backup (async, don't block), register warning, return default
             // DO NOT write back or modify the original key
-            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
+            void createBackupSnapshot(getStorageKey(), raw, { reason: 'corrupt' })
                 .then(filename => {
-                    registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined);
+                    registerSchemaWarning(getStorageKey(), 'CORRUPT', filename || undefined);
                 })
                 .catch(err => console.error('[projectStore] Backup failed:', err));
             
@@ -163,7 +168,7 @@ export function loadState(): ProjectStoreState {
         if (version === 2) {
             console.log('[projectStore] Migrating from schema v2 to v4...');
             
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 2, 
                 toVersion: 4 
@@ -182,7 +187,7 @@ export function loadState(): ProjectStoreState {
             console.log('[projectStore] Migrating from schema v1 to v4...');
             
             // S2-1 Fix: Single backup with final target version
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 1, 
                 toVersion: 4 
@@ -201,7 +206,7 @@ export function loadState(): ProjectStoreState {
         if (version === 3) {
             console.log('[projectStore] Migrating from schema v3 to v4...');
             
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: 'pre-migration', 
                 fromVersion: 3, 
                 toVersion: 4 
@@ -218,13 +223,13 @@ export function loadState(): ProjectStoreState {
         if (version !== CURRENT_SCHEMA_VERSION) {
             // Create backup (async), register warning, return default for UI
             // CRITICAL: DO NOT write back or modify localStorage
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
                 fromVersion: version || undefined 
             })
                 .then(filename => {
                     registerSchemaWarning(
-                        STORAGE_KEY, 
+                        getStorageKey(), 
                         version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
                         filename || undefined
                     );
@@ -243,7 +248,7 @@ export function loadState(): ProjectStoreState {
 }
 
 function saveState(state: ProjectStoreState): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStorageKey(), JSON.stringify(state));
 }
 
 // --- Public API ---

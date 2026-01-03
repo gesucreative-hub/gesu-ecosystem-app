@@ -1,6 +1,8 @@
 // Service Catalog Store - Pricelist items for BUSINESS workspace
 // S6-A: CRUD + search + category filter (snapshot values, not references)
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 export interface ServiceCatalogItem {
     id: string;
     name: string;               // e.g., "Desain Merek"
@@ -17,8 +19,11 @@ interface ServiceCatalogStoreState {
     items: ServiceCatalogItem[];
 }
 
-const STORAGE_KEY = 'gesu-service-catalog';
+const BASE_STORAGE_KEY = 'gesu-service-catalog';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -47,7 +52,7 @@ function loadState(): ServiceCatalogStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[serviceCatalogStore] No stored items, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, items: [] };
@@ -80,7 +85,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[serviceCatalogStore] Failed to save:', err);

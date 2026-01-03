@@ -4,6 +4,7 @@
 
 import { toggleDoDItem } from './workflowProgressStore';
 import { MAX_ACTIVE_ITEMS } from '../config/guardrails';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 export interface ProjectHubTask {
     id: string;
@@ -19,8 +20,11 @@ export interface ProjectHubTask {
     createdAt: number;        // timestamp
 }
 
-const STORAGE_KEY = 'gesu-projecthub-tasks';
+const BASE_STORAGE_KEY = 'gesu-projecthub-tasks';
 const MAX_ACTIVE_TASKS_PER_DAY = MAX_ACTIVE_ITEMS; // From shared guardrails config
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility Functions ---
 
@@ -57,14 +61,14 @@ function loadState(): StoredTasksState {
     const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: [] };
     
     try {
-        const raw = readRaw(STORAGE_KEY);
+        const raw = readRaw(getStorageKey());
         if (!raw) return defaultState;
 
         const parseResult = parse<StoredTasksState | ProjectHubTask[]>(raw);
         
         if (!parseResult.success) {
-            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
-                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+            void createBackupSnapshot(getStorageKey(), raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(getStorageKey(), 'CORRUPT', filename || undefined))
                 .catch(err => console.error('[projectHubTasksStore] Backup failed:', err));
             console.warn('[projectHubTasksStore] Parse failed, data preserved. NOT resetting.');
             return defaultState;
@@ -76,7 +80,7 @@ function loadState(): StoredTasksState {
         if (Array.isArray(parsed)) {
             console.log('[projectHubTasksStore] Migrating legacy array to schemaVersion 1');
             // Create backup before migration
-            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'pre-migration', fromVersion: 0, toVersion: 1 })
+            void createBackupSnapshot(getStorageKey(), raw, { reason: 'pre-migration', fromVersion: 0, toVersion: 1 })
                 .catch(err => console.error('[projectHubTasksStore] Pre-migration backup failed:', err));
             return { schemaVersion: CURRENT_SCHEMA_VERSION, tasks: parsed };
         }
@@ -85,13 +89,13 @@ function loadState(): StoredTasksState {
 
         // Handle new format with schemaVersion
         if (version !== CURRENT_SCHEMA_VERSION) {
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
                 fromVersion: version || undefined 
             })
                 .then(filename => {
                     registerSchemaWarning(
-                        STORAGE_KEY, 
+                        getStorageKey(), 
                         version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
                         filename || undefined
                     );
@@ -110,7 +114,7 @@ function loadState(): StoredTasksState {
 
 function saveState(tasks: ProjectHubTask[]): void {
     const payload: StoredTasksState = { schemaVersion: CURRENT_SCHEMA_VERSION, tasks };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(getStorageKey(), JSON.stringify(payload));
 }
 
 export function loadTasksForDate(dateKey: string): ProjectHubTask[] {

@@ -1,6 +1,8 @@
 // Compass Snapshot Store - Persists daily calibration snapshots
 // Uses localStorage with schemaVersion for safe migrations
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 export interface FocusAreaData {
     [key: string]: number;
 }
@@ -25,9 +27,12 @@ interface CompassSnapshotState {
     snapshots: CompassSnapshot[];
 }
 
-const STORAGE_KEY = 'gesu-compass-snapshots';
+const BASE_STORAGE_KEY = 'gesu-compass-snapshots';
 const CURRENT_SCHEMA_VERSION = 1;
 const MAX_SNAPSHOTS = 30; // Keep last 30 days
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -57,14 +62,14 @@ function loadState(): CompassSnapshotState {
     const defaultState = { schemaVersion: CURRENT_SCHEMA_VERSION, snapshots: [] };
     
     try {
-        const raw = readRaw(STORAGE_KEY);
+        const raw = readRaw(getStorageKey());
         if (!raw) return defaultState;
 
         const parseResult = parse<CompassSnapshotState>(raw);
         
         if (!parseResult.success) {
-            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
-                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+            void createBackupSnapshot(getStorageKey(), raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(getStorageKey(), 'CORRUPT', filename || undefined))
                 .catch(err => console.error('[compassSnapshotStore] Backup failed:', err));
             console.warn('[compassSnapshotStore] Parse failed, data preserved. NOT resetting.');
             return defaultState;
@@ -74,13 +79,13 @@ function loadState(): CompassSnapshotState {
         const version = detectVersion(parsed);
 
         if (version !== CURRENT_SCHEMA_VERSION) {
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
                 fromVersion: version || undefined 
             })
                 .then(filename => {
                     registerSchemaWarning(
-                        STORAGE_KEY, 
+                        getStorageKey(), 
                         version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
                         filename || undefined
                     );
@@ -98,7 +103,7 @@ function loadState(): CompassSnapshotState {
 }
 
 function saveState(state: CompassSnapshotState): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStorageKey(), JSON.stringify(state));
 }
 
 // --- Public API ---

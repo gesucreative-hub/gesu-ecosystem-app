@@ -3,6 +3,7 @@
 // Uses the existing GesuSettings interface from types/settings.ts
 
 import { GesuSettings } from '../types/settings';
+import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 // Default settings matching the existing interface structure
 export const DEFAULT_SETTINGS: GesuSettings = {
@@ -31,8 +32,11 @@ export const DEFAULT_SETTINGS: GesuSettings = {
     installPreference: 'manual',
 };
 
-const STORAGE_KEY = 'gesu-global-settings';
+const BASE_STORAGE_KEY = 'gesu-global-settings';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // Internal storage type with schema version
 interface StoredSettings extends GesuSettings {
@@ -51,15 +55,15 @@ import {
 
 export function loadSettings(): GesuSettings {
     try {
-        const raw = readRaw(STORAGE_KEY);
+        const raw = readRaw(getStorageKey());
         if (!raw) return { ...DEFAULT_SETTINGS };
 
         const parseResult = parse<StoredSettings>(raw);
 
         if (!parseResult.success) {
             // CORRUPT: backup + warning, DO NOT reset localStorage
-            void createBackupSnapshot(STORAGE_KEY, raw, { reason: 'corrupt' })
-                .then(filename => registerSchemaWarning(STORAGE_KEY, 'CORRUPT', filename || undefined))
+            void createBackupSnapshot(getStorageKey(), raw, { reason: 'corrupt' })
+                .then(filename => registerSchemaWarning(getStorageKey(), 'CORRUPT', filename || undefined))
                 .catch(err => console.error('[settingsStore] Backup failed:', err));
             console.warn('[settingsStore] Parse failed, data preserved. Using defaults.');
             return { ...DEFAULT_SETTINGS };
@@ -70,13 +74,13 @@ export function loadSettings(): GesuSettings {
 
         // Schema migration: preserve on version mismatch
         if (version !== CURRENT_SCHEMA_VERSION) {
-            void createBackupSnapshot(STORAGE_KEY, raw, { 
+            void createBackupSnapshot(getStorageKey(), raw, { 
                 reason: version && version > CURRENT_SCHEMA_VERSION ? 'future-version' : 'unknown-version',
                 fromVersion: version || undefined 
             })
                 .then(filename => {
                     registerSchemaWarning(
-                        STORAGE_KEY, 
+                        getStorageKey(), 
                         version && version > CURRENT_SCHEMA_VERSION ? 'FUTURE_VERSION' : 'CORRUPT',
                         filename || undefined
                     );
@@ -99,7 +103,7 @@ export function saveSettings(settings: GesuSettings): boolean {
             ...settings,
             schemaVersion: CURRENT_SCHEMA_VERSION,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        localStorage.setItem(getStorageKey(), JSON.stringify(payload));
         return true;
     } catch (error) {
         console.error('Failed to save settings:', error);

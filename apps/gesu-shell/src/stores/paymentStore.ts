@@ -2,6 +2,8 @@
 // S7-A: Payment recording with invoice linking
 // Persistence pattern matches other stores (localStorage + schemaVersion)
 
+import { getUserStorageKey } from '../utils/getUserStorageKey';
+
 // --- Types ---
 
 export type PaymentMethod = 'transfer' | 'cash' | 'other';
@@ -22,8 +24,11 @@ interface PaymentStoreState {
     payments: Payment[];
 }
 
-const STORAGE_KEY = 'gesu-payments';
+const BASE_STORAGE_KEY = 'gesu-payments';
 const CURRENT_SCHEMA_VERSION = 1;
+
+// Get user-scoped storage key
+const getStorageKey = () => getUserStorageKey(BASE_STORAGE_KEY);
 
 // --- Utility ---
 
@@ -52,7 +57,7 @@ function loadState(): PaymentStoreState {
     }
 
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getStorageKey());
         if (!raw) {
             console.log('[paymentStore] No stored payments, starting empty');
             return { schemaVersion: CURRENT_SCHEMA_VERSION, payments: [] };
@@ -85,7 +90,7 @@ function saveState(): void {
     if (!state || !isLocalStorageAvailable()) return;
 
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
         notifySubscribers();
     } catch (err) {
         console.error('[paymentStore] Failed to save:', err);

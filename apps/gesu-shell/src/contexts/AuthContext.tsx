@@ -143,7 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             clearAllUserData();
             
             await signOut();
-            // Switch back to default workspace (handled in useEffect)
+            
+            // Force page reload to reinitialize all stores with empty state
+            // This ensures in-memory cached data is also cleared
+            window.location.reload();
         } catch (error) {
             console.error('[AuthContext] Sign-out error:', error);
             throw error;

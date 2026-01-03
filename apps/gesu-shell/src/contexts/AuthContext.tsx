@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [workspace, setWorkspace] = useState<UserWorkspace | null>(null);
     const { settings } = useGesuSettings();
     const syncCleanupRef = useRef<(() => void) | null>(null);
+    const prevUserIdRef = useRef<string | null | undefined>(undefined); // undefined = not initialized yet
 
     // Handle workspace switching when user changes
     useEffect(() => {
@@ -36,6 +37,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             const userId = user?.uid || null;
+            const prevUserId = prevUserIdRef.current;
+            
+            // Detect user switch (not initial load, and switching FROM one user TO another)
+            // Don't reload on initial load (prevUserId === undefined)
+            // Do reload when: prevUserId exists AND userId exists AND they're different
+            if (prevUserId !== undefined && prevUserId !== null && userId !== null && prevUserId !== userId) {
+                console.log('[AuthContext] User switched from', prevUserId, 'to', userId, '- reloading page');
+                localStorage.setItem('gesu.userId', userId);
+                window.location.reload();
+                return;
+            }
+            
+            // Update previous user ref
+            prevUserIdRef.current = userId;
+            
             console.log('[AuthContext] Setting up workspace for user:', userId || 'default');
 
             // Store userId in localStorage for other stores to use (gamification, etc.)

@@ -9,6 +9,7 @@ import {
     stopRealtimeSync 
 } from '../services/gamificationSyncService';
 import { optInToLeaderboard } from '../services/leaderboardService';
+import { clearAllUserData } from '../utils/clearAllUserData';
 
 interface AuthContextType {
     user: GesuUser | null;
@@ -138,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const handleSignOut = async () => {
         try {
+            // Clear all user data BEFORE signing out to ensure data isolation
+            clearAllUserData();
+            
             await signOut();
             // Switch back to default workspace (handled in useEffect)
         } catch (error) {

@@ -97,7 +97,7 @@ export function WelcomeHeader() {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute right-0 top-full mt-2 z-50 w-72 shadow-2xl rounded-xl border border-tokens-border bg-tokens-bg"
+                                className="absolute right-0 top-full mt-2 z-50 w-72"
                             >
                                 {/* Close button */}
                                 <button

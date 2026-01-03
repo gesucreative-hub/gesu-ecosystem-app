@@ -49,13 +49,13 @@ export function GamificationBadge({ onClick }: GamificationBadgeProps) {
             </div>
             
             {/* Level Badge */}
-            <div className="flex items-center gap-1 text-xs">
+            <div className="flex items-center gap-1 text-xs shrink-0">
                 <Sparkles size={12} className="text-tokens-brand-DEFAULT" />
                 <span className="font-bold text-tokens-fg">Lv.{level}</span>
             </div>
             
             {/* XP with mini progress */}
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start shrink-0">
                 <div className="flex items-center gap-1 text-[10px]">
                     <Star size={10} className="text-yellow-600 dark:text-yellow-500" />
                     <span className="text-tokens-fg font-medium">{xp.toLocaleString()}</span>
@@ -71,7 +71,7 @@ export function GamificationBadge({ onClick }: GamificationBadgeProps) {
             
             {/* Streak */}
             {streak > 0 && (
-                <div className="flex items-center gap-0.5 text-[10px]">
+                <div className="flex items-center gap-0.5 text-[10px] shrink-0">
                     <Flame size={10} className="text-orange-600 dark:text-orange-500" />
                     <span className="text-tokens-fg font-medium">{streak}d</span>
                 </div>
@@ -79,7 +79,7 @@ export function GamificationBadge({ onClick }: GamificationBadgeProps) {
             
             {/* Combo Multiplier */}
             {combo > 1 && (
-                <span className="text-[10px] font-bold text-tokens-brand-DEFAULT bg-tokens-brand-DEFAULT/10 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold text-tokens-brand-DEFAULT bg-tokens-brand-DEFAULT/10 px-1.5 py-0.5 rounded shrink-0">
                     {comboMultiplier}x
                 </span>
             )}

@@ -73,7 +73,7 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
 
                 {/* Dropdown Menu - Opens upwards */}
                 {isOpen && (
-                    <div className="absolute bottom-full left-0 mb-2 w-full bg-tokens-panel border border-tokens-border rounded-xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className={`absolute bottom-full left-0 mb-2 bg-tokens-panel border border-tokens-border rounded-xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-200 ${isCollapsed ? 'w-56' : 'w-full'}`}>
                         {/* Settings */}
                         <Link
                             to="/settings"

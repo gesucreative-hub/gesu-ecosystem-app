@@ -363,7 +363,7 @@ export function Layout() {
                     </nav>
 
                     {/* Bottom Controls */}
-                    <div className="p-4 border-t border-tokens-sidebar-border flex flex-col gap-2 ${isCollapsed ? 'items-center' : ''}">
+                    <div className={`p-4 border-t border-tokens-sidebar-border flex flex-col gap-2 ${isCollapsed ? 'items-center' : ''}`}>
 
                     {/* S2-3: Persona Toggle */}
                     <PersonaToggle isCollapsed={isCollapsed} />

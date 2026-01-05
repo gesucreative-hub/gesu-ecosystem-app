@@ -1,6 +1,6 @@
 # BUG & ADJUSTMENT SNAPSHOTS (06/01/2026)
 
-## OVERALL
+## OTHERS MAJOR IN APP (MANDATORY)
 
 - [ ] In current state user need to reload the app manualy using reload or force reload to make the user's data appears. Especially the business toolkits data.
 - [ ] Some dialogs/toasts remain unstyled. e.g. delete contract dialog/toast. Many dialogs remains
@@ -16,7 +16,7 @@
 - [ ] Personal persona : Core | Tools | Extra (Media Suite) | (current state, keep it)
 - [ ] Business persona : Core | Working (Project Hub, Invoices, Contracts) | Planning (Clients, Business, Pricelist, Deliverables, Templates, Finance) | Extras (Media Suite)
 
-## Settings Page
+## Settings Page (MANDATORY)
 
 - [ ] Add shortcuts management within settings page.
 - [ ] Add an alert to user when leaving settings page if there are unsaved changes.

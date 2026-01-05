@@ -71,6 +71,20 @@ function App() {
             return () => mediaQuery.removeEventListener('change', handleChange);
         }
     }, [settings?.appearance?.theme]);
+
+    // Sprint 1 Fix: Eager store initialization to prevent reload requirement
+    // Hydrate business stores on app mount so data is available immediately
+    useEffect(() => {
+        // Import and initialize business stores
+        import('./stores/invoiceStore').then(({ listInvoices }) => listInvoices());
+        import('./stores/contractStore').then(({ listContracts }) => listContracts());
+        import('./stores/clientStore').then(({ listClients }) => listClients());
+        import('./stores/projectStore').then(({ listProjects }) => listProjects());
+        import('./stores/serviceCatalogStore').then(({ listServices }) => listServices());
+        import('./stores/paymentStore').then(({ listPayments }) => listPayments());
+        import('./stores/deliverableTemplateStore').then(({ listTemplates }) => listTemplates());
+    }, []);
+
     return (
         <AuthProvider>
             <Routes>

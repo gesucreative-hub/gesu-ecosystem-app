@@ -11,6 +11,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
+import { SidePanel } from '../components/SidePanel';
 import { Users, Plus, Trash2, Edit, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
@@ -165,18 +166,21 @@ export function ClientsPage() {
                 placeholder={t('business:clients.searchPlaceholder', 'Search clients...')}
             />
 
-            {/* Add/Edit Form */}
-            {showAddForm && (
-                <Card
-                    title={editingClient ? t('business:clients.form.editTitle', 'Edit Client') : t('business:clients.form.addTitle', 'Add New Client')}
-                    className="border-tokens-brand-DEFAULT/30"
-                >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Add/Edit Panel */}
+            <SidePanel
+                isOpen={showAddForm}
+                onClose={resetForm}
+                title={editingClient ? t('business:clients.form.editTitle', 'Edit Client') : t('business:clients.form.addTitle', 'Add New Client')}
+                width="600px"
+            >
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-4">
                         <Input
                             label={t('business:clients.form.name', 'Name') + ' *'}
                             value={formData.name}
                             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
                             placeholder={t('business:clients.form.namePlaceholder', 'Contact person name')}
+                            autoFocus
                         />
                         <Input
                             label={t('business:clients.form.company', 'Company')}
@@ -184,37 +188,38 @@ export function ClientsPage() {
                             onChange={(e) => setFormData(f => ({ ...f, company: e.target.value }))}
                             placeholder={t('business:clients.form.companyPlaceholder', 'Company or organization')}
                         />
-                        <Input
-                            label={t('business:clients.form.email', 'Email')}
-                            value={formData.email}
-                            onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
-                            placeholder={t('business:clients.form.emailPlaceholder', 'email@example.com')}
-                        />
-                        <Input
-                            label={t('business:clients.form.phone', 'Phone')}
-                            value={formData.phone}
-                            onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))}
-                            placeholder={t('business:clients.form.phonePlaceholder', '+62 812 3456 789')}
-                        />
-                        <div className="md:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <Input
-                                label={t('business:clients.form.address', 'Address')}
-                                value={formData.address}
-                                onChange={(e) => setFormData(f => ({ ...f, address: e.target.value }))}
-                                placeholder={t('business:clients.form.addressPlaceholder', 'Full address')}
+                                label={t('business:clients.form.email', 'Email')}
+                                value={formData.email}
+                                onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
+                                placeholder={t('business:clients.form.emailPlaceholder', 'email@example.com')}
+                            />
+                            <Input
+                                label={t('business:clients.form.phone', 'Phone')}
+                                value={formData.phone}
+                                onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))}
+                                placeholder={t('business:clients.form.phonePlaceholder', '+62 812 3456 789')}
                             />
                         </div>
-                        <div className="md:col-span-2">
+                        <Input
+                            label={t('business:clients.form.address', 'Address')}
+                            value={formData.address}
+                            onChange={(e) => setFormData(f => ({ ...f, address: e.target.value }))}
+                            placeholder={t('business:clients.form.addressPlaceholder', 'Full address')}
+                        />
+                        <div>
                             <label className="block text-sm font-medium text-tokens-fg mb-2">{t('business:clients.form.notes', 'Notes')}</label>
                             <textarea
                                 value={formData.notes}
                                 onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))}
-                                className="w-full h-20 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
+                                className="w-full h-32 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
                                 placeholder={t('business:clients.form.notesPlaceholder', 'Additional notes...')}
                             />
                         </div>
                     </div>
-                    <div className="flex gap-2 justify-end mt-4">
+
+                    <div className="flex gap-3 justify-end pt-4 border-t border-tokens-border">
                         <Button variant="secondary" onClick={resetForm}>
                             {t('common:buttons.cancel', 'Cancel')}
                         </Button>
@@ -222,8 +227,8 @@ export function ClientsPage() {
                             {editingClient ? t('common:buttons.update', 'Update') : t('common:buttons.create', 'Create')}
                         </Button>
                     </div>
-                </Card>
-            )}
+                </div>
+            </SidePanel>
 
             {/* Client List */}
             <div className="space-y-3">

@@ -10,17 +10,19 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { SelectDropdown } from '../components/Dropdown';
+import { Combobox } from '../components/Combobox';
 import { 
     ArrowLeft, Save, Send, CheckCircle, Plus, 
-    Trash2, FileText, Building2, User, List, ChevronUp, ChevronDown 
+    Trash2, FileText, Building2, User, List, ChevronUp, ChevronDown, Download 
 } from 'lucide-react';
+import { exportContractPDF } from '../utils/pdfExport';
 import { usePersona } from '../hooks/usePersona';
 import { 
     getContractById, 
     updateContract,
     markContractSent,
     markContractSigned,
+    deleteContract,
     subscribe,
     type Contract, 
     type ContractStatus
@@ -206,6 +208,20 @@ export function ContractDetailPage() {
                     <>
                         <Button 
                             variant="outline" 
+                            icon={<Trash2 size={16} />}
+                            className="text-tokens-error hover:text-tokens-error hover:bg-tokens-error/10"
+                            onClick={() => {
+                                if (window.confirm(t('common:confirmDelete', 'Are you sure you want to delete this contract?'))) {
+                                    if (id && deleteContract(id)) {
+                                        navigate('/contracts');
+                                    }
+                                }
+                            }}
+                        >
+                            {t('common:buttons.delete', 'Delete')}
+                        </Button>
+                        <Button 
+                            variant="outline" 
                             icon={<Save size={16} />}
                             onClick={handleSave}
                             disabled={!hasChanges}
@@ -229,6 +245,15 @@ export function ContractDetailPage() {
                         {t('invoices:contractEditor.markSigned', 'Mark as Signed')}
                     </Button>
                 )}
+                
+                {/* Export PDF - available for all statuses */}
+                <Button 
+                    variant="outline"
+                    icon={<Download size={16} />}
+                    onClick={() => exportContractPDF(contract)}
+                >
+                    {t('common:buttons.exportPdf', 'Export PDF')}
+                </Button>
             </div>
 
             {/* Summary Cards */}
@@ -241,7 +266,7 @@ export function ContractDetailPage() {
                             <span className="text-sm font-medium">{t('invoices:contractDetail.client', 'Client')}</span>
                         </div>
                         {isDraft && clients.length > 0 ? (
-                            <SelectDropdown
+                            <Combobox
                                 value={contract.clientId}
                                 onChange={(value) => {
                                     updateContract(contract.id, { clientId: value });
@@ -257,6 +282,9 @@ export function ContractDetailPage() {
                                     { value: '', label: t('invoices:detail.selectClient', '-- Select Client --') },
                                     ...clients.map(c => ({ value: c.id, label: c.company ? `${c.name} (${c.company})` : c.name }))
                                 ]}
+                                placeholder={t('invoices:detail.searchClient', 'Search clients...')}
+                                onCreateNew={() => navigate('/clients?create=true')}
+                                createNewLabel={t('common:createNewClient', 'Create New Client')}
                             />
                         ) : (
                             <>
@@ -294,7 +322,7 @@ export function ContractDetailPage() {
                                 <FileText size={16} />
                                 <span className="text-sm font-medium">{t('invoices:contractDetail.project', 'Project')}</span>
                             </div>
-                            <SelectDropdown
+                            <Combobox
                                 value={contract.projectId || ''}
                                 onChange={(value) => {
                                     updateContract(contract.id, { projectId: value || undefined });
@@ -307,6 +335,7 @@ export function ContractDetailPage() {
                                         label: p.name 
                                     }))
                                 ]}
+                                placeholder={t('invoices:detail.searchProject', 'Search projects...')}
                             />
                             {!contract.clientId && (
                                 <div className="text-xs text-tokens-muted mt-2">

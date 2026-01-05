@@ -11,10 +11,12 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
 import { SelectDropdown } from '../components/Dropdown';
+import { Combobox } from '../components/Combobox';
 import { 
     ArrowLeft, Save, Send, DollarSign, Plus, 
-    Trash2, FileText, Building2, User, ChevronUp, ChevronDown, AlertTriangle, Calendar, X
+    Trash2, FileText, Building2, User, ChevronUp, ChevronDown, AlertTriangle, Calendar, X, Download
 } from 'lucide-react';
+import { exportInvoicePDF } from '../utils/pdfExport';
 import { usePersona } from '../hooks/usePersona';
 import { 
     getInvoiceById, 
@@ -22,6 +24,7 @@ import {
     markInvoiceSent,
     markInvoicePaid,
     revertToSent,
+    deleteInvoice,
     subscribe,
     isOverdue,
     getEffectiveDueDate,
@@ -326,6 +329,20 @@ export function InvoiceDetailPage() {
                     <>
                         <Button 
                             variant="outline" 
+                            icon={<Trash2 size={16} />}
+                            className="text-tokens-error hover:text-tokens-error hover:bg-tokens-error/10"
+                            onClick={() => {
+                                if (window.confirm(t('common:confirmDelete', 'Are you sure you want to delete this invoice?'))) {
+                                    if (id && deleteInvoice(id)) {
+                                        navigate('/invoices');
+                                    }
+                                }
+                            }}
+                        >
+                            {t('common:buttons.delete', 'Delete')}
+                        </Button>
+                        <Button 
+                            variant="outline" 
                             icon={<Save size={16} />}
                             onClick={handleSave}
                             disabled={!hasChanges}
@@ -359,6 +376,15 @@ export function InvoiceDetailPage() {
                         {t('invoices:editor.undoPaid', 'Undo Paid')}
                     </Button>
                 )}
+                
+                {/* Export PDF - available for all statuses */}
+                <Button 
+                    variant="outline"
+                    icon={<Download size={16} />}
+                    onClick={() => exportInvoicePDF(invoice)}
+                >
+                    {t('common:buttons.exportPdf', 'Export PDF')}
+                </Button>
             </div>
 
             {/* Summary Cards */}
@@ -371,7 +397,7 @@ export function InvoiceDetailPage() {
                             <span className="text-sm font-medium">{t('invoices:detail.client', 'Client')}</span>
                         </div>
                         {isDraft && clients.length > 0 ? (
-                            <SelectDropdown
+                            <Combobox
                                 value={invoice.clientId}
                                 onChange={(value) => {
                                     updateInvoice(invoice.id, { clientId: value });
@@ -381,6 +407,9 @@ export function InvoiceDetailPage() {
                                     { value: '', label: t('invoices:detail.selectClient', '-- Select Client --') },
                                     ...clients.map(c => ({ value: c.id, label: c.company ? `${c.name} (${c.company})` : c.name }))
                                 ]}
+                                placeholder={t('invoices:detail.searchClient', 'Search clients...')}
+                                onCreateNew={() => navigate('/clients?create=true')}
+                                createNewLabel={t('common:createNewClient', 'Create New Client')}
                             />
                         ) : (
                             <>
@@ -418,7 +447,7 @@ export function InvoiceDetailPage() {
                                 <FileText size={16} />
                                 <span className="text-sm font-medium">{t('invoices:detail.project', 'Project')}</span>
                             </div>
-                            <SelectDropdown
+                            <Combobox
                                 value={invoice.projectId || ''}
                                 onChange={(value) => {
                                     updateInvoice(invoice.id, { projectId: value || undefined });
@@ -431,6 +460,7 @@ export function InvoiceDetailPage() {
                                         label: p.name 
                                     }))
                                 ]}
+                                placeholder={t('invoices:detail.searchProject', 'Search projects...')}
                             />
                             {!invoice.clientId && (
                                 <div className="text-xs text-tokens-muted mt-2">

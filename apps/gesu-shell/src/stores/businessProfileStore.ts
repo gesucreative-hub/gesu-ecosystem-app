@@ -54,26 +54,27 @@ function generateId(): string {
 
 // --- Default Values ---
 
-const DEFAULT_INVOICE_TERMS = `PAYMENT TERMS:
-- Payment due within 14 days from invoice date
-- Bank transfer to the account listed above
-- Please include invoice number in transfer description
-- Late payments may incur 2% monthly interest
+const DEFAULT_INVOICE_TERMS = `SYARAT PEMBAYARAN:
+- Harap melakukan pelunasan maksimal 7 hari sejak tanggal jatuh tempo.
+- File akhir akan dikirim setelah pembayaran lunas.
+- Invoice ini termasuk 8 kali revisi gratis. Revisi tambahan akan dikenakan biaya.
+- Tidak ada pengembalian dana untuk pembayaran DP (30%).
+- Harga dapat berubah bila terdapat tambahan pekerjaan di luar scope awal.
 
-NOTES:
-- All prices include applicable taxes unless stated otherwise
-- This invoice is valid without signature`;
+CATATAN:
+- Semua harga sudah termasuk pajak kecuali dinyatakan lain.
+- Invoice ini sah tanpa tanda tangan.`;
 
-const DEFAULT_CONTRACT_TERMS = `GENERAL TERMS:
-1. SCOPE: Services as described in the project description above
-2. PAYMENT: As per agreed schedule; 50% upfront, 50% upon completion
-3. REVISIONS: Includes up to 2 rounds of revisions; additional revisions billed separately
-4. TIMELINE: Estimated completion dates subject to timely client feedback
-5. CANCELLATION: 50% cancellation fee if cancelled after project start
-6. INTELLECTUAL PROPERTY: Full rights transfer upon final payment
-7. CONFIDENTIALITY: Both parties agree to keep project details confidential
+const DEFAULT_CONTRACT_TERMS = `SYARAT DAN KETENTUAN:
+1. RUANG LINGKUP: Layanan sebagaimana dijelaskan dalam deskripsi proyek di atas.
+2. PEMBAYARAN: Sesuai jadwal yang disepakati; 30% di muka, 70% setelah selesai.
+3. REVISI: Termasuk maksimal 8 kali revisi; revisi tambahan dikenakan biaya terpisah.
+4. WAKTU: Estimasi penyelesaian tergantung pada feedback klien yang tepat waktu.
+5. PEMBATALAN: Biaya pembatalan 30% jika dibatalkan setelah proyek dimulai.
+6. HAK KEKAYAAN INTELEKTUAL: Pengalihan hak penuh setelah pembayaran final.
+7. KERAHASIAAN: Kedua pihak setuju menjaga kerahasiaan detail proyek.
 
-This agreement is binding upon signature by both parties.`;
+Perjanjian ini mengikat setelah ditandatangani oleh kedua pihak.`;
 
 function getDefaultProfile(): BusinessProfile {
     return {

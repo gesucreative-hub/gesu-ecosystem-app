@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ArrowRight, Home, Compass, Zap, Film, Target, FolderOpen } from 'lucide-react';
+import { Search, ArrowRight, Home, Compass, Zap, Film, Target, FolderOpen, Users, Receipt, FileSignature, Tag, Package, TrendingUp, Building2 } from 'lucide-react';
 import { listProjects, setActiveProject } from '../stores/projectStore';
+import { listClients } from '../stores/clientStore';
+import { listInvoices } from '../stores/invoiceStore';
+import { listContracts } from '../stores/contractStore';
 import { isSessionActive, subscribe as subscribeFocusTimer } from '../stores/focusTimerStore';
 import { getRoutePolicy } from '../config/guardrails';
 import { BlockedRouteToast } from './focus/BlockedRouteToast';
@@ -59,7 +62,15 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteModalProp
             { id: 'page-hub', label: t('common:nav.projectHub'), icon: <Zap size={16} />, path: '/initiator' },
             { id: 'page-media', label: t('common:nav.mediaSuite'), icon: <Film size={16} />, path: '/media-suite' },
             { id: 'page-refocus', label: t('common:nav.refocus'), icon: <Target size={16} />, path: '/refocus' },
-            { id: 'page-settings', label: t('common:nav.settings'), icon: <Search size={16} />, path: '/settings' }
+            { id: 'page-settings', label: t('common:nav.settings'), icon: <Search size={16} />, path: '/settings' },
+            // Business Toolkit Pages
+            { id: 'page-clients', label: t('common:nav.clients', 'Clients'), icon: <Users size={16} />, path: '/clients' },
+            { id: 'page-invoices', label: t('common:nav.invoices', 'Invoices'), icon: <Receipt size={16} />, path: '/invoices' },
+            { id: 'page-contracts', label: t('common:nav.contracts', 'Contracts'), icon: <FileSignature size={16} />, path: '/contracts' },
+            { id: 'page-pricelist', label: t('common:nav.pricelist', 'Pricelist'), icon: <Tag size={16} />, path: '/pricelist' },
+            { id: 'page-deliverables', label: t('common:nav.deliverables', 'Deliverables'), icon: <Package size={16} />, path: '/project-deliverables' },
+            { id: 'page-finance', label: t('common:nav.financeSnapshot', 'Finance Snapshot'), icon: <TrendingUp size={16} />, path: '/finance-snapshot' },
+            { id: 'page-business-settings', label: t('common:nav.businessSettings', 'Business Settings'), icon: <Building2 size={16} />, path: '/business-settings' },
         ];
 
         pageItems.forEach(page => {
@@ -99,6 +110,60 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteModalProp
                     }
                 });
             });
+        }
+
+        // 3. Clients - navigate to /clients page
+        if (!focusActive || getRoutePolicy('/clients') !== 'blocked') {
+            try {
+                const clients = listClients();
+                clients.forEach(c => {
+                    items.push({
+                        id: `client-${c.id}`,
+                        type: 'action',
+                        label: c.name,
+                        description: c.email || 'Client',
+                        icon: <Users size={16} className="text-blue-500" />,
+                        targetPath: '/clients',
+                        action: () => navigate('/clients')
+                    });
+                });
+            } catch { /* Store not initialized */ }
+        }
+
+        // 4. Invoices - navigate to invoice detail
+        if (!focusActive || getRoutePolicy('/invoices') !== 'blocked') {
+            try {
+                const invoices = listInvoices();
+                invoices.slice(0, 10).forEach(inv => {
+                    items.push({
+                        id: `invoice-${inv.id}`,
+                        type: 'action',
+                        label: inv.number,
+                        description: `Invoice - ${inv.status}`,
+                        icon: <Receipt size={16} className="text-emerald-500" />,
+                        targetPath: `/invoices/${inv.id}`,
+                        action: () => navigate(`/invoices/${inv.id}`)
+                    });
+                });
+            } catch { /* Store not initialized */ }
+        }
+
+        // 5. Contracts - navigate to contract detail
+        if (!focusActive || getRoutePolicy('/contracts') !== 'blocked') {
+            try {
+                const contracts = listContracts();
+                contracts.slice(0, 10).forEach(c => {
+                    items.push({
+                        id: `contract-${c.id}`,
+                        type: 'action',
+                        label: c.number,
+                        description: `Contract - ${c.status}`,
+                        icon: <FileSignature size={16} className="text-amber-500" />,
+                        targetPath: `/contracts/${c.id}`,
+                        action: () => navigate(`/contracts/${c.id}`)
+                    });
+                });
+            } catch { /* Store not initialized */ }
         }
 
         return items;

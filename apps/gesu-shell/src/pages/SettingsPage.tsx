@@ -158,6 +158,7 @@ export function SettingsPage() {
     const [installPreference, setInstallPreference] = useState<InstallMethod>('manual');
     const [showInstallHints, setShowInstallHints] = useState(false);
     const [isDirty, setIsDirty] = useState(false);
+    const [currency, setCurrency] = useState('IDR');
 
     // Confirm dialog state
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -323,6 +324,18 @@ export function SettingsPage() {
         }
     }, [loadedSettings?.ai?.provider, loadedSettings?.ai?.endpoint]);
 
+    // Unsaved changes warning (beforeunload)
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
     // Apply theme instantly for live preview (before saving)
     useEffect(() => {
         const root = document.documentElement;
@@ -363,6 +376,11 @@ export function SettingsPage() {
 
             if (loadedSettings.installPreference) {
                 setInstallPreference(loadedSettings.installPreference);
+            }
+
+            // Hydrate preferences
+            if (loadedSettings.preferences?.currency) {
+                setCurrency(loadedSettings.preferences.currency);
             }
 
             if (loadedSettings.engines) {
@@ -495,7 +513,10 @@ export function SettingsPage() {
                 imageMagickPath: engines.find(e => e.id === 'imageMagick')?.path || null,
                 libreOfficePath: engines.find(e => e.id === 'libreOffice')?.path || null
             },
-            installPreference
+            installPreference,
+            preferences: {
+                currency
+            }
         };
 
         try {
@@ -824,6 +845,40 @@ export function SettingsPage() {
                                 ]}
                                 value={i18n.language.startsWith('id') ? 'id' : 'en'}
                                 onChange={(val) => i18n.changeLanguage(val)}
+                            />
+                        </div>
+                    </Card>
+
+                    {/* Preferences */}
+                    <Card title={
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-700 dark:bg-secondary-300 rounded-full"></span>
+                            {t('settings:preferences.title', 'Preferences')}
+                        </div>
+                    } className="lg:col-span-2">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="text-sm font-medium text-tokens-fg mb-1">{t('settings:preferences.currency', 'Currency')}</div>
+                                <div className="text-xs text-tokens-muted">
+                                    {t('settings:preferences.currencyDesc', 'Default currency for invoices and financial calculations')}
+                                </div>
+                            </div>
+                            <SelectDropdown
+                                value={currency}
+                                onChange={(val) => {
+                                    setCurrency(val);
+                                    setIsDirty(true);
+                                }}
+                                options={[
+                                    { value: 'IDR', label: 'IDR - Indonesian Rupiah' },
+                                    { value: 'USD', label: 'USD - US Dollar' },
+                                    { value: 'EUR', label: 'EUR - Euro' },
+                                    { value: 'SGD', label: 'SGD - Singapore Dollar' },
+                                    { value: 'MYR', label: 'MYR - Malaysian Ringgit' },
+                                    { value: 'GBP', label: 'GBP - British Pound' },
+                                    { value: 'JPY', label: 'JPY - Japanese Yen' },
+                                    { value: 'AUD', label: 'AUD - Australian Dollar' },
+                                ]}
                             />
                         </div>
                     </Card>

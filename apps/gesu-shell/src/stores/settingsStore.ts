@@ -23,6 +23,9 @@ export const DEFAULT_SETTINGS: GesuSettings = {
         accentColor: 'cyan',
         glassmorphism: true,
     },
+    preferences: {
+        currency: 'IDR',
+    },
     ai: {
         enabled: false,
         provider: 'none',

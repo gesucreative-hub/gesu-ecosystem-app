@@ -24,6 +24,9 @@ export interface GesuSettings {
         accentColor: string;
         glassmorphism: boolean;
     };
+    preferences?: {
+        currency: string;
+    };
     ai?: AISettings;
     installPreference?: 'manual' | 'winget' | 'choco' | 'scoop';
     [key: string]: unknown;

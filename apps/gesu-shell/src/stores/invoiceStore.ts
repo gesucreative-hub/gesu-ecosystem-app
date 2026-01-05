@@ -383,6 +383,29 @@ export function revertToSent(id: string): Invoice | null {
 }
 
 /**
+ * Revert sent invoice back to draft status.
+ * Used for accidentally marked as sent invoices.
+ * Business rule: Only allowed if no payments have been recorded.
+ */
+export function revertToDraft(id: string): Invoice | null {
+    const current = ensureLoaded();
+    const invoice = current.invoices.find(i => i.id === id);
+    if (!invoice) return null;
+    
+    if (invoice.status !== 'sent') {
+        console.warn('[invoiceStore] Can only revert sent invoices to draft');
+        return null;
+    }
+    
+    invoice.status = 'draft';
+    invoice.updatedAt = new Date().toISOString();
+    saveState();
+    notifySubscribers();
+    console.log('[invoiceStore] Invoice reverted to draft:', id);
+    return { ...invoice };
+}
+
+/**
  * Delete invoice. Only allowed for drafts.
  */
 export function deleteInvoice(id: string): boolean {

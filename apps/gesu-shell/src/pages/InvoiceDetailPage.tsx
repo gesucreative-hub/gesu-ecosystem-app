@@ -24,6 +24,7 @@ import {
     markInvoiceSent,
     markInvoicePaid,
     revertToSent,
+    revertToDraft,
     deleteInvoice,
     subscribe,
     isOverdue,
@@ -359,12 +360,26 @@ export function InvoiceDetailPage() {
                 )}
                 
                 {invoice.status === 'sent' && (
-                    <Button 
-                        icon={<DollarSign size={16} />}
-                        onClick={handleMarkPaid}
-                    >
-                        {t('invoices:editor.markPaid', 'Mark as Paid')}
-                    </Button>
+                    <>
+                        <Button 
+                            variant="outline"
+                            icon={<ArrowLeft size={16} />}
+                            onClick={() => {
+                                const result = revertToDraft(invoice.id);
+                                if (result) {
+                                    setInvoice(result);
+                                }
+                            }}
+                        >
+                            {t('invoices:editor.revertToDraft', 'Revert to Draft')}
+                        </Button>
+                        <Button 
+                            icon={<DollarSign size={16} />}
+                            onClick={handleMarkPaid}
+                        >
+                            {t('invoices:editor.markPaid', 'Mark as Paid')}
+                        </Button>
+                    </>
                 )}
                 
                 {invoice.status === 'paid' && (

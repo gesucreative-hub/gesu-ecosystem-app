@@ -22,6 +22,7 @@ import {
     updateContract,
     markContractSent,
     markContractSigned,
+    revertToDraft,
     deleteContract,
     subscribe,
     type Contract, 
@@ -238,12 +239,26 @@ export function ContractDetailPage() {
                 )}
                 
                 {contract.status === 'sent' && (
-                    <Button 
-                        icon={<CheckCircle size={16} />}
-                        onClick={handleMarkSigned}
-                    >
-                        {t('invoices:contractEditor.markSigned', 'Mark as Signed')}
-                    </Button>
+                    <>
+                        <Button 
+                            variant="outline"
+                            icon={<ArrowLeft size={16} />}
+                            onClick={() => {
+                                const result = revertToDraft(contract.id);
+                                if (result) {
+                                    setContract(result);
+                                }
+                            }}
+                        >
+                            {t('invoices:contractEditor.revertToDraft', 'Revert to Draft')}
+                        </Button>
+                        <Button 
+                            icon={<CheckCircle size={16} />}
+                            onClick={handleMarkSigned}
+                        >
+                            {t('invoices:contractEditor.markSigned', 'Mark as Signed')}
+                        </Button>
+                    </>
                 )}
                 
                 {/* Export PDF - available for all statuses */}

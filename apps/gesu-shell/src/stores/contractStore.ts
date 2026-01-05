@@ -337,6 +337,28 @@ export function markContractSigned(id: string): Contract | null {
     return { ...contract };
 }
 
+/**
+ * Revert sent contract back to draft status.
+ * Used for accidentally marked as sent contracts.
+ */
+export function revertToDraft(id: string): Contract | null {
+    const current = ensureLoaded();
+    const contract = current.contracts.find(c => c.id === id);
+    if (!contract) return null;
+    
+    if (contract.status !== 'sent') {
+        console.warn('[contractStore] Can only revert sent contracts to draft');
+        return null;
+    }
+    
+    contract.status = 'draft';
+    contract.updatedAt = new Date().toISOString();
+    saveState();
+    notifySubscribers();
+    console.log('[contractStore] Contract reverted to draft:', id);
+    return { ...contract };
+}
+
 
 
 export function getContractCount(): number {

@@ -11,7 +11,7 @@ import { Badge } from '../components/Badge';
 import { Tabs } from '../components/Tabs';
 import { ToggleSwitch } from '../components/ToggleSwitch';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw, X, FolderOpen } from 'lucide-react';
+import { Download, Zap, History as HistoryIcon, Link as LinkIcon, RefreshCcw, X, FolderOpen, Film } from 'lucide-react';
 
 
 // --- Types & Interfaces ---
@@ -803,9 +803,13 @@ export function MediaSuitePage() {
             )}
 
             {/* Header */}
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('mediasuite:title')}</h1>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Film size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('mediasuite:title')}
+                    </h1>
                     <p className="text-tokens-muted text-sm mt-1">{t('mediasuite:subtitle')}</p>
                 </div>
                 <Link to="/" className="px-4 py-2 bg-tokens-panel border border-tokens-border hover:bg-tokens-panel2 text-tokens-fg rounded-lg text-sm transition-colors">

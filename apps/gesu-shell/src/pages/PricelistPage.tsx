@@ -140,11 +140,22 @@ export function PricelistPage() {
     return (
         <PageContainer>
             {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-tokens-fg">{t('invoices:pricelist.title', 'Pricelist')}</h1>
-                <p className="text-tokens-muted mt-1">{t('invoices:pricelist.subtitle', 'Manage your service catalog and pricing')}</p>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Tag size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('invoices:pricelist.title', 'Pricelist')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">
+                        {t('invoices:pricelist.subtitle', 'Manage your service catalog and pricing')}
+                    </p>
+                </div>
+                <Button variant="primary" onClick={openCreate} icon={<Plus size={16} />}>
+                    {t('invoices:pricelist.add', 'Add Item')}
+                </Button>
             </div>
-            {/* Search + Filter + Add */}
+
+            {/* Search + Filter */}
             <div className="flex flex-wrap gap-3 mb-6">
                 <div className="flex-1 min-w-[200px]">
                     <SearchInput
@@ -162,9 +173,6 @@ export function PricelistPage() {
                         ...categories.map(c => ({ value: c, label: c }))
                     ]}
                 />
-                <Button onClick={openCreate} icon={<Plus size={16} />}>
-                    {t('invoices:pricelist.add', 'Add Item')}
-                </Button>
             </div>
 
             {/* Form (Create/Edit) Panel */}

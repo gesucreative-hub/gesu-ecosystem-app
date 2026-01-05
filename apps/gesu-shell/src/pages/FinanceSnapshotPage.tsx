@@ -101,24 +101,23 @@ export function FinanceSnapshotPage() {
     return (
         <PageContainer>
             {/* Header */}
-            <Card className="mb-6">
-                <div className="p-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-tokens-brand-DEFAULT" />
-                            <div>
-                                <h1 className="text-xl font-semibold">{t('finance:title', 'Finance Snapshot')}</h1>
-                                <p className="text-sm text-tokens-muted">{t('finance:subtitle', 'Monthly billing overview')}</p>
-                            </div>
-                        </div>
-                        <SelectDropdown
-                            value={selectedMonth}
-                            onChange={(value) => setSelectedMonth(value)}
-                            options={months.map(m => ({ value: m.key, label: m.label }))}
-                        />
-                    </div>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <TrendingUp size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('finance:title', 'Finance Snapshot')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">
+                        {t('finance:subtitle', 'Monthly billing overview')}
+                    </p>
                 </div>
-            </Card>
+                <SelectDropdown
+                    value={selectedMonth}
+                    onChange={(value) => setSelectedMonth(value)}
+                    options={months.map(m => ({ value: m.key, label: m.label }))}
+                />
+            </div>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
 import { SelectDropdown } from '../components/Dropdown';
+import { SidePanel } from '../components/SidePanel';
 import { 
     Plus, Trash2, CheckSquare, Square, Package, Link as LinkIcon, 
     ChevronDown, ChevronRight, FileStack, X 
@@ -259,22 +260,22 @@ export function ProjectDeliverablesPage() {
     return (
         <PageContainer>
             {/* Header */}
-            <Card className="mb-6">
-                <div className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <Package size={24} className="text-tokens-brand-DEFAULT" />
-                            <div>
-                                <h1 className="text-xl font-semibold">{t('deliverables:packs.title', 'Project Deliverables')}</h1>
-                                <p className="text-sm text-tokens-muted">{t('deliverables:packs.subtitle', 'Track deliverables for your projects')}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {/* Project Selector */}
-                    <div className="flex items-center gap-4">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Package size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('deliverables:packs.title', 'Project Deliverables')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">
+                        {t('deliverables:packs.subtitle', 'Track deliverables for your projects')}
+                    </p>
+                </div>
+                
+                {/* Project Selector */}
+                <div className="flex items-center gap-4">
+                    <div className="w-full md:w-64">
                         <SelectDropdown
-                            label={t('deliverables:packs.selectProject', 'Select a project')}
                             value={selectedProjectId}
                             onChange={handleProjectChange}
                             options={[
@@ -282,14 +283,14 @@ export function ProjectDeliverablesPage() {
                                 ...projects.map(p => ({ value: p.id, label: p.name }))
                             ]}
                         />
-                        {selectedProjectId && (
-                            <Button icon={<Plus size={16} />} onClick={openCreateModal}>
-                                {t('deliverables:packs.createFromTemplate', 'Create from Template')}
-                            </Button>
-                        )}
                     </div>
+                    {selectedProjectId && (
+                        <Button variant="primary" icon={<Plus size={16} />} onClick={openCreateModal}>
+                            {t('deliverables:packs.createFromTemplate', 'Create from Template')}
+                        </Button>
+                    )}
                 </div>
-            </Card>
+            </div>
 
             {/* No Project Selected */}
             {!selectedProjectId && (
@@ -366,54 +367,50 @@ export function ProjectDeliverablesPage() {
                 </div>
             )}
 
-            {/* Create Pack Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md">
-                        <div className="p-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold">{t('deliverables:packs.createFromTemplate', 'Create from Template')}</h3>
-                                <button onClick={() => setShowCreateModal(false)} className="text-tokens-muted hover:text-tokens-fg">
-                                    <X size={20} />
-                                </button>
-                            </div>
+            {/* Create Pack Panel */}
+            <SidePanel
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                title={t('deliverables:packs.createFromTemplate', 'Create from Template')}
+                width="500px"
+            >
+                <div className="space-y-6">
+                    <div className="space-y-4">
+                        <SelectDropdown
+                            label={t('deliverables:nav.templates', 'Templates')}
+                            value={selectedTemplateId}
+                            onChange={(value) => setSelectedTemplateId(value)}
+                            options={[
+                                { value: '', label: `-- ${t('deliverables:packs.createCustom', 'Custom Pack')} --` },
+                                ...templates.map(t => ({ value: t.id, label: `${t.name} (${t.items.length} items)` }))
+                            ]}
+                        />
+                        
+                        {!selectedTemplateId && (
+                            <Input
+                                label={t('deliverables:packs.packName', 'Pack Name')}
+                                value={customPackName}
+                                onChange={(e) => setCustomPackName(e.target.value)}
+                                placeholder={t('deliverables:templates.namePlaceholder', 'e.g. Brand Design Package')}
+                                autoFocus
+                            />
+                        )}
+                    </div>
 
-                            <div className="space-y-4">
-                                <SelectDropdown
-                                    label={t('deliverables:nav.templates', 'Template')}
-                                    value={selectedTemplateId}
-                                    onChange={(value) => setSelectedTemplateId(value)}
-                                    options={[
-                                        { value: '', label: `-- ${t('deliverables:packs.createCustom', 'Custom Pack')} --` },
-                                        ...templates.map(t => ({ value: t.id, label: `${t.name} (${t.items.length} items)` }))
-                                    ]}
-                                />
-                                
-                                {!selectedTemplateId && (
-                                    <Input
-                                        label={t('deliverables:packs.packName', 'Pack Name')}
-                                        value={customPackName}
-                                        onChange={(e) => setCustomPackName(e.target.value)}
-                                        placeholder={t('deliverables:templates.namePlaceholder', 'e.g. Brand Design Package')}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="flex justify-end gap-2 mt-6">
-                                <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
-                                    {t('common:buttons.cancel', 'Cancel')}
-                                </Button>
-                                <Button 
-                                    onClick={handleCreatePack}
-                                    disabled={!selectedTemplateId && !customPackName.trim()}
-                                >
-                                    {t('common:buttons.create', 'Create')}
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
+                    <div className="flex justify-end gap-3 pt-6 border-t border-tokens-border">
+                        <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+                            {t('common:buttons.cancel', 'Cancel')}
+                        </Button>
+                        <Button 
+                            onClick={handleCreatePack}
+                            disabled={!selectedTemplateId && !customPackName.trim()}
+                            variant="primary"
+                        >
+                            {t('common:buttons.create', 'Create')}
+                        </Button>
+                    </div>
                 </div>
-            )}
+            </SidePanel>
         </PageContainer>
     );
 }

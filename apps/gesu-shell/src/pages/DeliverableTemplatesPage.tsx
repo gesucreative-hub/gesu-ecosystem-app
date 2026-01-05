@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
+import { SidePanel } from '../components/SidePanel';
 import { Plus, Edit2, Trash2, FileStack, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
@@ -148,29 +149,29 @@ export function DeliverableTemplatesPage() {
     return (
         <PageContainer>
             {/* Header */}
-            <Card className="mb-6">
-                <div className="p-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <FileStack size={24} className="text-tokens-brand-DEFAULT" />
-                            <div>
-                                <h1 className="text-xl font-semibold">{t('deliverables:templates.title', 'Deliverable Templates')}</h1>
-                                <p className="text-sm text-tokens-muted">{t('deliverables:templates.subtitle', 'Create reusable checklists for your projects')}</p>
-                            </div>
-                        </div>
-                        <Button icon={<Plus size={16} />} onClick={openCreateModal}>
-                            {t('deliverables:templates.create', 'New Template')}
-                        </Button>
-                    </div>
-                    
-                    {/* Search */}
-                    <SearchInput
-                        placeholder={t('common:search', 'Search...')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <FileStack size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('deliverables:templates.title', 'Deliverable Templates')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">
+                        {t('deliverables:templates.subtitle', 'Create reusable checklists for your projects')}
+                    </p>
                 </div>
-            </Card>
+                <Button variant="primary" icon={<Plus size={16} />} onClick={openCreateModal}>
+                    {t('deliverables:templates.create', 'New Template')}
+                </Button>
+            </div>
+            
+            {/* Search */}
+            <div className="mb-6">
+                <SearchInput
+                    placeholder={t('common:search', 'Search...')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
 
             {/* Templates List */}
             {filteredTemplates.length === 0 ? (
@@ -218,107 +219,113 @@ export function DeliverableTemplatesPage() {
                 </div>
             )}
 
-            {/* Create/Edit Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="p-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-lg">
-                                    {editingId 
-                                        ? t('deliverables:templates.editTitle', 'Edit Template')
-                                        : t('deliverables:templates.createTitle', 'Create Template')}
-                                </h3>
-                                <button onClick={closeModal} className="text-tokens-muted hover:text-tokens-fg">
-                                    <X size={20} />
-                                </button>
-                            </div>
+            {/* Create/Edit Panel */}
+            <SidePanel
+                isOpen={showModal}
+                onClose={closeModal}
+                title={editingId 
+                    ? t('deliverables:templates.editTitle', 'Edit Template')
+                    : t('deliverables:templates.createTitle', 'Create Template')}
+                width="700px"
+            >
+                <div className="space-y-6">
+                    <div className="space-y-4">
+                        <Input
+                            label={t('deliverables:templates.name', 'Template Name')}
+                            value={formName}
+                            onChange={(e) => setFormName(e.target.value)}
+                            placeholder={t('deliverables:templates.namePlaceholder', 'e.g. Brand Design Package')}
+                            autoFocus
+                        />
+                        <Input
+                            label={t('deliverables:templates.description', 'Description')}
+                            value={formDescription}
+                            onChange={(e) => setFormDescription(e.target.value)}
+                            placeholder={t('deliverables:templates.descriptionPlaceholder', 'What this template includes...')}
+                        />
+                    </div>
 
-                            <div className="space-y-4">
-                                <Input
-                                    label={t('deliverables:templates.name', 'Template Name')}
-                                    value={formName}
-                                    onChange={(e) => setFormName(e.target.value)}
-                                    placeholder={t('deliverables:templates.namePlaceholder', 'e.g. Brand Design Package')}
-                                />
-                                <Input
-                                    label={t('deliverables:templates.description', 'Description')}
-                                    value={formDescription}
-                                    onChange={(e) => setFormDescription(e.target.value)}
-                                    placeholder={t('deliverables:templates.descriptionPlaceholder', 'What this template includes...')}
-                                />
-
-                                {/* Items List */}
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">
-                                        {t('deliverables:templates.items', 'Checklist Items')}
-                                    </label>
-                                    <div className="space-y-2">
-                                        {formItems.map((item, index) => (
-                                            <div key={index} className="flex items-center gap-2 p-2 bg-tokens-panel2 rounded-lg">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <button
-                                                        onClick={() => moveItem(index, 'up')}
-                                                        disabled={index === 0}
-                                                        className="p-0.5 text-tokens-muted hover:text-tokens-fg disabled:opacity-30"
-                                                    >
-                                                        <ChevronUp size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => moveItem(index, 'down')}
-                                                        disabled={index === formItems.length - 1}
-                                                        className="p-0.5 text-tokens-muted hover:text-tokens-fg disabled:opacity-30"
-                                                    >
-                                                        <ChevronDown size={14} />
-                                                    </button>
-                                                </div>
-                                                <div className="flex-1 space-y-1">
-                                                    <Input
-                                                        value={item.title}
-                                                        onChange={(e) => updateItem(index, 'title', e.target.value)}
-                                                        placeholder={t('deliverables:templates.itemTitlePlaceholder', 'e.g. Logo Design')}
-                                                        className="text-sm"
-                                                    />
-                                                    <Input
-                                                        value={item.description}
-                                                        onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                                        placeholder={t('deliverables:templates.itemDescription', 'Description (optional)')}
-                                                        className="text-sm text-tokens-muted"
-                                                    />
-                                                </div>
-                                                <button
-                                                    onClick={() => removeItem(index)}
-                                                    className="p-1.5 text-tokens-muted hover:text-red-500"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        icon={<Plus size={14} />}
-                                        onClick={addItem}
-                                        className="mt-2"
-                                    >
-                                        {t('deliverables:templates.addItem', 'Add Item')}
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-2 mt-6">
-                                <Button variant="ghost" onClick={closeModal}>
-                                    {t('common:buttons.cancel', 'Cancel')}
-                                </Button>
-                                <Button onClick={handleSave}>
-                                    {t('common:buttons.save', 'Save')}
-                                </Button>
-                            </div>
+                    {/* Items List */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-sm font-medium text-tokens-fg">
+                                {t('deliverables:templates.items', 'Checklist Items')}
+                            </label>
+                            <span className="text-xs text-tokens-muted">
+                                {formItems.length} items
+                            </span>
                         </div>
-                    </Card>
+                        
+                        <div className="space-y-3">
+                            <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3 scrollbar-hide">
+                                {formItems.map((item, index) => (
+                                    <div key={index} className="flex gap-3 p-3 bg-tokens-panel2 border border-tokens-border/50 rounded-xl group/item">
+                                        <div className="flex flex-col gap-1 pt-1">
+                                            <button
+                                                onClick={() => moveItem(index, 'up')}
+                                                disabled={index === 0}
+                                                className="p-1 text-tokens-muted hover:text-tokens-fg disabled:opacity-30 transition-colors"
+                                                title="Move Up"
+                                            >
+                                                <ChevronUp size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => moveItem(index, 'down')}
+                                                disabled={index === formItems.length - 1}
+                                                className="p-1 text-tokens-muted hover:text-tokens-fg disabled:opacity-30 transition-colors"
+                                                title="Move Down"
+                                            >
+                                                <ChevronDown size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                value={item.title}
+                                                onChange={(e) => updateItem(index, 'title', e.target.value)}
+                                                placeholder={t('deliverables:templates.itemTitlePlaceholder', 'e.g. Logo Design')}
+                                                className="text-sm font-medium"
+                                            />
+                                            <Input
+                                                value={item.description}
+                                                onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                                placeholder={t('deliverables:templates.itemDescription', 'Description (optional)')}
+                                                className="text-sm text-tokens-muted bg-tokens-bg/50"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => removeItem(index)}
+                                            className="self-start p-2 text-tokens-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+                                            title="Remove Item"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                icon={<Plus size={14} />}
+                                onClick={addItem}
+                                fullWidth
+                                className="border-dashed border-tokens-border hover:border-tokens-brand-DEFAULT/50"
+                            >
+                                {t('deliverables:templates.addItem', 'Add Checklist Item')}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-tokens-border">
+                        <Button variant="secondary" onClick={closeModal}>
+                            {t('common:buttons.cancel', 'Cancel')}
+                        </Button>
+                        <Button variant="primary" onClick={handleSave}>
+                            {t('common:buttons.save', 'Save Template')}
+                        </Button>
+                    </div>
                 </div>
-            )}
+            </SidePanel>
         </PageContainer>
     );
 }

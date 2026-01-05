@@ -251,16 +251,16 @@ export function SelectDropdown({
                     onClick={() => !disabled && setIsOpen(!isOpen)}
                     disabled={disabled}
                     className={`
-                        w-full flex items-center justify-between gap-2 
-                        px-4 py-2.5 rounded-xl
+                        w-full h-10 flex items-center justify-between gap-2 
+                        px-4 rounded-xl
                         bg-tokens-panel
                         border border-tokens-border
                         text-left
-                        transition-colors duration-150
+                        transition-all duration-150
                         focus:outline-none focus:ring-2 focus:ring-tokens-ring
                         ${disabled
                             ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-tokens-panel2 cursor-pointer'
+                            : 'hover:bg-tokens-panel2 hover:shadow-[0_0_12px_rgba(59,63,140,0.2)] cursor-pointer'
                         }
                     `}
                 >

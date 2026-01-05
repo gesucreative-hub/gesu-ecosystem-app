@@ -33,7 +33,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
                     ref={ref}
                     disabled={disabled}
                     className={`
-                        flex w-full rounded-lg border bg-tokens-bg px-3 py-2 text-sm text-tokens-fg shadow-sm transition-colors
+                        flex w-full h-10 rounded-lg border bg-tokens-bg px-3 text-sm text-tokens-fg shadow-sm transition-all
                         placeholder:text-tokens-muted/50
                         border-tokens-border
                         focus:outline-none focus:ring-2 focus:ring-tokens-ring focus:border-tokens-brand-DEFAULT/50

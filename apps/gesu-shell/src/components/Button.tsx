@@ -42,13 +42,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
         focus:outline-none focus:ring-2 focus:ring-tokens-ring focus:ring-offset-1 
         disabled:opacity-50 disabled:pointer-events-none 
         rounded-full select-none
+        hover:shadow-[0_0_12px_rgba(59,63,140,0.3)]
     `;
 
-    // Size configurations
+    // Size configurations - h-10 (40px) for md as standard
     const sizes = {
-        sm: "text-xs py-1.5 gap-2",
-        md: "text-sm py-2 gap-2.5",
-        lg: "text-base py-2.5 gap-3"
+        sm: "h-8 text-xs gap-2",
+        md: "h-10 text-sm gap-2.5",
+        lg: "h-12 text-base gap-3"
     };
 
     // Padding varies based on whether icon is in circle position

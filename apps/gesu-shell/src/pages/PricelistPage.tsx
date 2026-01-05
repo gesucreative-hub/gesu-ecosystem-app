@@ -10,6 +10,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
 import { SelectDropdown } from '../components/Dropdown';
+import { SidePanel } from '../components/SidePanel';
 import { Plus, Edit2, Trash2, Tag, X, Check } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
@@ -166,28 +167,31 @@ export function PricelistPage() {
                 </Button>
             </div>
 
-            {/* Form (Create/Edit) */}
-            {formMode !== 'closed' && (
-                <Card className="mb-6">
-                    <div className="p-4">
-                        <h3 className="font-semibold mb-4">
-                            {formMode === 'create' 
-                                ? t('invoices:pricelist.addTitle', 'Add New Item')
-                                : t('invoices:pricelist.editTitle', 'Edit Item')}
-                        </h3>
+            {/* Form (Create/Edit) Panel */}
+            <SidePanel
+                isOpen={formMode !== 'closed'}
+                onClose={resetForm}
+                title={formMode === 'create' 
+                    ? t('invoices:pricelist.addTitle', 'Add New Item')
+                    : t('invoices:pricelist.editTitle', 'Edit Item')}
+                width="600px"
+            >
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-4">
+                        <Input
+                            label={t('invoices:pricelist.name', 'Name') + ' *'}
+                            value={formData.name}
+                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                            placeholder="Desain Merek"
+                            autoFocus
+                        />
+                        <Input
+                            label={t('invoices:pricelist.description', 'Description')}
+                            value={formData.description}
+                            onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
+                            placeholder="Logo design and brand guidelines"
+                        />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <Input
-                                label={t('invoices:pricelist.name', 'Name')}
-                                value={formData.name}
-                                onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                placeholder="Desain Merek"
-                            />
-                            <Input
-                                label={t('invoices:pricelist.description', 'Description')}
-                                value={formData.description}
-                                onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))}
-                                placeholder="Logo design and brand guidelines"
-                            />
                             <SelectDropdown
                                 label={t('invoices:pricelist.unit', 'Unit')}
                                 value={formData.unit}
@@ -201,26 +205,27 @@ export function PricelistPage() {
                                 onChange={(e) => setFormData(f => ({ ...f, unitPrice: Number(e.target.value) }))}
                                 placeholder="45000"
                             />
-                            <Input
-                                label={t('invoices:pricelist.category', 'Category')}
-                                value={formData.category}
-                                onChange={(e) => setFormData(f => ({ ...f, category: e.target.value }))}
-                                placeholder="Desain"
-                            />
                         </div>
-                        <div className="flex gap-2 mt-4 justify-end">
-                            <Button variant="ghost" onClick={resetForm} icon={<X size={14} />}>
-                                {t('common:buttons.cancel', 'Cancel')}
-                            </Button>
-                            <Button onClick={handleSubmit} icon={<Check size={14} />}>
-                                {formMode === 'create' 
-                                    ? t('common:buttons.create', 'Create')
-                                    : t('common:buttons.update', 'Update')}
-                            </Button>
-                        </div>
+                        <Input
+                            label={t('invoices:pricelist.category', 'Category')}
+                            value={formData.category}
+                            onChange={(e) => setFormData(f => ({ ...f, category: e.target.value }))}
+                            placeholder="Desain"
+                        />
                     </div>
-                </Card>
-            )}
+
+                    <div className="flex gap-3 justify-end pt-4 border-t border-tokens-border">
+                        <Button variant="secondary" onClick={resetForm}>
+                            {t('common:buttons.cancel', 'Cancel')}
+                        </Button>
+                        <Button variant="primary" onClick={handleSubmit}>
+                            {formMode === 'create' 
+                                ? t('common:buttons.create', 'Create')
+                                : t('common:buttons.update', 'Update')}
+                        </Button>
+                    </div>
+                </div>
+            </SidePanel>
 
             {/* Items List */}
             {items.length === 0 ? (
@@ -241,12 +246,16 @@ export function PricelistPage() {
                                 <th className="p-3 font-medium">{t('invoices:pricelist.category', 'Category')}</th>
                                 <th className="p-3 font-medium">{t('invoices:pricelist.unit', 'Unit')}</th>
                                 <th className="p-3 font-medium text-right">{t('invoices:pricelist.price', 'Price')}</th>
-                                <th className="p-3 font-medium w-24"></th>
+                                <th className="p-3 font-medium w-16"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {items.map(item => (
-                                <tr key={item.id} className="border-b border-tokens-border hover:bg-tokens-panel2 transition-colors">
+                                <tr 
+                                    key={item.id} 
+                                    className="border-b border-tokens-border hover:bg-tokens-panel2 transition-colors cursor-pointer group"
+                                    onClick={() => openEdit(item)}
+                                >
                                     <td className="p-3">
                                         <div className="font-medium text-tokens-fg">{item.name}</div>
                                         {item.description && (
@@ -256,23 +265,14 @@ export function PricelistPage() {
                                     <td className="p-3 text-sm">{item.category || '-'}</td>
                                     <td className="p-3 text-sm">{item.unit}</td>
                                     <td className="p-3 text-right font-mono text-tokens-brand-DEFAULT">{formatPrice(item.unitPrice)}</td>
-                                    <td className="p-3">
-                                        <div className="flex gap-1 justify-end">
-                                            <button
-                                                onClick={() => openEdit(item)}
-                                                className="p-1.5 rounded hover:bg-tokens-panel text-tokens-muted hover:text-tokens-fg transition-colors"
-                                                title={t('common:buttons.edit', 'Edit')}
-                                            >
-                                                <Edit2 size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(item.id, item.name)}
-                                                className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors"
-                                                title={t('common:buttons.delete', 'Delete')}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
+                                    <td className="p-3 text-right">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.name); }}
+                                            className="p-1.5 rounded hover:bg-red-500/10 text-tokens-muted hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                            title={t('common:buttons.delete', 'Delete')}
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

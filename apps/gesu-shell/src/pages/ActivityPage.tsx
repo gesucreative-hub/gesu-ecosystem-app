@@ -4,7 +4,7 @@
  */
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Timer, Target, Pause, Calendar, Flame, Clock, Zap, Coffee, Trash2, ChevronDown } from 'lucide-react';
+import { Timer, Target, Pause, Calendar, Flame, Clock, Zap, Coffee, Trash2, ChevronDown, BarChart2 } from 'lucide-react';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
@@ -359,7 +359,8 @@ export function ActivityPage() {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <BarChart2 size={32} className="text-tokens-brand-DEFAULT" />
                         {t('title')}
                     </h1>
                     <p className="text-tokens-muted text-sm mt-1">

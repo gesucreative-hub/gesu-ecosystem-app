@@ -10,7 +10,7 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Plus, Receipt, ChevronRight, Trash2 } from 'lucide-react';
+import { Plus, ChevronRight, Trash2, Receipt } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listInvoices, 
@@ -121,11 +121,20 @@ export function InvoicesPage() {
     return (
         <PageContainer>
             {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-tokens-fg">{t('invoices:list.title', 'Invoices')}</h1>
-                <p className="text-tokens-muted mt-1">{t('invoices:list.subtitle', 'Manage and track your invoices')}</p>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Receipt size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('invoices:list.title', 'Invoices')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">{t('invoices:list.subtitle', 'Manage and track your invoices')}</p>
+                </div>
+                <Button variant="primary" onClick={handleNewInvoice} icon={<Plus size={16} />}>
+                    {t('invoices:list.create', 'New Invoice')}
+                </Button>
             </div>
-            {/* Search + Add */}
+            
+            {/* Search */}
             <div className="flex flex-wrap gap-3 mb-4">
                 <div className="flex-1 min-w-[200px]">
                     <SearchInput
@@ -135,9 +144,6 @@ export function InvoicesPage() {
                         fullWidth
                     />
                 </div>
-                <Button onClick={handleNewInvoice} icon={<Plus size={16} />}>
-                    {t('invoices:list.create', 'New Invoice')}
-                </Button>
             </div>
 
             {/* Status Tabs */}

@@ -9,7 +9,7 @@ import { Card } from '../components/Card';
 import { SelectDropdown } from '../components/Dropdown';
 import { Badge } from '../components/Badge';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { Save, Search, Loader2, CheckCircle, AlertCircle, Globe, Download, RefreshCw, Info, X } from 'lucide-react';
+import { Save, Search, Loader2, CheckCircle, AlertCircle, Globe, Download, RefreshCw, Info, X, Settings } from 'lucide-react';
 import { OllamaProvider, PullProgress } from '../services/ai/OllamaProvider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { AlertDialog } from '../components/AlertDialog';
@@ -536,7 +536,10 @@ export function SettingsPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-2">
                     <div>
-                        <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('settings:title')}</h1>
+                         <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                            <Settings size={32} className="text-tokens-brand-DEFAULT" />
+                            {t('settings:title')}
+                        </h1>
                         <p className="text-tokens-muted text-sm mt-1">{t('settings:subtitle')}</p>
                     </div>
                     <Link to="/" className="px-4 py-2 bg-tokens-panel hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg rounded-lg text-sm border border-tokens-border transition-colors">

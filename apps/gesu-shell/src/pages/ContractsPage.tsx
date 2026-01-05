@@ -116,11 +116,20 @@ export function ContractsPage() {
     return (
         <PageContainer>
             {/* Page Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-tokens-fg">{t('invoices:contracts.title', 'Contracts')}</h1>
-                <p className="text-tokens-muted mt-1">{t('invoices:contracts.subtitle', 'Manage your project contracts')}</p>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <FileSignature size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('invoices:contracts.title', 'Contracts')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">{t('invoices:contracts.subtitle', 'Manage your project contracts')}</p>
+                </div>
+                <Button variant="primary" onClick={handleNewContract} icon={<Plus size={16} />}>
+                    {t('invoices:contracts.create', 'New Contract')}
+                </Button>
             </div>
-            {/* Search + Add */}
+
+            {/* Search */}
             <div className="flex flex-wrap gap-3 mb-4">
                 <div className="flex-1 min-w-[200px]">
                     <SearchInput
@@ -130,9 +139,6 @@ export function ContractsPage() {
                         fullWidth
                     />
                 </div>
-                <Button onClick={handleNewContract} icon={<Plus size={16} />}>
-                    {t('invoices:contracts.create', 'New Contract')}
-                </Button>
             </div>
 
             {/* Status Tabs */}

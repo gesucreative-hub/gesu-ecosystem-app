@@ -959,8 +959,11 @@ export function ProjectHubPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('initiator:hub.title', 'Project Hub')}</h1>
-                    <p className="text-sm text-tokens-muted">{t('initiator:hub.subtitle', 'Manage projects from start to finish')}</p>
+                     <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                        <Zap size={32} className="text-tokens-brand-DEFAULT" />
+                        {t('initiator:hub.title', 'Project Hub')}
+                    </h1>
+                    <p className="text-tokens-muted text-sm mt-1">{t('initiator:hub.subtitle', 'Manage projects from start to finish')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {/* Sprint 20.1: Blueprint Filter + Project Selector - ONLY on Workflow tab */}

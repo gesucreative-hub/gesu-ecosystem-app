@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList, ArrowRight, History, TrendingUp, ChevronRight, Activity, RefreshCw } from 'lucide-react';
+import { Briefcase, Target, Play, Square, Trash2, Database, ChevronDown, ChevronUp, Zap, Info, X, Rocket, Plus, ClipboardList, ArrowRight, History, TrendingUp, ChevronRight, Activity, RefreshCw, Compass } from 'lucide-react';
 import { calculateInferredEnergy, getEnergyColorClass } from '../utils/inferredEnergy';
 import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
@@ -715,7 +715,10 @@ export function CompassPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-tokens-fg tracking-tight">{t('title')}</h1>
+                         <h1 className="text-3xl font-bold text-tokens-fg tracking-tight flex items-center gap-3">
+                            <Compass size={32} className="text-tokens-brand-DEFAULT" />
+                            {t('title')}
+                        </h1>
                         <p className="text-tokens-muted text-sm mt-1">{t('subtitle')}</p>
                     </div>
 

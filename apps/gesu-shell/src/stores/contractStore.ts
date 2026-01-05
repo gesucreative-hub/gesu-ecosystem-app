@@ -45,6 +45,7 @@ export interface Contract {
     snapshot: ContractSnapshot;
     createdAt: string;          // ISO timestamp
     updatedAt: string;
+    archived?: boolean;         // Soft delete for finalized contracts
 }
 
 interface ContractStoreState {
@@ -336,42 +337,7 @@ export function markContractSigned(id: string): Contract | null {
     return { ...contract };
 }
 
-export function cancelContract(id: string): Contract | null {
-    const current = ensureLoaded();
-    const contract = current.contracts.find(c => c.id === id);
-    if (!contract) return null;
-    
-    if (contract.status === 'cancelled') {
-        console.warn('[contractStore] Contract already cancelled');
-        return null;
-    }
-    
-    contract.status = 'cancelled';
-    contract.updatedAt = new Date().toISOString();
-    saveState();
-    console.log('[contractStore] Contract cancelled:', id);
-    return { ...contract };
-}
 
-/**
- * Delete contract. Only allowed for drafts.
- */
-export function deleteContract(id: string): boolean {
-    const current = ensureLoaded();
-    const index = current.contracts.findIndex(c => c.id === id);
-    if (index === -1) return false;
-    
-    const contract = current.contracts[index];
-    if (contract.status !== 'draft') {
-        console.warn('[contractStore] Can only delete draft contracts');
-        return false;
-    }
-    
-    current.contracts.splice(index, 1);
-    saveState();
-    console.log('[contractStore] Deleted contract:', id);
-    return true;
-}
 
 export function getContractCount(): number {
     return ensureLoaded().contracts.length;
@@ -405,4 +371,75 @@ if (import.meta.env?.DEV && typeof window !== 'undefined') {
         cancelContract,
         deleteContract
     };
+}
+/**
+ * Delete contract. Only allowed for drafts.
+ */
+export function deleteContract(id: string): boolean {
+    const currentState = ensureLoaded();
+    const index = currentState.contracts.findIndex(c => c.id === id);
+    
+    if (index === -1) return false;
+
+    // Guardrail: Only draft contracts can be hard deleted
+    if (currentState.contracts[index].status !== 'draft') {
+        console.warn('[contractStore] Cannot delete non-draft contract. Use archive or cancel instead.');
+        return false;
+    }
+
+    currentState.contracts.splice(index, 1);
+    saveState();
+    notifySubscribers();
+    console.log('[contractStore] Deleted contract:', id);
+    return true;
+}
+
+export function archiveContract(id: string): boolean {
+    const currentState = ensureLoaded();
+    const contract = currentState.contracts.find(c => c.id === id);
+
+    if (!contract) return false;
+
+    contract.archived = true;
+    contract.updatedAt = new Date().toISOString();
+    
+    saveState();
+    notifySubscribers();
+    console.log('[contractStore] Contract archived:', id);
+    return true;
+}
+
+export function unarchiveContract(id: string): boolean {
+    const currentState = ensureLoaded();
+    const contract = currentState.contracts.find(c => c.id === id);
+
+    if (!contract) return false;
+
+    contract.archived = false;
+    contract.updatedAt = new Date().toISOString();
+    
+    saveState();
+    notifySubscribers();
+    console.log('[contractStore] Contract unarchived:', id);
+    return true;
+}
+
+export function cancelContract(id: string): boolean {
+    const currentState = ensureLoaded();
+    const contract = currentState.contracts.find(c => c.id === id);
+
+    if (!contract) return false;
+
+    if (contract.status === 'cancelled') {
+        console.warn('[contractStore] Contract already cancelled');
+        return false;
+    }
+
+    contract.status = 'cancelled';
+    contract.updatedAt = new Date().toISOString();
+    
+    saveState();
+    notifySubscribers();
+    console.log('[contractStore] Contract cancelled:', id);
+    return true;
 }

@@ -9,12 +9,13 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Plus, FileSignature, ChevronRight } from 'lucide-react';
+import { Plus, FileSignature, ChevronRight, Trash2 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listContracts, 
     getContractsByStatus,
     createContract,
+    deleteContract,
     subscribe,
     type Contract,
     type ContractStatus
@@ -42,31 +43,34 @@ export function ContractsPage() {
     // State
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<ContractStatus | ''>('');
+    const [statusFilter, setStatusFilter] = useState<ContractStatus | '' | 'archived'>('');
     const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
         let result: Contract[];
-        if (statusFilter) {
-            result = getContractsByStatus(statusFilter);
+        
+        if (statusFilter === 'archived') {
+            result = listContracts().filter(c => c.archived);
+        } else if (statusFilter) {
+            result = getContractsByStatus(statusFilter as ContractStatus).filter(c => !c.archived);
         } else {
-            result = listContracts();
+            result = listContracts().filter(c => !c.archived);
         }
         
         // Apply search filter
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            result = result.filter(ctr => 
-                ctr.number.toLowerCase().includes(q) ||
-                ctr.snapshot.clientName.toLowerCase().includes(q) ||
-                ctr.snapshot.clientCompany.toLowerCase().includes(q)
+            result = result.filter(c => 
+                c.number.toLowerCase().includes(q) ||
+                c.snapshot.clientName.toLowerCase().includes(q) ||
+                c.snapshot.clientCompany.toLowerCase().includes(q)
             );
         }
         
         // Phase 3: Apply unlinked filter
         if (showUnlinkedOnly) {
-            result = result.filter(ctr => !ctr.clientId);
+            result = result.filter(c => !c.clientId);
         }
         
         setContracts(result);
@@ -80,7 +84,7 @@ export function ContractsPage() {
 
     // Create new contract
     const handleNewContract = () => {
-        // Create a draft contract with empty scope
+        // Create a draft contract
         const contract = createContract({
             clientId: '',
             projectId: '',
@@ -89,16 +93,24 @@ export function ContractsPage() {
         navigate(`/contracts/${contract.id}`);
     };
 
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (window.confirm(t('common:confirmDelete', 'Are you sure you want to delete this contract?'))) {
+            deleteContract(id);
+        }
+    };
+
     const formatDate = (iso: string) => {
         return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const statusTabs: { value: ContractStatus | '', label: string }[] = [
+    const statusTabs: { value: ContractStatus | '' | 'archived', label: string }[] = [
         { value: '', label: t('invoices:contracts.all', 'All') },
         { value: 'draft', label: t('invoices:contracts.draft', 'Draft') },
         { value: 'sent', label: t('invoices:contracts.sent', 'Sent') },
         { value: 'signed', label: t('invoices:contracts.signed', 'Signed') },
-        { value: 'cancelled', label: t('invoices:contracts.cancelled', 'Cancelled') }
+        { value: 'cancelled', label: t('invoices:contracts.cancelled', 'Cancelled') },
+        // { value: 'archived', label: t('invoices:contracts.archived', 'Archived') } // Hidden until phase 2 UI polish
     ];
 
     return (
@@ -167,7 +179,7 @@ export function ContractsPage() {
                         <div 
                             key={contract.id}
                             onClick={() => navigate(`/contracts/${contract.id}`)}
-                            className="cursor-pointer"
+                            className="cursor-pointer group"
                         >
                             <Card className="p-4 hover:bg-tokens-panel2 transition-colors">
                                 <div className="flex items-center gap-4">
@@ -186,7 +198,20 @@ export function ContractsPage() {
                                         <div className="text-sm text-tokens-muted">{contract.scope.length} {t('invoices:contracts.scopeItems', 'scope items')}</div>
                                         <div className="text-xs text-tokens-muted">{formatDate(contract.updatedAt)}</div>
                                     </div>
-                                    <ChevronRight size={16} className="text-tokens-muted" />
+                                    
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2">
+                                        {contract.status === 'draft' && (
+                                            <button 
+                                                onClick={(e) => handleDelete(e, contract.id)}
+                                                className="p-2 text-tokens-muted hover:text-tokens-error hover:bg-tokens-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                                title={t('common:delete', 'Delete')}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                        <ChevronRight size={16} className="text-tokens-muted" />
+                                    </div>
                                 </div>
                             </Card>
                         </div>

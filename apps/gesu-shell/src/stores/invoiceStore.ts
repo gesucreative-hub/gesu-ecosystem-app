@@ -55,6 +55,7 @@ export interface Invoice {
     snapshot: InvoiceSnapshot;
     createdAt: string;          // ISO timestamp
     updatedAt: string;
+    archived?: boolean;         // Soft delete for finalized invoices
 }
 
 interface InvoiceStoreState {
@@ -381,40 +382,79 @@ export function revertToSent(id: string): Invoice | null {
     return { ...invoice };
 }
 
-export function cancelInvoice(id: string): Invoice | null {
-    const current = ensureLoaded();
-    const invoice = current.invoices.find(i => i.id === id);
-    if (!invoice) return null;
-    
-    if (invoice.status === 'cancelled') {
-        console.warn('[invoiceStore] Invoice already cancelled');
-        return null;
-    }
-    
-    invoice.status = 'cancelled';
-    invoice.updatedAt = new Date().toISOString();
-    saveState();
-    console.log('[invoiceStore] Invoice cancelled:', id);
-    return { ...invoice };
-}
-
 /**
  * Delete invoice. Only allowed for drafts.
  */
 export function deleteInvoice(id: string): boolean {
-    const current = ensureLoaded();
-    const index = current.invoices.findIndex(i => i.id === id);
-    if (index === -1) return false;
+    const currentState = ensureLoaded();
+    const index = currentState.invoices.findIndex(i => i.id === id);
     
-    const invoice = current.invoices[index];
-    if (invoice.status !== 'draft') {
-        console.warn('[invoiceStore] Can only delete draft invoices');
+    if (index === -1) return false;
+
+    // Guardrail: Only draft invoices can be hard deleted
+    if (currentState.invoices[index].status !== 'draft') {
+        console.warn('[invoiceStore] Cannot delete non-draft invoice. Use archive or cancel instead.');
+        return false;
+    }
+
+    currentState.invoices.splice(index, 1);
+    saveState();
+    notifySubscribers();
+    console.log('[invoiceStore] Deleted invoice:', id);
+    return true;
+}
+
+export function archiveInvoice(id: string): boolean {
+    const currentState = ensureLoaded();
+    const invoice = currentState.invoices.find(i => i.id === id);
+
+    if (!invoice) return false;
+
+    invoice.archived = true;
+    invoice.updatedAt = new Date().toISOString();
+    
+    saveState();
+    notifySubscribers();
+    console.log('[invoiceStore] Invoice archived:', id);
+    return true;
+}
+
+export function unarchiveInvoice(id: string): boolean {
+    const currentState = ensureLoaded();
+    const invoice = currentState.invoices.find(i => i.id === id);
+
+    if (!invoice) return false;
+
+    invoice.archived = false;
+    invoice.updatedAt = new Date().toISOString();
+    
+    saveState();
+    notifySubscribers();
+    console.log('[invoiceStore] Invoice unarchived:', id);
+    return true;
+}
+
+export function cancelInvoice(id: string): boolean {
+    const currentState = ensureLoaded();
+    const invoice = currentState.invoices.find(i => i.id === id);
+
+    if (!invoice) return false;
+
+    if (invoice.status === 'cancelled') {
+        console.warn('[invoiceStore] Invoice already cancelled');
         return false;
     }
     
-    current.invoices.splice(index, 1);
+    if (invoice.status === 'draft') {
+        // Drafts should be deleted, but cancelling is technically allowed if user wants to keep record
+    }
+
+    invoice.status = 'cancelled';
+    invoice.updatedAt = new Date().toISOString();
+    
     saveState();
-    console.log('[invoiceStore] Deleted invoice:', id);
+    notifySubscribers();
+    console.log('[invoiceStore] Invoice cancelled:', id);
     return true;
 }
 

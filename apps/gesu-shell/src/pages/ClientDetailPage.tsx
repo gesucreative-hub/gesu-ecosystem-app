@@ -87,6 +87,20 @@ export function ClientDetailPage() {
         return null;
     }
 
+    // Contact link handlers
+    const handleEmailClick = (e: React.MouseEvent, email: string) => {
+        e.preventDefault();
+        // Open Gmail with prefilled "To" field
+        window.open(`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}`, '_blank');
+    };
+
+    const handlePhoneClick = (e: React.MouseEvent, phone: string) => {
+        e.preventDefault();
+        // Clean phone number (remove non-digits) and open WhatsApp
+        const cleanPhone = phone.replace(/\D/g, '');
+        window.open(`https://wa.me/${cleanPhone}`, '_blank');
+    };
+
     if (!client) {
         return (
             <PageContainer className="flex flex-col items-center justify-center">
@@ -149,7 +163,11 @@ export function ClientDetailPage() {
                                 <Mail size={18} className="text-tokens-muted" />
                                 <div>
                                     <div className="text-xs text-tokens-muted">{t('business:clientDetail.email', 'Email')}</div>
-                                    <a href={`mailto:${client.email}`} className="text-tokens-fg hover:text-tokens-brand-DEFAULT">
+                                    <a 
+                                        href={`mailto:${client.email}`} 
+                                        onClick={(e) => handleEmailClick(e, client.email)}
+                                        className="text-tokens-fg hover:text-tokens-brand-DEFAULT cursor-pointer"
+                                    >
                                         {client.email}
                                     </a>
                                 </div>
@@ -160,7 +178,11 @@ export function ClientDetailPage() {
                                 <Phone size={18} className="text-tokens-muted" />
                                 <div>
                                     <div className="text-xs text-tokens-muted">{t('business:clientDetail.phone', 'Phone')}</div>
-                                    <a href={`tel:${client.phone}`} className="text-tokens-fg hover:text-tokens-brand-DEFAULT">
+                                    <a 
+                                        href={`tel:${client.phone}`}
+                                        onClick={(e) => handlePhoneClick(e, client.phone)}
+                                        className="text-tokens-fg hover:text-tokens-brand-DEFAULT cursor-pointer"
+                                    >
                                         {client.phone}
                                     </a>
                                 </div>

@@ -10,12 +10,13 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
-import { Plus, Receipt, ChevronRight } from 'lucide-react';
+import { Plus, Receipt, ChevronRight, Trash2 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listInvoices, 
     getInvoicesByStatus,
     createInvoice,
+    deleteInvoice,
     subscribe,
     type Invoice,
     type InvoiceStatus
@@ -43,16 +44,19 @@ export function InvoicesPage() {
     // State
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<InvoiceStatus | ''>('');
+    const [statusFilter, setStatusFilter] = useState<InvoiceStatus | '' | 'archived'>('');
     const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
         let result: Invoice[];
-        if (statusFilter) {
-            result = getInvoicesByStatus(statusFilter);
+        
+        if (statusFilter === 'archived') {
+            result = listInvoices().filter(inv => inv.archived);
+        } else if (statusFilter) {
+            result = getInvoicesByStatus(statusFilter as InvoiceStatus).filter(inv => !inv.archived);
         } else {
-            result = listInvoices();
+            result = listInvoices().filter(inv => !inv.archived);
         }
         
         // Apply search filter
@@ -90,6 +94,13 @@ export function InvoicesPage() {
         navigate(`/invoices/${invoice.id}`);
     };
 
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (window.confirm(t('common:confirmDelete', 'Are you sure you want to delete this invoice?'))) {
+            deleteInvoice(id);
+        }
+    };
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
     };
@@ -98,12 +109,13 @@ export function InvoicesPage() {
         return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const statusTabs: { value: InvoiceStatus | '', label: string }[] = [
+    const statusTabs: { value: InvoiceStatus | '' | 'archived', label: string }[] = [
         { value: '', label: t('invoices:list.all', 'All') },
         { value: 'draft', label: t('invoices:list.draft', 'Draft') },
         { value: 'sent', label: t('invoices:list.sent', 'Sent') },
         { value: 'paid', label: t('invoices:list.paid', 'Paid') },
-        { value: 'cancelled', label: t('invoices:list.cancelled', 'Cancelled') }
+        { value: 'cancelled', label: t('invoices:list.cancelled', 'Cancelled') },
+        // { value: 'archived', label: t('invoices:list.archived', 'Archived') } // Hidden for now until phase 2 UI polish
     ];
 
     return (
@@ -172,7 +184,7 @@ export function InvoicesPage() {
                         <div 
                             key={invoice.id}
                             onClick={() => navigate(`/invoices/${invoice.id}`)}
-                            className="cursor-pointer"
+                            className="cursor-pointer group"
                         >
                             <Card className="p-4 hover:bg-tokens-panel2 transition-colors">
                                 <div className="flex items-center gap-4">
@@ -191,7 +203,20 @@ export function InvoicesPage() {
                                         <div className="font-mono font-semibold">{formatPrice(invoice.total)}</div>
                                         <div className="text-xs text-tokens-muted">{formatDate(invoice.updatedAt)}</div>
                                     </div>
-                                    <ChevronRight size={16} className="text-tokens-muted" />
+                                    
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2">
+                                        {invoice.status === 'draft' && (
+                                            <button 
+                                                onClick={(e) => handleDelete(e, invoice.id)}
+                                                className="p-2 text-tokens-muted hover:text-tokens-error hover:bg-tokens-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                                title={t('common:delete', 'Delete')}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                        <ChevronRight size={16} className="text-tokens-muted" />
+                                    </div>
                                 </div>
                             </Card>
                         </div>

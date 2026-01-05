@@ -331,31 +331,42 @@ export function Layout() {
                     {/* Navigation */}
                     <nav className="flex-1 py-2 flex flex-col gap-1 overflow-y-auto scrollbar-hide">
 
-                        {/* CORE Group - Dashboard > Compass > Activity > Project Hub */}
+                        {/* CORE Group - Dashboard */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-2 animate-in fade-in">{t('nav.coreGroup', 'Core')}</div>}
 
                         <NavItem to="/dashboard" icon={<Home strokeWidth={1.5} size={20} />} label={t('nav.dashboard')} isActive={p === '/' || p === '/dashboard'} isCollapsed={isCollapsed} />
+                        
+                        {/* Personal Persona: Core items */}
                         {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
                         {activePersona === 'personal' && <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />}
                         {activePersona === 'personal' && <NavItem to="/second-brain" icon={<Brain strokeWidth={1.5} size={20} />} label={t('nav.secondBrain', 'Second Brain')} isActive={p.startsWith('/second-brain')} isCollapsed={isCollapsed} />}
+
+                        {/* Business Persona: WORKING Group - Active project work */}
+                        {activePersona === 'business' && !isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-4 animate-in fade-in">{t('nav.workingGroup', 'Working')}</div>}
+                        {activePersona === 'business' && isCollapsed && <div className="h-3"></div>}
+                        
                         {activePersona === 'business' && <NavItem to="/initiator" icon={<Zap strokeWidth={1.5} size={20} />} label={t('nav.projectHub')} isActive={p.startsWith('/initiator')} isCollapsed={isCollapsed} />}
-                        {activePersona === 'business' && <NavItem to="/clients" icon={<Users strokeWidth={1.5} size={20} />} label={t('nav.clients', 'Clients')} isActive={p.startsWith('/clients')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/invoices" icon={<Receipt strokeWidth={1.5} size={20} />} label={t('nav.invoices', 'Invoices')} isActive={p.startsWith('/invoices')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/contracts" icon={<FileSignature strokeWidth={1.5} size={20} />} label={t('nav.contracts', 'Contracts')} isActive={p.startsWith('/contracts')} isCollapsed={isCollapsed} />}
+
+                        {/* Business Persona: PLANNING Group - Setup & configuration */}
+                        {activePersona === 'business' && !isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-4 animate-in fade-in">{t('nav.planningGroup', 'Planning')}</div>}
+                        {activePersona === 'business' && isCollapsed && <div className="h-3"></div>}
+                        
+                        {activePersona === 'business' && <NavItem to="/clients" icon={<Users strokeWidth={1.5} size={20} />} label={t('nav.clients', 'Clients')} isActive={p.startsWith('/clients')} isCollapsed={isCollapsed} />}
+                        {activePersona === 'business' && <NavItem to="/business-settings" icon={<Building2 strokeWidth={1.5} size={20} />} label={t('nav.businessSettings', 'Business')} isActive={p.startsWith('/business-settings')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/pricelist" icon={<Tag strokeWidth={1.5} size={20} />} label={t('nav.pricelist', 'Pricelist')} isActive={p.startsWith('/pricelist')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/deliverables" icon={<Package strokeWidth={1.5} size={20} />} label={t('nav.deliverables', 'Deliverables')} isActive={p.startsWith('/deliverables')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/deliverable-templates" icon={<FileStack strokeWidth={1.5} size={20} />} label={t('nav.deliverableTemplates', 'Templates')} isActive={p.startsWith('/deliverable-templates')} isCollapsed={isCollapsed} />}
                         {activePersona === 'business' && <NavItem to="/finance" icon={<TrendingUp strokeWidth={1.5} size={20} />} label={t('nav.finance', 'Finance')} isActive={p.startsWith('/finance')} isCollapsed={isCollapsed} />}
-                        {activePersona === 'business' && <NavItem to="/business-settings" icon={<Building2 strokeWidth={1.5} size={20} />} label={t('nav.businessSettings', 'Business')} isActive={p.startsWith('/business-settings')} isCollapsed={isCollapsed} />}
 
-
-                        {/* TOOLS Group - Only show when there are tools to display (personal persona) */}
+                        {/* Personal: TOOLS Group */}
                         {activePersona === 'personal' && !isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.toolsGroup', 'Tools')}</div>}
                         {activePersona === 'personal' && isCollapsed && <div className="h-4"></div>}
 
                         {activePersona === 'personal' && <NavItem to="/refocus" icon={<Target strokeWidth={1.5} size={20} />} label={t('nav.refocus', 'Refocus')} isActive={p.startsWith('/refocus')} isCollapsed={isCollapsed} />}
 
-                        {/* EXTRAS Group - Media Suite */}
+                        {/* EXTRAS Group - Media Suite (both personas) */}
                         {!isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-6 animate-in fade-in">{t('nav.extrasGroup', 'Extras')}</div>}
                         {isCollapsed && <div className="h-4"></div>}
 

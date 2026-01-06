@@ -52,7 +52,6 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
     }).slice(0, 5);
 
     return (
-    return (
         <Card className="h-full [&>div]:h-full" noPadding>
             <div className="p-5 flex flex-col h-full">
                 {/* Header */}
@@ -114,7 +113,6 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
                 )}
             </div>
         </Card>
-    );
     );
 }
 

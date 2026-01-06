@@ -4,7 +4,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { FileText, DollarSign, Users } from 'lucide-react';
-import { Card } from '../Card';
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

@@ -49,12 +49,12 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
     ];
 
     return (
-        <Card className="p-4">
+        <Card className="p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <FileText size={18} className="text-tokens-muted" />
-                    <h3 className="font-semibold text-tokens-fg">
+                    <h3 className="text-sm font-semibold text-tokens-fg">
                         {t('business.contractsPipeline', 'Contracts Pipeline')}
                     </h3>
                 </div>

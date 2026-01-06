@@ -103,12 +103,12 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
     }, [monthlyRevenue]);
 
     return (
-        <Card className="p-4">
+        <Card className="p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <TrendingUp size={18} className="text-emerald-500" />
-                    <h3 className="font-semibold text-tokens-fg">
+                    <h3 className="text-sm font-semibold text-tokens-fg">
                         {t('business.revenueThisYear', 'Revenue This Year')}
                     </h3>
                 </div>

@@ -52,12 +52,12 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
     }).slice(0, 5);
 
     return (
-        <Card className="p-4">
+        <Card className="p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <AlertTriangle size={18} className="text-tokens-error" />
-                    <h3 className="font-semibold text-tokens-fg">
+                    <h3 className="text-sm font-semibold text-tokens-fg">
                         {t('business.overdueAlerts', 'Overdue Alerts')}
                     </h3>
                     {overdueInvoices.length > 0 && (

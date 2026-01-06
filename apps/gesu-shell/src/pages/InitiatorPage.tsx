@@ -5,6 +5,7 @@ import { PageContainer } from '../components/PageContainer';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
+import { SidePanel } from '../components/SidePanel';
 import { SelectDropdown } from '../components/Dropdown';
 import { SearchableProjectDropdown } from '../components/SearchableProjectDropdown';
 import { Tabs } from '../components/Tabs';
@@ -13,7 +14,7 @@ import { ProjectSearch } from '../components/ProjectSearch'; // NEW
 import { BlueprintFilter } from '../components/BlueprintFilter'; // NEW
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { FolderTemplateEditorModal } from '../components/FolderTemplateEditorModal';
-import { Zap, FileText, Settings, Plus, Users } from 'lucide-react';
+import { Zap, FileText, Settings, Plus, Users, Edit } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
 import {
     listProjects,
@@ -28,7 +29,7 @@ import {
     unlinkProjectFromClient,
     Project,
 } from '../stores/projectStore';
-import { listClients, type Client } from '../stores/clientStore';
+import { listClients, updateClient, type Client } from '../stores/clientStore';
 import { scaffoldingService } from '../services/scaffoldingService';
 import { StandardsTab } from './StandardsTab';
 import {
@@ -95,6 +96,8 @@ function ProjectGeneratorForm({
     const [selectedFolderTemplateId, setSelectedFolderTemplateId] = useState<string | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [showTemplateEditor, setShowTemplateEditor] = useState(false);  // Phase 8: Template editor modal
+    const [showClientEdit, setShowClientEdit] = useState(false);  // Client edit sidepanel
+    const [clientFormData, setClientFormData] = useState({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
 
     // Generator mode: 'new' = create new project, 'exist' = assign blueprint to existing folder
     // Sprint 21: Auto-select mode from URL param
@@ -442,7 +445,7 @@ function ProjectGeneratorForm({
                                         ]}
                                     />
 
-                                    {/* Sprint 21.3 -> S5: Client Dropdown with Add button (BUSINESS persona only) */}
+                                    {/* Sprint 21.3 -> S5: Client Dropdown with Add/Edit buttons (BUSINESS persona only) */}
                                     {isClientProject && (
                                         <div className="flex items-end gap-2">
                                             <div className="flex-1">
@@ -465,16 +468,43 @@ function ProjectGeneratorForm({
                                                 />
                                             </div>
                                             {activePersona === 'business' && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => navigate('/clients')}
-                                                    icon={<Plus size={14} />}
-                                                    title={t('initiator:generator.addClient', 'Add new client')}
-                                                    className="mb-0.5"
-                                                >
-                                                    <Users size={14} />
-                                                </Button>
+                                                <>
+                                                    {selectedClientId && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const client = clients.find(c => c.id === selectedClientId);
+                                                                if (client) {
+                                                                    setClientFormData({
+                                                                        name: client.name,
+                                                                        company: client.company,
+                                                                        email: client.email,
+                                                                        phone: client.phone,
+                                                                        address: client.address,
+                                                                        notes: client.notes
+                                                                    });
+                                                                    setShowClientEdit(true);
+                                                                }
+                                                            }}
+                                                            icon={<Edit size={14} />}
+                                                            title={t('business:clients.form.editTitle', 'Edit Client')}
+                                                            className="mb-0.5"
+                                                        >
+                                                            <Edit size={14} />
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => navigate('/clients')}
+                                                        icon={<Plus size={14} />}
+                                                        title={t('initiator:generator.addClient', 'Add new client')}
+                                                        className="mb-0.5"
+                                                    >
+                                                        <Users size={14} />
+                                                    </Button>
+                                                </>
                                             )}
                                         </div>
                                     )}
@@ -509,7 +539,7 @@ function ProjectGeneratorForm({
                                                         {selectedFolderTemplate.name}
                                                     </div>
                                                     <div className="text-xs text-tokens-muted mt-0.5">
-                                                        {selectedFolderTemplate.folders.length} folders
+                                                        {t('initiator:generator.folderCount', '{{count}} folders', { count: selectedFolderTemplate.folders.length })}
                                                     </div>
                                                 </>
                                             ) : (
@@ -542,7 +572,7 @@ function ProjectGeneratorForm({
                                     <div className="flex flex-wrap gap-4">
                                         <label className="flex items-center gap-2 text-xs text-tokens-fg cursor-pointer">
                                             <input type="checkbox" checked={options.gitInit} onChange={() => handleOptionToggle('gitInit')} className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT" />
-                                            Git Init
+                                            {t('initiator:generator.gitInit', 'Git Init')}
                                         </label>
                                     </div>
                                 </div>
@@ -673,7 +703,7 @@ function ProjectGeneratorForm({
                                             onChange={() => handleOptionToggle('gitInit')}
                                             className="rounded border-tokens-border bg-tokens-panel2 text-tokens-brand-DEFAULT focus:ring-1 focus:ring-tokens-brand-DEFAULT"
                                         />
-                                        Git Init
+                                        {t('initiator:generator.gitInit', 'Git Init')}
                                     </label>
                                 </div>
 
@@ -685,7 +715,7 @@ function ProjectGeneratorForm({
                                         disabled={isLoading || !selectedExistingFolder || !selectedBlueprint}
                                         className="flex-1 justify-center shadow-md shadow-tokens-brand-DEFAULT/20"
                                     >
-                                        {isLoading ? 'Assigning...' : 'Assign Blueprint'}
+                                        {isLoading ? t('initiator:createProject.assigning', 'Assigning...') : t('initiator:createProject.assignBlueprint', 'Assign Blueprint')}
                                     </Button>
                                 </div>
                             </div>
@@ -729,7 +759,7 @@ function ProjectGeneratorForm({
                                         ))}
                                     </>
                                 ) : (
-                                    <div className="text-tokens-muted italic">Loading templates...</div>
+                                    <div className="text-tokens-muted italic">{t('common:status.loading', 'Loading...')}</div>
                                 )}
                             </div>
                         </div>
@@ -754,6 +784,101 @@ function ProjectGeneratorForm({
                     initialSelectedId={selectedFolderTemplateId || undefined}
                 />
             )}
+
+            {/* Client Edit Sidepanel */}
+            <SidePanel
+                isOpen={showClientEdit}
+                onClose={() => {
+                    setShowClientEdit(false);
+                    setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+                }}
+                title={t('business:clients.form.editTitle', 'Edit Client')}
+                width="600px"
+            >
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-4">
+                        <Input
+                            label={t('business:clients.form.name', 'Name') + ' *'}
+                            value={clientFormData.name}
+                            onChange={(e) => setClientFormData(f => ({ ...f, name: e.target.value }))}
+                            placeholder={t('business:clients.form.namePlaceholder', 'Contact person name')}
+                            autoFocus
+                        />
+                        <Input
+                            label={t('business:clients.form.company', 'Company')}
+                            value={clientFormData.company}
+                            onChange={(e) => setClientFormData(f => ({ ...f, company: e.target.value }))}
+                            placeholder={t('business:clients.form.companyPlaceholder', 'Company or organization')}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label={t('business:clients.form.email', 'Email')}
+                                value={clientFormData.email}
+                                onChange={(e) => setClientFormData(f => ({ ...f, email: e.target.value }))}
+                                placeholder={t('business:clients.form.emailPlaceholder', 'email@example.com')}
+                            />
+                            <Input
+                                label={t('business:clients.form.phone', 'Phone')}
+                                value={clientFormData.phone}
+                                onChange={(e) => setClientFormData(f => ({ ...f, phone: e.target.value }))}
+                                placeholder={t('business:clients.form.phonePlaceholder', '+62 812 3456 789')}
+                            />
+                        </div>
+                        <Input
+                            label={t('business:clients.form.address', 'Address')}
+                            value={clientFormData.address}
+                            onChange={(e) => setClientFormData(f => ({ ...f, address: e.target.value }))}
+                            placeholder={t('business:clients.form.addressPlaceholder', 'Full address')}
+                        />
+                        <div>
+                            <label className="block text-sm font-medium text-tokens-fg mb-2">{t('business:clients.form.notes', 'Notes')}</label>
+                            <textarea
+                                value={clientFormData.notes}
+                                onChange={(e) => setClientFormData(f => ({ ...f, notes: e.target.value }))}
+                                className="w-full h-32 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
+                                placeholder={t('business:clients.form.notesPlaceholder', 'Additional notes...')}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-4 border-t border-tokens-border">
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                setShowClientEdit(false);
+                                setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+                            }}
+                        >
+                            {t('common:buttons.cancel', 'Cancel')}
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                if (!clientFormData.name.trim()) {
+                                    alert({ title: t('common:alerts.error', 'Error'), message: t('business:clients.form.nameRequired', 'Client name is required'), type: 'error' });
+                                    return;
+                                }
+                                if (selectedClientId) {
+                                    updateClient(selectedClientId, clientFormData);
+                                    // Refresh client list
+                                    setClients(listClients());
+                                    // Update displayed client name if company changed
+                                    const updatedClient = listClients().find(c => c.id === selectedClientId);
+                                    if (updatedClient) {
+                                        setClientName(updatedClient.name);
+                                    }
+                                    setShowClientEdit(false);
+                                    setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+                                    alert({ title: t('common:alerts.success', 'Success'), message: t('business:clients.updated', 'Client updated successfully!'), type: 'success' });
+                                }
+                            }}
+                        >
+                            {t('common:buttons.update', 'Update')}
+                        </Button>
+                    </div>
+                </div>
+            </SidePanel>
+
             <AlertDialogComponent />
         </div>
     );

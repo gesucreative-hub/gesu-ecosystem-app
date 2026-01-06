@@ -82,7 +82,8 @@
             "addressPlaceholder": "Full address",
             "notes": "Notes",
             "notesPlaceholder": "Additional notes..."
-        }
+        },
+        "updated": "Client updated successfully!"
     },
     "clientDetail": {
         "contactInfo": "Contact Information",

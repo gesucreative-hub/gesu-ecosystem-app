@@ -42,6 +42,7 @@
         "clientName": "Client Name",
         "folderTemplate": "Folder Template",
         "manage": "Manage",
+        "folderCount": "{{count}} folders",
         "folders": "folders",
         "gitInit": "Git Init",
         "livePreviewNote": "Live Preview",
@@ -58,7 +59,9 @@
         "projectName": "Enter project name...",
         "clientName": "Enter client name...",
         "description": "Optional project summary...",
-        "selectBlueprint": "Select Blueprint..."
+        "selectBlueprint": "Select Blueprint...",
+        "selectClient": "Select Client...",
+        "noClient": "-- No Client --"
     },
     "projectTypes": {
         "client": "Client Project",

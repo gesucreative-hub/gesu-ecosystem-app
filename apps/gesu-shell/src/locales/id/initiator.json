@@ -42,6 +42,7 @@
         "clientName": "Nama Klien",
         "folderTemplate": "Template Folder",
         "manage": "Kelola",
+        "folderCount": "{{count}} folder",
         "folders": "folder",
         "gitInit": "Git Init",
         "livePreviewNote": "Pratinjau Langsung",
@@ -58,7 +59,9 @@
         "projectName": "Masukkan nama proyek...",
         "clientName": "Masukkan nama klien...",
         "description": "Ringkasan proyek opsional...",
-        "selectBlueprint": "Pilih Blueprint..."
+        "selectBlueprint": "Pilih Blueprint...",
+        "selectClient": "Pilih Klien...",
+        "noClient": "-- Tanpa Klien --"
     },
     "projectTypes": {
         "client": "Proyek Klien",

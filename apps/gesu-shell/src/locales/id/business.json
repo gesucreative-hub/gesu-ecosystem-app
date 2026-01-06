@@ -82,7 +82,8 @@
             "addressPlaceholder": "Alamat lengkap",
             "notes": "Catatan",
             "notesPlaceholder": "Catatan tambahan..."
-        }
+        },
+        "updated": "Klien berhasil diperbarui!"
     },
     "clientDetail": {
         "contactInfo": "Informasi Kontak",

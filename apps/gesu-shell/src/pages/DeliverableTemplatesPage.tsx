@@ -167,7 +167,7 @@ export function DeliverableTemplatesPage() {
             {/* Search */}
             <div className="mb-6">
                 <SearchInput
-                    placeholder={t('common:search', 'Search...')}
+                    placeholder={t('deliverables:templates.searchPlaceholder', 'Search...')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />

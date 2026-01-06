@@ -12,7 +12,7 @@ import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
 import { Badge } from '../components/Badge';
 import { SidePanel } from '../components/SidePanel';
-import { Users, Plus, Trash2, Edit, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Users, Plus, Trash2, ChevronRight, Building2, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
     listClients,
@@ -80,7 +80,7 @@ export function ClientsPage() {
         if (editingClient) {
             updateClient(editingClient.id, formData);
         } else {
-        } else {
+
             // Create full name for display compatibility
             createClient({
                 ...formData,
@@ -90,19 +90,6 @@ export function ClientsPage() {
         resetForm();
     };
 
-    const handleEdit = (client: Client) => {
-        setEditingClient(client);
-        setFormData({
-            firstName: client.firstName || client.name.split(' ')[0] || '',
-            lastName: client.lastName || client.name.split(' ').slice(1).join(' ') || '',
-            company: client.company,
-            email: client.email,
-            phone: client.phone,
-            address: client.address,
-            notes: client.notes
-        });
-        setShowAddForm(true);
-    };
 
     const handleDelete = (client: Client) => {
         // Check for linked entities

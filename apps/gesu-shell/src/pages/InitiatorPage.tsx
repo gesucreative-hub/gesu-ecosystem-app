@@ -794,7 +794,7 @@ function ProjectGeneratorForm({
                 isOpen={showClientEdit}
                 onClose={() => {
                     setShowClientEdit(false);
-                    setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+                    setClientFormData({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
                 }}
                 title={t('business:clients.form.editTitle', 'Edit Client')}
                 width="600px"
@@ -858,7 +858,7 @@ function ProjectGeneratorForm({
                             variant="secondary"
                             onClick={() => {
                                 setShowClientEdit(false);
-                                setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+                                setClientFormData({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
                             }}
                         >
                             {t('common:buttons.cancel', 'Cancel')}
@@ -867,7 +867,7 @@ function ProjectGeneratorForm({
                             variant="primary"
                             onClick={() => {
                                 if (!clientFormData.firstName.trim()) {
-                                    alert(t('business:clients.form.nameRequired', 'Front name is required'));
+                                    alert({ title: t('common:alerts.error', 'Error'), message: t('business:clients.form.nameRequired', 'Front name is required'), type: 'error' });
                                     return;
                                 }
                                 if (selectedClientId) {
@@ -882,8 +882,8 @@ function ProjectGeneratorForm({
                                         setClientName(updatedClient.name);
                                     }
                                     setShowClientEdit(false);
-                                    setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
-                                    alert(t('business:clients.updated', 'Client updated successfully!'));
+                                    setClientFormData({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
+                                    alert({ title: t('common:alerts.success', 'Success'), message: t('business:clients.updated', 'Client updated successfully!'), type: 'success' });
                                 }
                             }}
                         >

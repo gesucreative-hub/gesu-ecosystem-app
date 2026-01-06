@@ -8,7 +8,9 @@ import { getUserStorageKey } from '../utils/getUserStorageKey';
 
 export interface Client {
     id: string;
-    name: string;               // Contact person name
+    name: string;               // Full name (firstName + lastName)
+    firstName?: string;         // Front name
+    lastName?: string;          // Back name
     company: string;            // Company/organization name
     email: string;
     phone: string;
@@ -149,8 +151,17 @@ export function createClient(data: Omit<Client, 'id' | 'createdAt' | 'updatedAt'
     const current = ensureLoaded();
     const now = new Date().toISOString();
     
+    // Auto-generate name if first/last provided
+    let fullName = data.name;
+    if (data.firstName && data.lastName) {
+        fullName = `${data.firstName} ${data.lastName}`;
+    } else if (data.firstName) {
+        fullName = data.firstName;
+    }
+    
     const newClient: Client = {
         ...data,
+        name: fullName,
         id: generateId(),
         createdAt: now,
         updatedAt: now
@@ -167,7 +178,20 @@ export function updateClient(id: string, updates: Partial<Omit<Client, 'id' | 'c
     const client = current.clients.find(c => c.id === id);
     if (!client) return null;
     
-    Object.assign(client, updates, { updatedAt: new Date().toISOString() });
+    // Handle name update if first/last provided
+    const updatedData = { ...updates };
+    if (updates.firstName !== undefined || updates.lastName !== undefined) {
+        const firstName = updates.firstName ?? client.firstName;
+        const lastName = updates.lastName ?? client.lastName;
+        
+        if (firstName && lastName) {
+            updatedData.name = `${firstName} ${lastName}`;
+        } else if (firstName) {
+            updatedData.name = firstName;
+        }
+    }
+    
+    Object.assign(client, updatedData, { updatedAt: new Date().toISOString() });
     saveState();
     console.log('[clientStore] Updated client:', id);
     return { ...client };

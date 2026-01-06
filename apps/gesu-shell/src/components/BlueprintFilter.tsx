@@ -33,8 +33,8 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
 
     // Get active label
     const activeLabel = (() => {
-        if (value === 'all') return t('initiator:filter.allBlueprints', 'All Blueprints');
-        if (value === 'none') return t('initiator:filter.noBlueprint', 'No Blueprint');
+        if (value === 'all') return t('initiator:hubFilters.allBlueprints', 'All Blueprints');
+        if (value === 'none') return t('initiator:hubFilters.noBlueprint', 'No Blueprint');
         const bp = blueprintData?.blueprints.find(b => b.id === value);
         return bp ? bp.name : 'Unknown';
     })();
@@ -50,8 +50,8 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
         ).sort((a, b) => a.name.localeCompare(b.name));
 
         return [
-            { id: 'all', label: t('initiator:filter.allProjects', 'All Projects') },
-            { id: 'none', label: t('initiator:filter.noBlueprint', 'No Blueprint') },
+            { id: 'all', label: t('initiator:hubFilters.allProjects', 'All Projects') },
+            { id: 'none', label: t('initiator:hubFilters.noBlueprint', 'No Blueprint') },
             ...validBlueprints.map(bp => ({
                 id: bp.id,
                 label: bp.name
@@ -60,9 +60,9 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
     })();
 
     const statusMap = {
-        'Ready to start': t('initiator:filter.status.ready', 'Ready to start'),
-        'On progress': t('initiator:filter.status.progress', 'On progress'),
-        'Completed': t('initiator:filter.status.completed', 'Completed')
+        'Ready to start': t('initiator:hubFilters.status.ready', 'Ready to start'),
+        'On progress': t('initiator:hubFilters.status.progress', 'On progress'),
+        'Completed': t('initiator:hubFilters.status.completed', 'Completed')
     };
 
     return (
@@ -84,7 +84,7 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
             {isOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-tokens-panel border border-tokens-border rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in-95 duration-200">
                     <div className="text-xs font-semibold text-tokens-muted px-2 py-1.5 uppercase tracking-wider">
-                        {t('initiator:filter.filterByStatus', 'Filter by Status')}
+                        {t('initiator:hubFilters.filterByStatus', 'Filter by Status')}
                     </div>
                     <div className="px-2 pb-2 mb-2 border-b border-tokens-border space-y-1">
                         {(Object.keys(statusMap) as string[]).map(status => (
@@ -107,7 +107,7 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
                     </div>
 
                     <div className="text-xs font-semibold text-tokens-muted px-2 py-1.5 uppercase tracking-wider">
-                        {t('initiator:filter.filterByType', 'Filter by Type')}
+                        {t('initiator:hubFilters.filterByType', 'Filter by Type')}
                     </div>
                     <div className="px-2 pb-2 mb-2 border-b border-tokens-border space-y-1">
                         {[
@@ -134,7 +134,7 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
                     </div>
 
                     <div className="text-xs font-semibold text-tokens-muted px-2 py-1.5 uppercase tracking-wider">
-                        {t('initiator:filter.filterByBlueprint', 'Filter by Blueprint')}
+                        {t('initiator:hubFilters.filterByBlueprint', 'Filter by Blueprint')}
                     </div>
                     <div className="mb-2 border-b border-tokens-border pb-2">
                         {options.map((option) => (
@@ -167,8 +167,8 @@ export function BlueprintFilter({ value, onChange, statusFilters, onStatusFilter
                                 onChange={(e) => onShowUnlinkedChange(e.target.checked)}
                             />
                             <div className="flex flex-col">
-                                <span className="text-sm text-tokens-fg">{t('initiator:filter.unlinkedOnly', 'Unlinked Only')}</span>
-                                <span className="text-[10px] text-tokens-muted">{t('initiator:filter.noClientLinked', 'No client linked')}</span>
+                                <span className="text-sm text-tokens-fg">{t('initiator:hubFilters.unlinkedOnly', 'Unlinked Only')}</span>
+                                <span className="text-[10px] text-tokens-muted">{t('initiator:hubFilters.noClientLinked', 'No client linked')}</span>
                             </div>
                         </label>
                     </div>

@@ -144,7 +144,7 @@
             "f2": { "title": "Delivery & Handoff", "desc": "Package and deliver final assets" }
         }
     },
-    "filter": {
+    "hubFilters": {
         "allBlueprints": "All Blueprints",
         "noBlueprint": "No Blueprint",
         "allProjects": "All Projects",

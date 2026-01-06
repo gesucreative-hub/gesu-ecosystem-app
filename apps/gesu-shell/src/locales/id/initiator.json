@@ -144,7 +144,7 @@
             "f2": { "title": "Pengiriman & Handoff", "desc": "Kemas dan kirim aset final" }
         }
     },
-    "filter": {
+    "hubFilters": {
         "allBlueprints": "Semua Blueprint",
         "noBlueprint": "Tanpa Blueprint",
         "allProjects": "Semua Proyek",

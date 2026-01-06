@@ -9,6 +9,7 @@
         "create": "New Template",
         "createTitle": "Create Template",
         "editTitle": "Edit Template",
+        "searchPlaceholder": "Search...",
         "name": "Template Name",
         "namePlaceholder": "e.g. Brand Design Package",
         "description": "Description",

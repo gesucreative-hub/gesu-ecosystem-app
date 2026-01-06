@@ -25,6 +25,12 @@
         "clients": "Klien",
         "businessSettings": "Bisnis",
         "pricelist": "Daftar Harga",
+        "deliverables": "Deliverables",
+        "deliverableTemplates": "Template",
+        "finance": "Keuangan",
+        "workingGroup": "Proyek",
+        "planningGroup": "Perencanaan",
+        "pricelist": "Daftar Harga",
         "invoices": "Faktur",
         "contracts": "Kontrak"
     },

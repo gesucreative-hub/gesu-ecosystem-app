@@ -25,6 +25,12 @@
         "clients": "Clients",
         "businessSettings": "Business",
         "pricelist": "Pricelist",
+        "deliverables": "Deliverables",
+        "deliverableTemplates": "Templates",
+        "finance": "Finance",
+        "workingGroup": "Working",
+        "planningGroup": "Planning",
+        "pricelist": "Pricelist",
         "invoices": "Invoices",
         "contracts": "Contracts"
     },

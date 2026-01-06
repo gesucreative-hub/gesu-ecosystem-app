@@ -134,8 +134,8 @@ export function InvoicesPage() {
                 </Button>
             </div>
             
-            {/* Search */}
-            <div className="flex flex-wrap gap-3 mb-4">
+            {/* Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 min-w-[200px]">
                     <SearchInput
                         value={searchQuery}
@@ -144,24 +144,26 @@ export function InvoicesPage() {
                         fullWidth
                     />
                 </div>
+
+                {/* Status Tabs */}
+                <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar items-center">
+                    {statusTabs.map(tab => (
+                        <button
+                            key={tab.value}
+                            onClick={() => setStatusFilter(tab.value)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                                statusFilter === tab.value
+                                    ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
+                                    : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel3'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* Status Tabs */}
-            <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
-                {statusTabs.map(tab => (
-                    <button
-                        key={tab.value}
-                        onClick={() => setStatusFilter(tab.value)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                            statusFilter === tab.value
-                                ? 'bg-tokens-brand-DEFAULT text-white'
-                                : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+
 
             {/* Unlinked Filter Checkbox */}
             <label className="flex items-center gap-2 mb-4 cursor-pointer">

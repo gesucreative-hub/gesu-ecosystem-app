@@ -74,7 +74,7 @@ export function DailyScheduleWidget() {
     };
 
     return (
-    return (
+
         <Card className="h-full [&>div]:h-full" noPadding>
             <div className="p-5 flex flex-col h-full">
                 {/* Header */}
@@ -111,5 +111,5 @@ export function DailyScheduleWidget() {
             </div>
         </Card>
     );
-    );
+
 }

@@ -157,7 +157,7 @@ export function WeeklyActivityChart() {
     const hasData = weeklyData.some(d => d.value > 0);
 
     return (
-    return (
+
         <Card className="h-full [&>div]:h-full" noPadding>
             <div className="p-5 flex flex-col h-full">
                 {/* Header */}
@@ -203,5 +203,5 @@ export function WeeklyActivityChart() {
             </div>
         </Card>
     );
-    );
+
 }

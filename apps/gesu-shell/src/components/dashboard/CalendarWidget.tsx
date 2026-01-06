@@ -102,7 +102,7 @@ export function CalendarWidget() {
     }
 
     return (
-    return (
+
         <Card className="h-full [&>div]:h-full" noPadding>
             <div className="p-5 flex flex-col h-full">
                 {/* Header with navigation */}
@@ -138,5 +138,5 @@ export function CalendarWidget() {
             </div>
         </Card>
     );
-    );
+
 }

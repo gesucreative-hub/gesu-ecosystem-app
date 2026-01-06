@@ -75,7 +75,7 @@ export function FocusPet({ mood, evolution, size = 'md', cosmetics }: FocusPetPr
 
     return (
         <motion.div
-            className={`${sizeClass.container} rounded-xl bg-tokens-panel2 border border-tokens-border flex items-center justify-center relative transition-shadow ${glow}`}
+            className={`${sizeClass.container} rounded-xl bg-tokens-panel2 flex items-center justify-center relative transition-shadow ${glow}`}
             animate={getAnimation()}
             transition={{ 
                 repeat: Infinity, 

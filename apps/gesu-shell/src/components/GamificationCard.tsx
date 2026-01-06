@@ -101,7 +101,7 @@ export function GamificationCard({ isCollapsed }: GamificationCardProps) {
                 
                 {/* Main Content */}
                 <div 
-                    className="relative z-10 p-2 cursor-pointer"
+                    className="relative z-10 p-5 cursor-pointer"
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
                     {/* Centered Pet */}

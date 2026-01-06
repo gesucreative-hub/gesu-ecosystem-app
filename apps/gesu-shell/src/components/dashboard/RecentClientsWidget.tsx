@@ -34,14 +34,14 @@ export function RecentClientsWidget({
                 <div className="flex items-center gap-2">
                     <Users size={18} className="text-tokens-muted" />
                     <h3 className="font-semibold text-tokens-fg">
-                        {t('dashboard:business.recentClients', 'Recent Clients')}
+                        {t('business.recentClients', 'Recent Clients')}
                     </h3>
                 </div>
                 <Link 
                     to="/clients" 
                     className="text-sm text-tokens-brand-DEFAULT hover:underline flex items-center gap-1"
                 >
-                    {t('dashboard:business.viewAll', 'View All')}
+                    {t('activeProjects.viewAll', 'View All')}
                     <ChevronRight size={14} />
                 </Link>
             </div>
@@ -49,7 +49,7 @@ export function RecentClientsWidget({
             {/* Client List */}
             {displayClients.length === 0 ? (
                 <div className="text-center py-8 text-tokens-muted text-sm">
-                    {t('dashboard:business.noClients', 'No clients yet')}
+                    {t('business.noClients', 'No clients yet')}
                 </div>
             ) : (
                 <div className="space-y-2">

@@ -54,7 +54,7 @@ export function ActiveInvoicesWidget({
                 <div className="flex items-center gap-2">
                     <FileText size={18} className="text-tokens-muted" />
                     <h3 className="font-semibold text-tokens-fg">
-                        {t('dashboard:business.activeInvoices', 'Active Invoices')}
+                        {t('business.activeInvoices', 'Active Invoices')}
                     </h3>
                     {invoices.length > 0 && (
                         <span className="text-xs text-tokens-muted">({invoices.length})</span>
@@ -64,7 +64,7 @@ export function ActiveInvoicesWidget({
                     to="/invoices?status=sent" 
                     className="text-sm text-tokens-brand-DEFAULT hover:underline flex items-center gap-1"
                 >
-                    {t('dashboard:business.viewAll', 'View All')}
+                    {t('activeProjects.viewAll', 'View All')}
                     <ChevronRight size={14} />
                 </Link>
             </div>
@@ -72,7 +72,7 @@ export function ActiveInvoicesWidget({
             {/* Invoice List */}
             {displayInvoices.length === 0 ? (
                 <div className="text-center py-8 text-tokens-muted text-sm">
-                    {t('dashboard:business.noActiveInvoices', 'No active invoices')} 🎉
+                    {t('business.noActiveInvoices', 'No active invoices')} 🎉
                 </div>
             ) : (
                 <div className="space-y-2">

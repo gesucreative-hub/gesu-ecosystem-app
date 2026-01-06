@@ -109,7 +109,7 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
                 <div className="flex items-center gap-2">
                     <TrendingUp size={18} className="text-emerald-500" />
                     <h3 className="font-semibold text-tokens-fg">
-                        {t('dashboard:business.revenueChart', 'Revenue This Year')}
+                        {t('business.revenueThisYear', 'Revenue This Year')}
                     </h3>
                 </div>
                 <div className="text-right">
@@ -117,7 +117,7 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
                         Rp{totalRevenue.toLocaleString('id-ID')}
                     </div>
                     <div className="text-xs text-tokens-muted">
-                        {t('dashboard:business.totalRevenue', 'Total Revenue')}
+                        {t('business.totalRevenue', 'Total Revenue')}
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
             {/* Chart */}
             {totalRevenue === 0 ? (
                 <div className="h-[200px] flex items-center justify-center text-tokens-muted text-sm">
-                    {t('dashboard:business.noRevenue', 'No revenue data yet')}
+                    {t('business.noRevenueData', 'No revenue data yet')}
                 </div>
             ) : (
                 <ReactECharts 

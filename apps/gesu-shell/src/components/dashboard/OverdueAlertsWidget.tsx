@@ -58,7 +58,7 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
                 <div className="flex items-center gap-2">
                     <AlertTriangle size={18} className="text-tokens-error" />
                     <h3 className="font-semibold text-tokens-fg">
-                        {t('dashboard:business.overdueAlerts', 'Overdue Alerts')}
+                        {t('business.overdueAlerts', 'Overdue Alerts')}
                     </h3>
                     {overdueInvoices.length > 0 && (
                         <span className="bg-tokens-error/20 text-tokens-error text-xs font-bold px-2 py-0.5 rounded-full">
@@ -73,10 +73,10 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                     <CheckCircle size={32} className="text-emerald-500 mb-2" />
                     <div className="text-sm text-tokens-muted">
-                        {t('dashboard:business.noOverdue', 'No overdue items')} 🎉
+                        {t('business.noOverdueItems', 'No overdue items')} 🎉
                     </div>
                     <div className="text-xs text-tokens-muted mt-1">
-                        {t('dashboard:business.allCaughtUp', 'All caught up!')}
+                        {t('business.allCaughtUp', 'All caught up!')}
                     </div>
                 </div>
             ) : (

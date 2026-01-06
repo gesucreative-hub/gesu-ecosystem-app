@@ -46,7 +46,7 @@ export function BusinessQuickStats({
     const stats = [
         {
             icon: <FileText size={20} />,
-            title: t('dashboard:business.unpaidInvoices', 'Unpaid Invoices'),
+            title: t('business.unpaidInvoices', 'Unpaid Invoices'),
             stat: unpaidCount.toString(),
             subStat: formatCurrency(totalUnpaid),
             to: '/invoices?status=sent',
@@ -55,18 +55,18 @@ export function BusinessQuickStats({
         },
         {
             icon: <DollarSign size={20} />,
-            title: t('dashboard:business.revenueThisMonth', 'This Month'),
+            title: t('business.thisMonth', 'This Month'),
             stat: formatCurrency(revenueThisMonth),
-            subStat: t('dashboard:business.revenue', 'Revenue'),
+            subStat: t('business.totalRevenue', 'Revenue'),
             to: '/invoices?status=paid',
             color: 'text-emerald-500',
             bgColor: 'bg-emerald-500/10'
         },
         {
             icon: <Users size={20} />,
-            title: t('dashboard:business.activeClients', 'Active Clients'),
+            title: t('business.activeClients', 'Active Clients'),
             stat: activeClients.toString(),
-            subStat: t('dashboard:business.clients', 'Clients'),
+            subStat: t('business.clients', 'Clients'),
             to: '/clients',
             color: 'text-purple-500',
             bgColor: 'bg-purple-500/10'

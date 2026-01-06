@@ -55,14 +55,14 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
                 <div className="flex items-center gap-2">
                     <FileText size={18} className="text-tokens-muted" />
                     <h3 className="font-semibold text-tokens-fg">
-                        {t('dashboard:business.contractsPipeline', 'Contracts Pipeline')}
+                        {t('business.contractsPipeline', 'Contracts Pipeline')}
                     </h3>
                 </div>
                 <Link 
                     to="/contracts" 
                     className="text-sm text-tokens-brand-DEFAULT hover:underline flex items-center gap-1"
                 >
-                    {t('dashboard:business.viewAll', 'View All')}
+                    {t('activeProjects.viewAll', 'View All')}
                     <ChevronRight size={14} />
                 </Link>
             </div>
@@ -70,7 +70,7 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
             {/* Pipeline Stages */}
             {total === 0 ? (
                 <div className="text-center py-8 text-tokens-muted text-sm">
-                    {t('dashboard:business.noContracts', 'No contracts yet')}
+                    {t('business.noContracts', 'No contracts yet')}
                 </div>
             ) : (
                 <div className="space-y-3">

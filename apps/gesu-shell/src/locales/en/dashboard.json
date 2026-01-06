@@ -66,5 +66,24 @@
         "break": "Break",
         "longBreak": "Long Break",
         "idle": "Idle"
+    },
+    "business": {
+        "unpaidInvoices": "Unpaid Invoices",
+        "thisMonth": "This Month",
+        "clients": "Clients",
+        "activeClients": "Active Clients",
+        "activeInvoices": "Active Invoices",
+        "noActiveInvoices": "No active invoices",
+        "overdueAlerts": "Overdue Alerts",
+        "noOverdueItems": "No overdue items",
+        "allCaughtUp": "All caught up!",
+        "contractsPipeline": "Contracts Pipeline",
+        "activeContracts": "Active Contracts",
+        "noContracts": "No contracts yet",
+        "recentClients": "Recent Clients",
+        "noClients": "No clients yet",
+        "revenueThisYear": "Revenue This Year",
+        "noRevenueData": "No revenue data yet",
+        "totalRevenue": "Total Revenue"
     }
 }

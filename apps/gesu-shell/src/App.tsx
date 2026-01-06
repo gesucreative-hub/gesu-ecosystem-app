@@ -80,8 +80,8 @@ function App() {
         import('./stores/contractStore').then(({ listContracts }) => listContracts());
         import('./stores/clientStore').then(({ listClients }) => listClients());
         import('./stores/projectStore').then(({ listProjects }) => listProjects());
-        import('./stores/serviceCatalogStore').then(({ listServices }) => listServices());
-        import('./stores/paymentStore').then(({ listPayments }) => listPayments());
+        import('./stores/serviceCatalogStore').then(({ listItems: listServices }) => listServices());
+        import('./stores/paymentStore').then(({ listAll: listPayments }) => listPayments());
         import('./stores/deliverableTemplateStore').then(({ listTemplates }) => listTemplates());
     }, []);
 

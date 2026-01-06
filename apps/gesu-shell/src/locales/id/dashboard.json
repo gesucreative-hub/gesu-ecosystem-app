@@ -66,5 +66,24 @@
         "break": "Istirahat",
         "longBreak": "Istirahat Panjang",
         "idle": "Idle"
+    },
+    "business": {
+        "unpaidInvoices": "Faktur Belum Bayar",
+        "thisMonth": "Bulan Ini",
+        "clients": "Klien",
+        "activeClients": "Klien Aktif",
+        "activeInvoices": "Faktur Aktif",
+        "noActiveInvoices": "Tidak ada faktur aktif",
+        "overdueAlerts": "Peringatan Jatuh Tempo",
+        "noOverdueItems": "Tidak ada item jatuh tempo",
+        "allCaughtUp": "Semua aman!",
+        "contractsPipeline": "Pipeline Kontrak",
+        "activeContracts": "Kontrak Aktif",
+        "noContracts": "Belum ada kontrak",
+        "recentClients": "Klien Terbaru",
+        "noClients": "Belum ada klien",
+        "revenueThisYear": "Pendapatan Tahun Ini",
+        "noRevenueData": "Belum ada data pendapatan",
+        "totalRevenue": "Total Pendapatan"
     }
 }

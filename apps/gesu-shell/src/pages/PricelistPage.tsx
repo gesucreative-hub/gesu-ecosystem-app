@@ -11,7 +11,7 @@ import { Input } from '../components/Input';
 import { SearchInput } from '../components/SearchInput';
 import { SelectDropdown } from '../components/Dropdown';
 import { SidePanel } from '../components/SidePanel';
-import { Plus, Edit2, Trash2, Tag, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listItems, 

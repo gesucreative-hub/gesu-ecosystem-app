@@ -62,7 +62,7 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
                     to="/contracts" 
                     className="text-xs text-tokens-brand-DEFAULT hover:underline flex items-center gap-1 whitespace-nowrap"
                 >
-                    {t('activeProjects.viewAll', 'View All')}
+                    {t('business.viewAll', 'See All')}
                     <ChevronRight size={12} />
                 </Link>
             </div>

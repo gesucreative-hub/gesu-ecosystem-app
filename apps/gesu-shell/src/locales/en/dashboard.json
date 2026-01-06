@@ -84,6 +84,7 @@
         "noClients": "No clients yet",
         "revenueThisYear": "Revenue This Year",
         "noRevenueData": "No revenue data yet",
-        "totalRevenue": "Total Revenue"
+        "totalRevenue": "Total Revenue",
+        "viewAll": "See All"
     }
 }

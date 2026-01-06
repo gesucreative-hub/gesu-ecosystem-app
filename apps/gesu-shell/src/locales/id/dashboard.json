@@ -84,6 +84,7 @@
         "noClients": "Belum ada klien",
         "revenueThisYear": "Pendapatan Tahun Ini",
         "noRevenueData": "Belum ada data pendapatan",
-        "totalRevenue": "Total Pendapatan"
+        "totalRevenue": "Total Pendapatan",
+        "viewAll": "Lihat Semua"
     }
 }

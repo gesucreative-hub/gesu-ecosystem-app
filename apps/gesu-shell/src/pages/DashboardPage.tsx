@@ -138,7 +138,7 @@ function BusinessDashboard() {
                     revenueThisMonth={data.stats.revenueThisMonth}
                     activeClients={data.stats.activeClients}
                 />
-                <ActiveInvoicesWidget invoices={data.unpaidInvoices} />
+                <ActiveInvoicesWidget invoices={data.unpaidInvoices} maxItems={2} />
             </div>
 
             {/* Row 3: Overdue + Pipeline + Recent Clients */}

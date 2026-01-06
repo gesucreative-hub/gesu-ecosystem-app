@@ -84,7 +84,7 @@ export function BusinessQuickStats({
     ];
 
     return (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4 h-full">
             {stats.map((item, index) => (
                 <Link 
                     key={index} 

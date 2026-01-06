@@ -48,7 +48,7 @@ export function ActiveInvoicesWidget({
     const displayInvoices = invoices.slice(0, maxItems);
 
     return (
-        <Card className="p-5">
+        <Card className="p-5 h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -71,11 +71,11 @@ export function ActiveInvoicesWidget({
 
             {/* Invoice List */}
             {displayInvoices.length === 0 ? (
-                <div className="text-center py-8 text-tokens-muted text-sm">
+                <div className="flex-1 flex items-center justify-center text-tokens-muted text-sm">
                     {t('business.noActiveInvoices', 'No active invoices')} 🎉
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1 overflow-auto">
                     {displayInvoices.map(invoice => {
                         const overdue = isOverdue(invoice);
                         const daysOver = getDaysOverdue(invoice);

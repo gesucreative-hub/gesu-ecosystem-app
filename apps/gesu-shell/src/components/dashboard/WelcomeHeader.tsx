@@ -66,7 +66,7 @@ export function WelcomeHeader() {
             {/* Left: Greeting */}
             <div className="flex-1">
                 <h1 className="text-3xl md:text-4xl font-extrabold text-tokens-fg tracking-tight mb-1">
-                    {greeting}, {displayName} 👋
+                    {greeting}, {displayName}
                 </h1>
                 <p className="text-sm text-tokens-muted">
                     {dateStr}

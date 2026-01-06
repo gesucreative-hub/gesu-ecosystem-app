@@ -37,11 +37,12 @@ interface FormData {
     category: string;
 }
 
-const UNIT_OPTIONS = [
-    { value: 'item', label: 'Item' },
-    { value: 'jam', label: 'Jam (Hour)' },
-    { value: 'hari', label: 'Hari (Day)' },
-    { value: 'paket', label: 'Paket (Package)' }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getUnitOptions = (t: any) => [
+    { value: 'item', label: t('invoices:pricelist.units.item', 'Item') },
+    { value: 'jam', label: t('invoices:pricelist.units.hour', 'Hour') },
+    { value: 'hari', label: t('invoices:pricelist.units.day', 'Day') },
+    { value: 'paket', label: t('invoices:pricelist.units.package', 'Package') }
 ];
 
 export function PricelistPage() {
@@ -206,7 +207,7 @@ export function PricelistPage() {
                                 label={t('invoices:pricelist.unit', 'Unit')}
                                 value={formData.unit}
                                 onChange={(value) => setFormData(f => ({ ...f, unit: value as FormData['unit'] }))}
-                                options={UNIT_OPTIONS}
+                                options={getUnitOptions(t)}
                             />
                             <Input
                                 label={t('invoices:pricelist.price', 'Unit Price (IDR)')}

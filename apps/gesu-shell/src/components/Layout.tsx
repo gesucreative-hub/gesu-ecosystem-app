@@ -248,8 +248,8 @@ export function Layout() {
     useEffect(() => {
         const path = location.pathname;
         
-        // Personal routes (S8: added second-brain)
-        const personalRoutes = ['/compass', '/activity', '/refocus', '/second-brain'];
+        // Personal routes (S8: added second-brain - now shared)
+        const personalRoutes = ['/compass', '/activity', '/refocus'];
         // Business routes (S5 + S6 + S7: clients, settings, pricelist, invoices, contracts, deliverables, finance)
         const businessRoutes = ['/initiator', '/clients', '/business-settings', '/pricelist', '/invoices', '/contracts', '/deliverable-templates', '/deliverables', '/finance'];
         
@@ -339,7 +339,6 @@ export function Layout() {
                         {/* Personal Persona: Core items */}
                         {activePersona === "personal" && <NavItem to="/compass" icon={<Compass strokeWidth={1.5} size={20} />} label={t("nav.compass")} isActive={p.startsWith("/compass")} isCollapsed={isCollapsed} />}
                         {activePersona === 'personal' && <NavItem to="/activity" icon={<BarChart2 strokeWidth={1.5} size={20} />} label={t('nav.activity')} isActive={p.startsWith('/activity')} isCollapsed={isCollapsed} />}
-                        {activePersona === 'personal' && <NavItem to="/second-brain" icon={<Brain strokeWidth={1.5} size={20} />} label={t('nav.secondBrain', 'Second Brain')} isActive={p.startsWith('/second-brain')} isCollapsed={isCollapsed} />}
 
                         {/* Business Persona: WORKING Group - Active project work */}
                         {activePersona === 'business' && !isCollapsed && <div className="text-[10px] font-bold text-tokens-sidebar-muted uppercase tracking-wider px-6 mb-2 mt-4 animate-in fade-in">{t('nav.workingGroup', 'Working')}</div>}
@@ -371,6 +370,7 @@ export function Layout() {
                         {isCollapsed && <div className="h-4"></div>}
 
                         <NavItem to="/media-suite" icon={<Film strokeWidth={1.5} size={20} />} label={t('nav.mediaSuite')} isActive={p.startsWith('/media-suite')} isCollapsed={isCollapsed} />
+                        <NavItem to="/second-brain" icon={<Brain strokeWidth={1.5} size={20} />} label={t('nav.secondBrain', 'Second Brain')} isActive={p.startsWith('/second-brain')} isCollapsed={isCollapsed} />
                     </nav>
 
                     {/* Bottom Controls */}

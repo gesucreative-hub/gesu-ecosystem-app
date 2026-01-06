@@ -9,7 +9,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useFocusTimer } from '../../hooks/useFocusTimer';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { Timer, Search, X } from 'lucide-react';
+import { Timer, Search } from 'lucide-react';
 import { GamificationBadge } from '../GamificationBadge';
 import { GamificationCard } from '../GamificationCard';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -99,14 +99,7 @@ export function WelcomeHeader() {
                                 transition={{ duration: 0.15 }}
                                 className="absolute right-0 top-full mt-2 z-50 w-72"
                             >
-                                {/* Close button */}
-                                <button
-                                    onClick={() => setShowGamificationPopover(false)}
-                                    className="absolute top-2 right-2 z-10 p-1 rounded-lg hover:bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg transition-colors"
-                                >
-                                    <X size={14} />
-                                </button>
-                                {/* Full GamificationCard */}
+                                {/* Full GamificationCard - closes on outside click via popoverRef */}
                                 <GamificationCard isCollapsed={false} />
                             </motion.div>
                         )}

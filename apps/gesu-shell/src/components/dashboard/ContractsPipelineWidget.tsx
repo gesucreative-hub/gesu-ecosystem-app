@@ -49,55 +49,57 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
     ];
 
     return (
-        <Card className="p-5 h-full flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4 gap-4">
-                <div className="flex items-center gap-2 min-w-0">
-                    <FileText size={18} className="text-tokens-muted flex-shrink-0" />
-                    <h3 className="text-sm font-semibold text-tokens-fg truncate">
-                        {t('business.contractsPipeline', 'Contracts Pipeline')}
-                    </h3>
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4 gap-4">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={18} className="text-tokens-muted flex-shrink-0" />
+                        <h3 className="text-sm font-semibold text-tokens-fg truncate">
+                            {t('business.contractsPipeline', 'Contracts Pipeline')}
+                        </h3>
+                    </div>
+                    <Link 
+                        to="/contracts" 
+                        className="text-xs text-tokens-brand-DEFAULT hover:underline flex items-center gap-1 whitespace-nowrap"
+                    >
+                        {t('business.viewAll', 'See All')}
+                        <ChevronRight size={12} />
+                    </Link>
                 </div>
-                <Link 
-                    to="/contracts" 
-                    className="text-xs text-tokens-brand-DEFAULT hover:underline flex items-center gap-1 whitespace-nowrap"
-                >
-                    {t('business.viewAll', 'See All')}
-                    <ChevronRight size={12} />
-                </Link>
-            </div>
 
-            {/* Pipeline Stages */}
-            {total === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center text-tokens-muted text-sm min-h-[100px]">
-                    <p>{t('business.noContracts', 'No contracts yet')}</p>
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {stages.map((stage, index) => (
-                        <div key={index} className="space-y-1">
+                {/* Pipeline Stages */}
+                {total === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center text-tokens-muted text-sm min-h-[100px]">
+                        <p>{t('business.noContracts', 'No contracts yet')}</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {stages.map((stage, index) => (
+                            <div key={index} className="space-y-1">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-tokens-muted">{stage.label}</span>
+                                    <span className="font-semibold text-tokens-fg">{stage.count}</span>
+                                </div>
+                                <div className="h-2 bg-tokens-panel2 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full ${stage.color} transition-all duration-500`}
+                                        style={{ width: `${Math.max(stage.percent, stage.count > 0 ? 5 : 0)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {/* Total */}
+                        <div className="pt-2 border-t border-tokens-border">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-tokens-muted">{stage.label}</span>
-                                <span className="font-semibold text-tokens-fg">{stage.count}</span>
+                                <span className="text-tokens-muted">{t('common:total', 'Total')}</span>
+                                <span className="font-bold text-tokens-fg">{total}</span>
                             </div>
-                            <div className="h-2 bg-tokens-panel2 rounded-full overflow-hidden">
-                                <div 
-                                    className={`h-full ${stage.color} transition-all duration-500`}
-                                    style={{ width: `${Math.max(stage.percent, stage.count > 0 ? 5 : 0)}%` }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                    
-                    {/* Total */}
-                    <div className="pt-2 border-t border-tokens-border">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-tokens-muted">{t('common:total', 'Total')}</span>
-                            <span className="font-bold text-tokens-fg">{total}</span>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </Card>
     );
 }

@@ -102,37 +102,41 @@ export function CalendarWidget() {
     }
 
     return (
-        <Card className="h-full p-4 flex flex-col">
-            {/* Header with navigation */}
-            <div className="flex items-center justify-between mb-3">
-                <button
-                    onClick={prevMonth}
-                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-tokens-panel2 transition-colors"
-                >
-                    <ChevronLeft size={14} className="text-tokens-muted" />
-                </button>
-                <span className="text-xs font-semibold text-tokens-fg">{monthName}</span>
-                <button
-                    onClick={nextMonth}
-                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-tokens-panel2 transition-colors"
-                >
-                    <ChevronRight size={14} className="text-tokens-muted" />
-                </button>
-            </div>
+    return (
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header with navigation */}
+                <div className="flex items-center justify-between mb-3">
+                    <button
+                        onClick={prevMonth}
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-tokens-panel2 transition-colors"
+                    >
+                        <ChevronLeft size={14} className="text-tokens-muted" />
+                    </button>
+                    <span className="text-xs font-semibold text-tokens-fg">{monthName}</span>
+                    <button
+                        onClick={nextMonth}
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-tokens-panel2 transition-colors"
+                    >
+                        <ChevronRight size={14} className="text-tokens-muted" />
+                    </button>
+                </div>
 
-            {/* Week day headers */}
-            <div className="grid grid-cols-7 gap-1 mb-1">
-                {weekDays.map((day, i) => (
-                    <div key={i} className="w-6 h-6 flex items-center justify-center text-[9px] font-medium text-tokens-muted">
-                        {day}
-                    </div>
-                ))}
-            </div>
+                {/* Week day headers */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                    {weekDays.map((day, i) => (
+                        <div key={i} className="w-6 h-6 flex items-center justify-center text-[9px] font-medium text-tokens-muted">
+                            {day}
+                        </div>
+                    ))}
+                </div>
 
-            {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1 flex-1">
-                {days}
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-1 flex-1">
+                    {days}
+                </div>
             </div>
         </Card>
+    );
     );
 }

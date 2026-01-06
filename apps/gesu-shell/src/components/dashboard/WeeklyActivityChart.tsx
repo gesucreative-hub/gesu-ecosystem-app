@@ -157,47 +157,51 @@ export function WeeklyActivityChart() {
     const hasData = weeklyData.some(d => d.value > 0);
 
     return (
-        <Card className="h-full p-5 flex flex-col">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-                <div>
-                    <h3 className="text-sm font-semibold text-tokens-fg">{t('hoursActivity.title')}</h3>
-                    <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[10px] text-tokens-muted">{t('hoursActivity.weekly')}</span>
+    return (
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                    <div>
+                        <h3 className="text-sm font-semibold text-tokens-fg">{t('hoursActivity.title')}</h3>
+                        <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[10px] text-tokens-muted">{t('hoursActivity.weekly')}</span>
+                        </div>
                     </div>
+                    {trendPercent !== 0 && (
+                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${trendPercent > 0
+                                ? 'bg-emerald-500/10 text-emerald-500'
+                                : 'bg-red-500/10 text-red-500'
+                            }`}>
+                            {trendPercent > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                            {trendPercent > 0 ? '+' : ''}{trendPercent}%
+                            <span className="text-tokens-muted ml-1">{t('hoursActivity.vsLastWeek')}</span>
+                        </div>
+                    )}
                 </div>
-                {trendPercent !== 0 && (
-                    <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${trendPercent > 0
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-red-500/10 text-red-500'
-                        }`}>
-                        {trendPercent > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                        {trendPercent > 0 ? '+' : ''}{trendPercent}%
-                        <span className="text-tokens-muted ml-1">{t('hoursActivity.vsLastWeek')}</span>
+
+                {/* Chart */}
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <p className="text-xs text-tokens-muted">{t('common:status.loading', 'Loading...')}</p>
+                    </div>
+                ) : !hasData ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <p className="text-xs text-tokens-muted">{t('hoursActivity.noData')}</p>
+                    </div>
+                ) : (
+                    <div className="h-[120px] w-full">
+                        <ReactECharts
+                            option={chartOption}
+                            style={{ height: '100%', width: '100%' }}
+                            opts={{ renderer: 'canvas' }}
+                            notMerge={true}
+                            lazyUpdate={true}
+                        />
                     </div>
                 )}
             </div>
-
-            {/* Chart */}
-            {loading ? (
-                <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xs text-tokens-muted">{t('common:status.loading', 'Loading...')}</p>
-                </div>
-            ) : !hasData ? (
-                <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xs text-tokens-muted">{t('hoursActivity.noData')}</p>
-                </div>
-            ) : (
-                <div className="h-[120px] w-full">
-                    <ReactECharts
-                        option={chartOption}
-                        style={{ height: '100%', width: '100%' }}
-                        opts={{ renderer: 'canvas' }}
-                        notMerge={true}
-                        lazyUpdate={true}
-                    />
-                </div>
-            )}
         </Card>
+    );
     );
 }

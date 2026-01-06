@@ -33,7 +33,7 @@ export function QuickAccessCard({ icon, title, stat, statLabel, to, color = 'bra
     return (
         <Link
             to={to}
-            className={`group w-full h-full flex flex-col items-center justify-center p-6 rounded-xl bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses] || colorClasses.brand} border border-tokens-border/30 hover:border-tokens-brand-DEFAULT/40 transition-all hover:shadow-md text-center gap-2`}
+            className={`group w-full h-full flex flex-col items-center justify-center p-5 rounded-xl bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses] || colorClasses.brand} border border-tokens-border/30 hover:border-tokens-brand-DEFAULT/40 transition-all hover:shadow-md text-center gap-2`}
         >
             {/* Icon */}
             <div className={`w-10 h-10 rounded-lg bg-tokens-panel/50 flex items-center justify-center ${iconColorClasses[color as keyof typeof iconColorClasses] || iconColorClasses.brand}`}>

@@ -74,38 +74,42 @@ export function DailyScheduleWidget() {
     };
 
     return (
-        <Card className="h-full p-5 flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-tokens-fg">{t('dailySchedule.title')}</h3>
-            </div>
+    return (
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-tokens-fg">{t('dailySchedule.title')}</h3>
+                </div>
 
-            {/* Schedule Items */}
-            <div className="flex-1 space-y-2">
-                {scheduleItems.slice(0, 4).map(item => (
-                    <Link
-                        key={item.id}
-                        to={item.to}
-                        className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-tokens-panel2 transition-colors"
-                    >
-                        {/* Icon */}
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClasses[item.color]}`}>
-                            {item.icon}
-                        </div>
+                {/* Schedule Items */}
+                <div className="flex-1 space-y-2">
+                    {scheduleItems.slice(0, 4).map(item => (
+                        <Link
+                            key={item.id}
+                            to={item.to}
+                            className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-tokens-panel2 transition-colors"
+                        >
+                            {/* Icon */}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colorClasses[item.color]}`}>
+                                {item.icon}
+                            </div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-tokens-fg truncate group-hover:text-tokens-brand-DEFAULT transition-colors">
-                                {item.title}
-                            </p>
-                            <p className="text-[10px] text-tokens-muted">{item.subtitle}</p>
-                        </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-tokens-fg truncate group-hover:text-tokens-brand-DEFAULT transition-colors">
+                                    {item.title}
+                                </p>
+                                <p className="text-[10px] text-tokens-muted">{item.subtitle}</p>
+                            </div>
 
-                        {/* Arrow */}
-                        <ChevronRight size={14} className="text-tokens-muted opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </Link>
-                ))}
+                            {/* Arrow */}
+                            <ChevronRight size={14} className="text-tokens-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Link>
+                    ))}
+                </div>
             </div>
         </Card>
+    );
     );
 }

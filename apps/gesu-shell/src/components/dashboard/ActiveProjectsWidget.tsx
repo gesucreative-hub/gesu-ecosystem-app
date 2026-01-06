@@ -85,63 +85,67 @@ export function ActiveProjectsWidget() {
     };
 
     return (
-        <Card className="h-full p-5 flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-tokens-fg uppercase tracking-wider">
-                    {t('activeProjects.title')}
-                </h3>
-                <Link
-                    to="/initiator"
-                    className="w-6 h-6 rounded-lg bg-tokens-panel2 hover:bg-tokens-brand-DEFAULT/20 flex items-center justify-center transition-colors"
-                    title="Add Project"
-                >
-                    <Plus size={14} className="text-tokens-muted" />
-                </Link>
-            </div>
-
-            {/* Projects List */}
-            {loading ? (
-                <div className="flex-1 flex items-center justify-center">
-                    <p className="text-xs text-tokens-muted">{t('common:status.loading', 'Loading...')}</p>
-                </div>
-            ) : projects.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                    <Folder size={24} className="text-tokens-muted" />
-                    <p className="text-xs text-tokens-muted">{t('activeProject.noProjects')}</p>
+    return (
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-tokens-fg uppercase tracking-wider">
+                        {t('activeProjects.title')}
+                    </h3>
                     <Link
                         to="/initiator"
-                        className="text-xs text-tokens-brand-DEFAULT hover:underline"
+                        className="w-6 h-6 rounded-lg bg-tokens-panel2 hover:bg-tokens-brand-DEFAULT/20 flex items-center justify-center transition-colors"
+                        title="Add Project"
                     >
-                        {t('activeProject.createFirst')} →
+                        <Plus size={14} className="text-tokens-muted" />
                     </Link>
                 </div>
-            ) : (
-                <div className="flex-1 space-y-3">
-                    {projects.map(project => (
+
+                {/* Projects List */}
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <p className="text-xs text-tokens-muted">{t('common:status.loading', 'Loading...')}</p>
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                        <Folder size={24} className="text-tokens-muted" />
+                        <p className="text-xs text-tokens-muted">{t('activeProject.noProjects')}</p>
                         <Link
-                            key={project.id}
                             to="/initiator"
-                            className="block group"
+                            className="text-xs text-tokens-brand-DEFAULT hover:underline"
                         >
-                            <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-medium text-tokens-fg group-hover:text-tokens-brand-DEFAULT transition-colors truncate">
-                                    {project.name}
-                                </span>
-                                <span className="text-xs font-bold text-tokens-muted">
-                                    {project.progress}%
-                                </span>
-                            </div>
-                            <div className="h-2 bg-tokens-panel2 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full ${getProgressColor(project.progress)} rounded-full transition-all duration-500`}
-                                    style={{ width: `${project.progress}%` }}
-                                />
-                            </div>
+                            {t('activeProject.createFirst')} →
                         </Link>
-                    ))}
-                </div>
-            )}
+                    </div>
+                ) : (
+                    <div className="flex-1 space-y-3">
+                        {projects.map(project => (
+                            <Link
+                                key={project.id}
+                                to="/initiator"
+                                className="block group"
+                            >
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-sm font-medium text-tokens-fg group-hover:text-tokens-brand-DEFAULT transition-colors truncate">
+                                        {project.name}
+                                    </span>
+                                    <span className="text-xs font-bold text-tokens-muted">
+                                        {project.progress}%
+                                    </span>
+                                </div>
+                                <div className="h-2 bg-tokens-panel2 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full ${getProgressColor(project.progress)} rounded-full transition-all duration-500`}
+                                        style={{ width: `${project.progress}%` }}
+                                    />
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </div>
         </Card>
+    );
     );
 }

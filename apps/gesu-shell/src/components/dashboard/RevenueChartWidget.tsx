@@ -103,38 +103,42 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
     }, [monthlyRevenue]);
 
     return (
-        <Card className="p-5 h-full flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <TrendingUp size={18} className="text-emerald-500" />
-                    <h3 className="text-sm font-semibold text-tokens-fg">
-                        {t('business.revenueThisYear', 'Revenue This Year')}
-                    </h3>
-                </div>
-                <div className="text-right">
-                    <div className="text-lg font-bold text-tokens-fg">
-                        Rp{totalRevenue.toLocaleString('id-ID')}
+    return (
+        <Card className="h-full [&>div]:h-full" noPadding>
+            <div className="p-5 flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp size={18} className="text-emerald-500" />
+                        <h3 className="text-sm font-semibold text-tokens-fg">
+                            {t('business.revenueThisYear', 'Revenue This Year')}
+                        </h3>
                     </div>
-                    <div className="text-xs text-tokens-muted">
-                        {t('business.totalRevenue', 'Total Revenue')}
+                    <div className="text-right">
+                        <div className="text-lg font-bold text-tokens-fg">
+                            Rp{totalRevenue.toLocaleString('id-ID')}
+                        </div>
+                        <div className="text-xs text-tokens-muted">
+                            {t('business.totalRevenue', 'Total Revenue')}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Chart */}
-            {totalRevenue === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-tokens-muted text-sm min-h-[200px] text-center">
-                    <p>{t('business.noRevenueData', 'No revenue data yet')}</p>
-                </div>
-            ) : (
-                <ReactECharts 
-                    option={chartOptions} 
-                    style={{ height: 200 }}
-                    opts={{ renderer: 'svg' }}
-                />
-            )}
+                {/* Chart */}
+                {totalRevenue === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-tokens-muted text-sm min-h-[200px] text-center">
+                        <p>{t('business.noRevenueData', 'No revenue data yet')}</p>
+                    </div>
+                ) : (
+                    <ReactECharts 
+                        option={chartOptions} 
+                        style={{ height: 200 }}
+                        opts={{ renderer: 'svg' }}
+                    />
+                )}
+            </div>
         </Card>
+    );
     );
 }
 

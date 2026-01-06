@@ -14,7 +14,7 @@ import { Plus, ChevronRight, Trash2, Receipt } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listInvoices, 
-    listInvoices,
+
     createInvoice,
     deleteInvoice,
     subscribe,

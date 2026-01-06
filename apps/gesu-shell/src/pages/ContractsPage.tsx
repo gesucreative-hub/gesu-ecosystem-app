@@ -13,7 +13,7 @@ import { Plus, FileSignature, ChevronRight, Trash2 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listContracts, 
-    listContracts,
+
     createContract,
     deleteContract,
     subscribe,

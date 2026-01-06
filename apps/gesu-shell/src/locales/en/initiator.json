@@ -147,7 +147,17 @@
     "filter": {
         "allBlueprints": "All Blueprints",
         "noBlueprint": "No Blueprint",
-        "allProjects": "All Projects"
+        "allProjects": "All Projects",
+        "filterByStatus": "Filter by Status",
+        "filterByType": "Filter by Type",
+        "filterByBlueprint": "Filter by Blueprint",
+        "status": {
+            "ready": "Ready to start",
+            "progress": "On progress",
+            "completed": "Completed"
+        },
+        "unlinkedOnly": "Unlinked Only",
+        "noClientLinked": "No client linked"
     },
     "standards": {
         "title": "Blueprints",

@@ -147,7 +147,17 @@
     "filter": {
         "allBlueprints": "Semua Blueprint",
         "noBlueprint": "Tanpa Blueprint",
-        "allProjects": "Semua Proyek"
+        "allProjects": "Semua Proyek",
+        "filterByStatus": "Filter Status",
+        "filterByType": "Filter Tipe",
+        "filterByBlueprint": "Filter Blueprint",
+        "status": {
+            "ready": "Siap dimulai",
+            "progress": "Sedang berjalan",
+            "completed": "Selesai"
+        },
+        "unlinkedOnly": "Hanya yang belum terhubung",
+        "noClientLinked": "Belum terhubung ke klien"
     },
     "standards": {
         "title": "Blueprint",

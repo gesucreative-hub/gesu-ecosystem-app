@@ -984,19 +984,10 @@ export function ProjectHubPage() {
                                 onStatusFilterChange={setStatusFilters}
                                 typeFilters={typeFilters}
                                 onTypeFilterChange={setTypeFilters}
+                                showUnlinkedOnly={showUnlinkedOnly}
+                                onShowUnlinkedChange={setShowUnlinkedOnly}
                                 blueprintData={blueprintData}
                             />
-
-                            {/* Phase 3: Unlinked Filter Checkbox */}
-                            <label className="flex items-center gap-2 px-3 py-2 bg-tokens-panel border border-tokens-border rounded-lg cursor-pointer hover:bg-tokens-panel2 transition-colors">
-                                <input
-                                    type="checkbox"
-                                    checked={showUnlinkedOnly}
-                                    onChange={(e) => setShowUnlinkedOnly(e.target.checked)}
-                                    className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/50"
-                                />
-                                <span className="text-sm text-tokens-muted whitespace-nowrap">{t('initiator:filters.unlinkedOnly', 'Unlinked Only')}</span>
-                            </label>
 
                         </div>
                     )}

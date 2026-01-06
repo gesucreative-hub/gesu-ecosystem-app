@@ -2,7 +2,7 @@
 // Quick capture input + items list with PARA dropdown + export
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { useTranslation } from 'react-i18next';
 import { PageContainer } from '../components/PageContainer';
 import { Card } from '../components/Card';
@@ -14,7 +14,6 @@ import {
     Brain, Plus, Trash2, Download, Inbox, FolderKanban, 
     Compass, BookOpen, Archive, Filter
 } from 'lucide-react';
-import { usePersona } from '../hooks/usePersona';
 import {
     listItems,
     addItem,
@@ -37,8 +36,7 @@ const PARA_OPTIONS: { value: ParaBucket; label: string; icon: React.ReactNode }[
 
 export function SecondBrainPage() {
     const { t } = useTranslation(['secondbrain', 'common']);
-    const navigate = useNavigate();
-    const { activePersona } = usePersona();
+
 
     // State
     const [items, setItems] = useState<SecondBrainItem[]>([]);
@@ -50,11 +48,7 @@ export function SecondBrainPage() {
     const [captureContent, setCaptureContent] = useState('');
 
     // Redirect if not personal persona
-    useEffect(() => {
-        if (activePersona !== 'personal') {
-            navigate('/initiator', { replace: true });
-        }
-    }, [activePersona, navigate]);
+
 
     // Load data
     const loadData = useCallback(() => {

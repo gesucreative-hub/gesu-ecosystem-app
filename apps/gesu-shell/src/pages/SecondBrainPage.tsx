@@ -12,7 +12,7 @@ import { Badge } from '../components/Badge';
 import { SelectDropdown } from '../components/Dropdown';
 import { 
     Brain, Plus, Trash2, Download, Inbox, FolderKanban, 
-    Compass, BookOpen, Archive, Filter
+    Compass, BookOpen, Archive, Filter, Check, ChevronDown
 } from 'lucide-react';
 import {
     listItems,
@@ -42,6 +42,7 @@ export function SecondBrainPage() {
     const [items, setItems] = useState<SecondBrainItem[]>([]);
     const [inboxCount, setInboxCount] = useState(0);
     const [filterBucket, setFilterBucket] = useState<ParaBucket | 'all'>('all');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
     
     // Quick capture
     const [captureTitle, setCaptureTitle] = useState('');
@@ -145,9 +146,91 @@ export function SecondBrainPage() {
                                 <Badge variant="warning">{inboxCount} {t('secondbrain:inbox', 'inbox')}</Badge>
                             )}
                         </div>
-                        <Button variant="outline" icon={<Download size={16} />} onClick={handleExport}>
-                            {t('secondbrain:export', 'Export')}
-                        </Button>
+                        
+                        <div className="flex items-center gap-2">
+                            {/* Filter Dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                    className={`
+                                        flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all
+                                        ${filterBucket !== 'all'
+                                            ? 'bg-tokens-brand-DEFAULT/10 border-tokens-brand-DEFAULT/50 text-tokens-brand-DEFAULT'
+                                            : 'bg-tokens-panel border-tokens-border text-tokens-muted hover:text-tokens-fg hover:border-tokens-fg/20'
+                                        }
+                                    `}
+                                >
+                                    <Filter size={16} />
+                                    <span>
+                                        {filterBucket === 'all' 
+                                            ? t('secondbrain:all', 'All Items')
+                                            : getBucketLabel(filterBucket)
+                                        }
+                                    </span>
+                                    <ChevronDown size={14} className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {isFilterOpen && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setIsFilterOpen(false)}
+                                        />
+                                        <div className="absolute right-0 top-full mt-2 w-48 bg-tokens-panel border border-tokens-border rounded-lg shadow-xl z-50 p-1 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="text-xs font-semibold text-tokens-muted px-2 py-1.5 uppercase tracking-wider">
+                                                {t('secondbrain:filterBy', 'Filter View')}
+                                            </div>
+                                            <div className="px-1 pb-1 space-y-0.5">
+                                                <button
+                                                    onClick={() => {
+                                                        setFilterBucket('all');
+                                                        setIsFilterOpen(false);
+                                                    }}
+                                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-colors ${
+                                                        filterBucket === 'all' 
+                                                            ? 'bg-tokens-brand-DEFAULT/10 text-tokens-brand-DEFAULT font-medium' 
+                                                            : 'text-tokens-fg hover:bg-tokens-panel2'
+                                                    }`}
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <Filter size={14} />
+                                                        {t('secondbrain:all', 'All Items')}
+                                                    </span>
+                                                    {filterBucket === 'all' && <Check size={14} />}
+                                                </button>
+                                                
+                                                <div className="border-t border-tokens-border my-1"></div>
+
+                                                {PARA_OPTIONS.map(opt => (
+                                                    <button
+                                                        key={opt.value || 'inbox'}
+                                                        onClick={() => {
+                                                            setFilterBucket(opt.value);
+                                                            setIsFilterOpen(false);
+                                                        }}
+                                                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-sm transition-colors ${
+                                                            filterBucket === opt.value 
+                                                                ? 'bg-tokens-brand-DEFAULT/10 text-tokens-brand-DEFAULT font-medium' 
+                                                                : 'text-tokens-fg hover:bg-tokens-panel2'
+                                                        }`}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            {opt.icon}
+                                                            {t(`secondbrain:para.${opt.value || 'inbox'}`, opt.label)}
+                                                        </span>
+                                                        {filterBucket === opt.value && <Check size={14} />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <Button variant="outline" icon={<Download size={16} />} onClick={handleExport}>
+                                {t('secondbrain:export', 'Export')}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Quick Capture */}
@@ -158,14 +241,16 @@ export function SecondBrainPage() {
                             onChange={(e) => setCaptureTitle(e.target.value)}
                             onKeyDown={handleKeyDown}
                         />
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder={t('secondbrain:contentPlaceholder', 'What\'s on your mind? (Ctrl+Enter to save)')}
-                                value={captureContent}
-                                onChange={(e) => setCaptureContent(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                className="flex-1"
-                            />
+                        <div className="flex gap-2 w-full">
+                            <div className="flex-1">
+                                <Input
+                                    placeholder={t('secondbrain:contentPlaceholder', 'What\'s on your mind? (Ctrl+Enter to save)')}
+                                    value={captureContent}
+                                    onChange={(e) => setCaptureContent(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    fullWidth
+                                />
+                            </div>
                             <Button icon={<Plus size={16} />} onClick={handleCapture} disabled={!captureContent.trim()}>
                                 {t('secondbrain:capture', 'Capture')}
                             </Button>
@@ -174,36 +259,7 @@ export function SecondBrainPage() {
                 </div>
             </Card>
 
-            {/* Filter */}
-            <div className="flex items-center gap-2 mb-4">
-                <Filter size={16} className="text-tokens-muted" />
-                <div className="flex gap-1">
-                    <button
-                        onClick={() => setFilterBucket('all')}
-                        className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                            filterBucket === 'all' 
-                                ? 'bg-tokens-brand-DEFAULT text-white' 
-                                : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg'
-                        }`}
-                    >
-                        {t('secondbrain:all', 'All')}
-                    </button>
-                    {PARA_OPTIONS.map(opt => (
-                        <button
-                            key={opt.value || 'inbox'}
-                            onClick={() => setFilterBucket(opt.value)}
-                            className={`px-3 py-1 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                                filterBucket === opt.value 
-                                    ? 'bg-tokens-brand-DEFAULT text-white' 
-                                    : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg'
-                            }`}
-                        >
-                            {opt.icon}
-                            {t(`secondbrain:para.${opt.value || 'inbox'}`, opt.label)}
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             {/* Items List */}
             {items.length === 0 ? (

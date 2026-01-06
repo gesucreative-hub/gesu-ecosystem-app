@@ -33,11 +33,11 @@ export function GamificationBadge({ onClick }: GamificationBadgeProps) {
     return (
         <button
             onClick={onClick}
-            className="flex items-center justify-center p-1 rounded-xl hover:bg-tokens-panel2 transition-all cursor-pointer"
+            className="flex items-center justify-center p-1 rounded-xl transition-all cursor-pointer hover:bg-tokens-panel2/50 hover:scale-105 active:scale-95 group"
             title={t('gamification.viewDetails', 'View gamification details')}
         >
             {/* Mini Pet */}
-            <div className="w-8 h-8 flex items-center justify-center">
+            <div className="w-10 h-10 flex items-center justify-center relative z-10">
                 <FocusPet mood={petMood} evolution={petEvolution} size="sm" cosmetics={equippedEmojis} />
             </div>
             

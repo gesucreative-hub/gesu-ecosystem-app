@@ -49,28 +49,28 @@ export function ContractsPipelineWidget({ contractsByStatus }: ContractsPipeline
     ];
 
     return (
-        <Card className="p-5">
+        <Card className="p-5 h-full flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <FileText size={18} className="text-tokens-muted" />
-                    <h3 className="text-sm font-semibold text-tokens-fg">
+            <div className="flex items-center justify-between mb-4 gap-4">
+                <div className="flex items-center gap-2 min-w-0">
+                    <FileText size={18} className="text-tokens-muted flex-shrink-0" />
+                    <h3 className="text-sm font-semibold text-tokens-fg truncate">
                         {t('business.contractsPipeline', 'Contracts Pipeline')}
                     </h3>
                 </div>
                 <Link 
                     to="/contracts" 
-                    className="text-sm text-tokens-brand-DEFAULT hover:underline flex items-center gap-1"
+                    className="text-xs text-tokens-brand-DEFAULT hover:underline flex items-center gap-1 whitespace-nowrap"
                 >
                     {t('activeProjects.viewAll', 'View All')}
-                    <ChevronRight size={14} />
+                    <ChevronRight size={12} />
                 </Link>
             </div>
 
             {/* Pipeline Stages */}
             {total === 0 ? (
-                <div className="text-center py-8 text-tokens-muted text-sm">
-                    {t('business.noContracts', 'No contracts yet')}
+                <div className="flex-1 flex flex-col items-center justify-center text-center text-tokens-muted text-sm min-h-[100px]">
+                    <p>{t('business.noContracts', 'No contracts yet')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">

@@ -52,7 +52,7 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
     }).slice(0, 5);
 
     return (
-        <Card className="p-5">
+        <Card className="p-5 h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -70,10 +70,10 @@ export function OverdueAlertsWidget({ overdueInvoices }: OverdueAlertsWidgetProp
 
             {/* Content */}
             {sortedOverdue.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="flex-1 flex flex-col items-center justify-center py-8 text-center h-full">
                     <CheckCircle size={32} className="text-emerald-500 mb-2" />
                     <div className="text-sm text-tokens-muted">
-                        {t('business.noOverdueItems', 'No overdue items')} 🎉
+                        {t('business.noOverdueItems', 'No overdue items')}
                     </div>
                     <div className="text-xs text-tokens-muted mt-1">
                         {t('business.allCaughtUp', 'All caught up!')}

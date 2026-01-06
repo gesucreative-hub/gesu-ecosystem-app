@@ -103,7 +103,7 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
     }, [monthlyRevenue]);
 
     return (
-        <Card className="p-5">
+        <Card className="p-5 h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -124,8 +124,8 @@ export function RevenueChartWidget({ monthlyRevenue }: RevenueChartWidgetProps) 
 
             {/* Chart */}
             {totalRevenue === 0 ? (
-                <div className="h-[200px] flex items-center justify-center text-tokens-muted text-sm">
-                    {t('business.noRevenueData', 'No revenue data yet')}
+                <div className="flex-1 flex flex-col items-center justify-center text-tokens-muted text-sm min-h-[200px] text-center">
+                    <p>{t('business.noRevenueData', 'No revenue data yet')}</p>
                 </div>
             ) : (
                 <ReactECharts 

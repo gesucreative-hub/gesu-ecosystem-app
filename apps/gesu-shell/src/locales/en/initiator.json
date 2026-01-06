@@ -9,6 +9,7 @@
         "projects": "Projects",
         "workflow": "Workflow",
         "generator": "Generator",
+        "manage": "Manage",
         "standards": "Standards"
     },
     "createProject": {
@@ -278,5 +279,28 @@
         "applied": "AI suggestions applied",
         "validationFailed": "Invalid AI response",
         "timeout": "Request timed out"
+    },
+    "manage": {
+        "title": "Project Management",
+        "projects": "projects",
+        "noProjects": "No projects found",
+        "editTitle": "Edit Project",
+        "nameRequired": "Project name is required",
+        "updated": "Project updated",
+        "archived": "Project archived",
+        "deleted": "Project deleted",
+        "archiveConfirm": "Archive \"{{name}}\"? You can restore it later.",
+        "deleteConfirm": "Permanently delete \"{{name}}\"? This cannot be undone.",
+        "actions": {
+            "edit": "Edit",
+            "archive": "Archive",
+            "delete": "Delete"
+        },
+        "form": {
+            "name": "Project Name",
+            "namePlaceholder": "Enter project name",
+            "type": "Project Type",
+            "client": "Linked Client"
+        }
     }
 }

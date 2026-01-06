@@ -315,6 +315,21 @@ export function renameProject(id: string, name: string): Project | null {
     return project;
 }
 
+/**
+ * Update project type
+ */
+export function updateProjectType(id: string, type: ProjectType): Project | null {
+    const state = loadState();
+    const project = state.projects.find(p => p.id === id);
+    if (!project) return null;
+
+    project.type = type;
+    project.updatedAt = Date.now();
+    saveState(state);
+
+    return project;
+}
+
 export function setActiveProject(id: string): boolean {
     const state = loadState();
     const project = state.projects.find(p => p.id === id && !p.archived);

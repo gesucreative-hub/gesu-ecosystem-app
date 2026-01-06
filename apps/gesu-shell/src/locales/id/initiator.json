@@ -9,6 +9,7 @@
         "projects": "Proyek",
         "workflow": "Alur Kerja",
         "generator": "Generator",
+        "manage": "Kelola",
         "standards": "Standar"
     },
     "createProject": {
@@ -280,5 +281,28 @@
         "applied": "Saran AI diterapkan",
         "validationFailed": "Respons AI tidak valid",
         "timeout": "Permintaan timeout"
+    },
+    "manage": {
+        "title": "Manajemen Proyek",
+        "projects": "proyek",
+        "noProjects": "Tidak ada proyek ditemukan",
+        "editTitle": "Edit Proyek",
+        "nameRequired": "Nama proyek wajib diisi",
+        "updated": "Proyek diperbarui",
+        "archived": "Proyek diarsipkan",
+        "deleted": "Proyek dihapus",
+        "archiveConfirm": "Arsipkan \"{{name}}\"? Kamu bisa memulihkannya nanti.",
+        "deleteConfirm": "Hapus permanen \"{{name}}\"? Tidak dapat dibatalkan.",
+        "actions": {
+            "edit": "Edit",
+            "archive": "Arsipkan",
+            "delete": "Hapus"
+        },
+        "form": {
+            "name": "Nama Proyek",
+            "namePlaceholder": "Masukkan nama proyek",
+            "type": "Tipe Proyek",
+            "client": "Klien Terhubung"
+        }
     }
 }

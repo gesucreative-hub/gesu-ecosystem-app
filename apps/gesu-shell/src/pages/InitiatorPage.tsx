@@ -14,7 +14,8 @@ import { ProjectSearch } from '../components/ProjectSearch'; // NEW
 import { BlueprintFilter } from '../components/BlueprintFilter'; // NEW
 import { WorkflowCanvas } from './WorkflowCanvas';
 import { FolderTemplateEditorModal } from '../components/FolderTemplateEditorModal';
-import { Zap, FileText, Settings, Plus, Users, Edit } from 'lucide-react';
+import { ManageTab } from '../components/ManageTab';
+import { Zap, FileText, Settings, Plus, Users, Edit, FolderCog } from 'lucide-react';
 import { useAlertDialog } from '../components/AlertDialog';
 import {
     listProjects,
@@ -904,7 +905,7 @@ export function ProjectHubPage() {
     
     const [searchParams, setSearchParams] = useSearchParams();
     const tabFromUrl = searchParams.get('tab') || 'workflow';
-    const activeTab = ['workflow', 'standards', 'generator'].includes(tabFromUrl) ? tabFromUrl : 'workflow';
+    const activeTab = ['workflow', 'standards', 'generator', 'manage'].includes(tabFromUrl) ? tabFromUrl : 'workflow';
 
     // Project state
     const [activeProject, setActiveProjectState] = useState<Project | null>(null);
@@ -1012,6 +1013,7 @@ export function ProjectHubPage() {
     const tabs = [
         { id: 'workflow', label: t('initiator:tabs.workflow', 'Workflow'), icon: <FileText size={16} /> },
         { id: 'generator', label: t('initiator:tabs.generator', 'Generator'), icon: <Zap size={16} /> },
+        { id: 'manage', label: t('initiator:tabs.manage', 'Manage'), icon: <FolderCog size={16} /> },
         { id: 'standards', label: t('initiator:tabs.standards', 'Standards'), icon: <Settings size={16} /> }
     ];
 
@@ -1105,8 +1107,8 @@ export function ProjectHubPage() {
                     <p className="text-tokens-muted text-sm mt-1">{t('initiator:hub.subtitle', 'Manage projects from start to finish')}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Sprint 20.1: Blueprint Filter + Project Selector - ONLY on Workflow tab */}
-                    {activeTab === 'workflow' && (
+                    {/* Sprint 20.1: Blueprint Filter + Project Selector - ONLY on Workflow and Manage tabs */}
+                    {(activeTab === 'workflow' || activeTab === 'manage') && (
                         <div className="flex items-center gap-2">
                             {/* NEW: Project Search */}
                             <ProjectSearch
@@ -1154,6 +1156,13 @@ export function ProjectHubPage() {
                 )}
 
                 {activeTab === 'standards' && <StandardsTab />}
+
+                {activeTab === 'manage' && (
+                    <ManageTab
+                        projects={filteredProjects}
+                        onRefresh={handleRefreshProjects}
+                    />
+                )}
 
                 {activeTab === 'generator' && (
                     <ProjectGeneratorForm

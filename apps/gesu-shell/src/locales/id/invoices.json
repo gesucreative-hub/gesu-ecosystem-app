@@ -34,7 +34,12 @@
         "cancelled": "Dibatalkan",
         "noInvoices": "Belum ada faktur. Buat faktur pertama Anda!",
         "noResults": "Faktur tidak ditemukan",
-        "noClient": "Tanpa klien"
+        "noClient": "Tanpa klien",
+        "filter": "Filter Status",
+        "filterCount": "{{count}} Dipilih",
+        "filterByStatus": "Filter berdasarkan Status",
+        "showUnlinked": "Tampilkan yang belum terhubung",
+        "noClientLinked": "Belum terhubung ke klien"
     },
     "status": {
         "draft": "Draf",
@@ -91,7 +96,12 @@
         "noContracts": "Belum ada kontrak. Buat kontrak pertama Anda!",
         "noResults": "Kontrak tidak ditemukan",
         "noClient": "Tanpa klien",
-        "scopeItems": "item lingkup"
+        "scopeItems": "item lingkup",
+        "filter": "Filter Status",
+        "filterCount": "{{count}} Dipilih",
+        "filterByStatus": "Filter berdasarkan Status",
+        "showUnlinked": "Tampilkan yang belum terhubung",
+        "noClientLinked": "Belum terhubung ke klien"
     },
     "contractDetail": {
         "title": "Kontrak",

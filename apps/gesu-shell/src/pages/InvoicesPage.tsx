@@ -14,13 +14,14 @@ import { Plus, ChevronRight, Trash2, Receipt } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listInvoices, 
-    getInvoicesByStatus,
+    listInvoices,
     createInvoice,
     deleteInvoice,
     subscribe,
     type Invoice,
     type InvoiceStatus
 } from '../stores/invoiceStore';
+import { InvoiceStatusFilter } from '../components/InvoiceStatusFilter';
 
 const STATUS_COLORS: Record<InvoiceStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -44,19 +45,15 @@ export function InvoicesPage() {
     // State
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<InvoiceStatus | '' | 'archived'>('');
+    const [statusFilters, setStatusFilters] = useState<InvoiceStatus[]>([]);
     const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
-        let result: Invoice[];
+        let result = listInvoices().filter(inv => !inv.archived);
         
-        if (statusFilter === 'archived') {
-            result = listInvoices().filter(inv => inv.archived);
-        } else if (statusFilter) {
-            result = getInvoicesByStatus(statusFilter as InvoiceStatus).filter(inv => !inv.archived);
-        } else {
-            result = listInvoices().filter(inv => !inv.archived);
+        if (statusFilters.length > 0) {
+             result = result.filter(inv => statusFilters.includes(inv.status));
         }
         
         // Apply search filter
@@ -81,7 +78,7 @@ export function InvoicesPage() {
         loadData();
         const unsub = subscribe(loadData);
         return unsub;
-    }, [searchQuery, statusFilter, showUnlinkedOnly]);
+    }, [searchQuery, statusFilters, showUnlinkedOnly]);
 
     // Create new invoice
     const handleNewInvoice = () => {
@@ -109,14 +106,7 @@ export function InvoicesPage() {
         return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const statusTabs: { value: InvoiceStatus | '' | 'archived', label: string }[] = [
-        { value: '', label: t('invoices:list.all', 'All') },
-        { value: 'draft', label: t('invoices:list.draft', 'Draft') },
-        { value: 'sent', label: t('invoices:list.sent', 'Sent') },
-        { value: 'paid', label: t('invoices:list.paid', 'Paid') },
-        { value: 'cancelled', label: t('invoices:list.cancelled', 'Cancelled') },
-        // { value: 'archived', label: t('invoices:list.archived', 'Archived') } // Hidden for now until phase 2 UI polish
-    ];
+
 
     return (
         <PageContainer>
@@ -145,43 +135,25 @@ export function InvoicesPage() {
                     />
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar items-center">
-                    {statusTabs.map(tab => (
-                        <button
-                            key={tab.value}
-                            onClick={() => setStatusFilter(tab.value)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                                statusFilter === tab.value
-                                    ? 'bg-tokens-brand-DEFAULT text-white shadow-sm'
-                                    : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg hover:bg-tokens-panel3'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+                {/* Status Filter Dropdown */}
+                <InvoiceStatusFilter 
+                    selectedStatuses={statusFilters}
+                    onChange={setStatusFilters}
+                    showUnlinkedOnly={showUnlinkedOnly}
+                    onShowUnlinkedChange={setShowUnlinkedOnly}
+                />
             </div>
 
 
 
-            {/* Unlinked Filter Checkbox */}
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-                <input
-                    type="checkbox"
-                    checked={showUnlinkedOnly}
-                    onChange={(e) => setShowUnlinkedOnly(e.target.checked)}
-                    className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/50"
-                />
-                <span className="text-sm text-tokens-muted">{t('invoices:list.showUnlinked', 'Show unlinked only')}</span>
-            </label>
+
 
             {/* Invoices List */}
             {invoices.length === 0 ? (
                 <Card className="p-8 text-center">
                     <Receipt size={40} className="mx-auto text-tokens-muted mb-3 opacity-50" />
                     <p className="text-tokens-muted">
-                        {searchQuery || statusFilter
+                        {searchQuery || statusFilters.length > 0
                             ? t('invoices:list.noResults', 'No invoices found')
                             : t('invoices:list.noInvoices', 'No invoices yet. Create your first invoice!')}
                     </p>

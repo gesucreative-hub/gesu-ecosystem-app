@@ -34,7 +34,12 @@
         "cancelled": "Cancelled",
         "noInvoices": "No invoices yet. Create your first invoice!",
         "noResults": "No invoices found",
-        "noClient": "No client"
+        "noClient": "No client",
+        "filter": "Filter Status",
+        "filterCount": "{{count}} Selected",
+        "filterByStatus": "Filter by Status",
+        "showUnlinked": "Show unlinked only",
+        "noClientLinked": "No client linked"
     },
     "status": {
         "draft": "Draft",
@@ -91,7 +96,12 @@
         "noContracts": "No contracts yet. Create your first contract!",
         "noResults": "No contracts found",
         "noClient": "No client",
-        "scopeItems": "scope items"
+        "scopeItems": "scope items",
+        "filter": "Filter Status",
+        "filterCount": "{{count}} Selected",
+        "filterByStatus": "Filter by Status",
+        "showUnlinked": "Show unlinked only",
+        "noClientLinked": "No client linked"
     },
     "contractDetail": {
         "title": "Contract",

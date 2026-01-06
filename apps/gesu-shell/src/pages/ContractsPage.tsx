@@ -13,13 +13,14 @@ import { Plus, FileSignature, ChevronRight, Trash2 } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import { 
     listContracts, 
-    getContractsByStatus,
+    listContracts,
     createContract,
     deleteContract,
     subscribe,
     type Contract,
     type ContractStatus
 } from '../stores/contractStore';
+import { ContractStatusFilter } from '../components/ContractStatusFilter';
 
 const STATUS_COLORS: Record<ContractStatus, 'neutral' | 'brand' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -43,19 +44,15 @@ export function ContractsPage() {
     // State
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<ContractStatus | '' | 'archived'>('');
+    const [statusFilters, setStatusFilters] = useState<ContractStatus[]>([]);
     const [showUnlinkedOnly, setShowUnlinkedOnly] = useState<boolean>(false); // Phase 3: Unlinked filter
 
     // Load data
     const loadData = () => {
-        let result: Contract[];
+        let result = listContracts().filter(c => !c.archived);
         
-        if (statusFilter === 'archived') {
-            result = listContracts().filter(c => c.archived);
-        } else if (statusFilter) {
-            result = getContractsByStatus(statusFilter as ContractStatus).filter(c => !c.archived);
-        } else {
-            result = listContracts().filter(c => !c.archived);
+        if (statusFilters.length > 0) {
+            result = result.filter(c => statusFilters.includes(c.status));
         }
         
         // Apply search filter
@@ -80,7 +77,7 @@ export function ContractsPage() {
         loadData();
         const unsub = subscribe(loadData);
         return unsub;
-    }, [searchQuery, statusFilter, showUnlinkedOnly]);
+    }, [searchQuery, statusFilters, showUnlinkedOnly]);
 
     // Create new contract
     const handleNewContract = () => {
@@ -104,14 +101,7 @@ export function ContractsPage() {
         return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const statusTabs: { value: ContractStatus | '' | 'archived', label: string }[] = [
-        { value: '', label: t('invoices:contracts.all', 'All') },
-        { value: 'draft', label: t('invoices:contracts.draft', 'Draft') },
-        { value: 'sent', label: t('invoices:contracts.sent', 'Sent') },
-        { value: 'signed', label: t('invoices:contracts.signed', 'Signed') },
-        { value: 'cancelled', label: t('invoices:contracts.cancelled', 'Cancelled') },
-        // { value: 'archived', label: t('invoices:contracts.archived', 'Archived') } // Hidden until phase 2 UI polish
-    ];
+
 
     return (
         <PageContainer>
@@ -129,8 +119,8 @@ export function ContractsPage() {
                 </Button>
             </div>
 
-            {/* Search */}
-            <div className="flex flex-wrap gap-3 mb-4">
+            {/* Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 min-w-[200px]">
                     <SearchInput
                         value={searchQuery}
@@ -139,42 +129,22 @@ export function ContractsPage() {
                         fullWidth
                     />
                 </div>
-            </div>
 
-            {/* Status Tabs */}
-            <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
-                {statusTabs.map(tab => (
-                    <button
-                        key={tab.value}
-                        onClick={() => setStatusFilter(tab.value)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-                            statusFilter === tab.value
-                                ? 'bg-tokens-brand-DEFAULT text-white'
-                                : 'bg-tokens-panel2 text-tokens-muted hover:text-tokens-fg'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Unlinked Filter Checkbox */}
-            <label className="flex items-center gap-2 mb-4 cursor-pointer">
-                <input
-                    type="checkbox"
-                    checked={showUnlinkedOnly}
-                    onChange={(e) => setShowUnlinkedOnly(e.target.checked)}
-                    className="w-4 h-4 rounded border-tokens-border text-tokens-brand-DEFAULT focus:ring-tokens-brand-DEFAULT/50"
+                {/* Status Filter Dropdown */}
+                <ContractStatusFilter 
+                    selectedStatuses={statusFilters}
+                    onChange={setStatusFilters}
+                    showUnlinkedOnly={showUnlinkedOnly}
+                    onShowUnlinkedChange={setShowUnlinkedOnly}
                 />
-                <span className="text-sm text-tokens-muted">{t('invoices:contracts.showUnlinked', 'Show unlinked only')}</span>
-            </label>
+            </div>
 
             {/* Contracts List */}
             {contracts.length === 0 ? (
                 <Card className="p-8 text-center">
                     <FileSignature size={40} className="mx-auto text-tokens-muted mb-3 opacity-50" />
                     <p className="text-tokens-muted">
-                        {searchQuery || statusFilter
+                        {searchQuery || statusFilters.length > 0
                             ? t('invoices:contracts.noResults', 'No contracts found')
                             : t('invoices:contracts.noContracts', 'No contracts yet. Create your first contract!')}
                     </p>

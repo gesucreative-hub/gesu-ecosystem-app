@@ -10,6 +10,21 @@
             "phone": "Phone",
             "taxId": "Tax ID (NPWP)"
         },
+        "currency": {
+            "title": "Default Currency",
+            "label": "Currency for Invoices & Contracts",
+            "description": "This will be the default currency for new invoices, contracts, and pricelist items.",
+            "options": {
+                "IDR": "IDR - Indonesian Rupiah",
+                "USD": "USD - US Dollar",
+                "EUR": "EUR - Euro",
+                "SGD": "SGD - Singapore Dollar",
+                "MYR": "MYR - Malaysian Ringgit",
+                "GBP": "GBP - British Pound",
+                "JPY": "JPY - Japanese Yen",
+                "AUD": "AUD - Australian Dollar"
+            }
+        },
         "payment": {
             "title": "Payment Methods",
             "add": "Add",

@@ -156,7 +156,7 @@
             "progress": "Sedang berjalan",
             "completed": "Selesai"
         },
-        "unlinkedOnly": "Hanya yang belum terhubung",
+        "unlinkedOnly": "Tanpa Klien",
         "noClientLinked": "Belum terhubung ke klien"
     },
     "standards": {

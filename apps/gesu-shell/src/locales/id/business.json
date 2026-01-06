@@ -10,6 +10,21 @@
             "phone": "Telepon",
             "taxId": "NPWP"
         },
+        "currency": {
+            "title": "Mata Uang Default",
+            "label": "Mata Uang untuk Faktur & Kontrak",
+            "description": "Ini akan menjadi mata uang default untuk faktur, kontrak, dan item daftar harga baru.",
+            "options": {
+                "IDR": "IDR - Rupiah Indonesia",
+                "USD": "USD - Dolar AS",
+                "EUR": "EUR - Euro",
+                "SGD": "SGD - Dolar Singapura",
+                "MYR": "MYR - Ringgit Malaysia",
+                "GBP": "GBP - Pound Inggris",
+                "JPY": "JPY - Yen Jepang",
+                "AUD": "AUD - Dolar Australia"
+            }
+        },
         "payment": {
             "title": "Metode Pembayaran",
             "add": "Tambah",

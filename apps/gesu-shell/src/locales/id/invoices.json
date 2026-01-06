@@ -37,8 +37,8 @@
         "noClient": "Tanpa klien",
         "filter": "Filter Status",
         "filterCount": "{{count}} Dipilih",
-        "filterByStatus": "Filter berdasarkan Status",
-        "showUnlinked": "Tampilkan yang belum terhubung",
+        "filterByStatus": "Filter Status",
+        "showUnlinked": "Tanpa Klien",
         "noClientLinked": "Belum terhubung ke klien"
     },
     "status": {
@@ -99,8 +99,8 @@
         "scopeItems": "item lingkup",
         "filter": "Filter Status",
         "filterCount": "{{count}} Dipilih",
-        "filterByStatus": "Filter berdasarkan Status",
-        "showUnlinked": "Tampilkan yang belum terhubung",
+        "filterByStatus": "Filter Status",
+        "showUnlinked": "Tanpa Klien",
         "noClientLinked": "Belum terhubung ke klien"
     },
     "contractDetail": {

@@ -191,14 +191,14 @@ export function BusinessSettingsPage() {
                                 value={profile.defaultCurrency || 'IDR'}
                                 onChange={(val) => handleProfileChange('defaultCurrency', val)}
                                 options={[
-                                    { value: 'IDR', label: 'IDR - Indonesian Rupiah' },
-                                    { value: 'USD', label: 'USD - US Dollar' },
-                                    { value: 'EUR', label: 'EUR - Euro' },
-                                    { value: 'SGD', label: 'SGD - Singapore Dollar' },
-                                    { value: 'MYR', label: 'MYR - Malaysian Ringgit' },
-                                    { value: 'GBP', label: 'GBP - British Pound' },
-                                    { value: 'JPY', label: 'JPY - Japanese Yen' },
-                                    { value: 'AUD', label: 'AUD - Australian Dollar' },
+                                    { value: 'IDR', label: t('business:settings.currency.options.IDR', 'IDR - Indonesian Rupiah') },
+                                    { value: 'USD', label: t('business:settings.currency.options.USD', 'USD - US Dollar') },
+                                    { value: 'EUR', label: t('business:settings.currency.options.EUR', 'EUR - Euro') },
+                                    { value: 'SGD', label: t('business:settings.currency.options.SGD', 'SGD - Singapore Dollar') },
+                                    { value: 'MYR', label: t('business:settings.currency.options.MYR', 'MYR - Malaysian Ringgit') },
+                                    { value: 'GBP', label: t('business:settings.currency.options.GBP', 'GBP - British Pound') },
+                                    { value: 'JPY', label: t('business:settings.currency.options.JPY', 'JPY - Japanese Yen') },
+                                    { value: 'AUD', label: t('business:settings.currency.options.AUD', 'AUD - Australian Dollar') },
                                 ]}
                             />
                             <p className="text-xs text-tokens-muted mt-2">

@@ -4,6 +4,7 @@
 
 - Previous Sprint: **S6 — Invoices & Contracts** ✅ COMPLETE (2026-01-02)
 - Next Sprint: **S7 — Payments, Deliverables, Finance Snapshot** — PLANNED
+- Completed: **DB Schema Audit** ✅ DONE (2026-01-06) — See [DATA_SCHEMA_SOURCE_OF_TRUTH.md](./DATA_SCHEMA_SOURCE_OF_TRUTH.md) & [DATA_SCHEMA_MIGRATION_PLAN.md](./DATA_SCHEMA_MIGRATION_PLAN.md)
 - Completed: **S6-B — Nav + List Pages** ✅ DONE (2026-01-02)
 - Completed: **S6-C — Invoice Editor + Contract Builder** ✅ DONE (2026-01-02)
 - Completed: **S5-1 — Business Profile Store + Settings** ✅ DONE (2026-01-01)

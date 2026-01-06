@@ -39,6 +39,7 @@ export interface Contract {
     clientId: string;
     projectId: string;
     status: ContractStatus;
+    currency?: string;          // Currency code (e.g., 'IDR', 'USD'), defaults to business profile
     scope: ScopeItem[];         // List of project scope items
     terms: string;              // Terms & conditions (snapshot from profile, editable in draft)
     notes: string;

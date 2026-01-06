@@ -24,6 +24,8 @@ import {
     subscribe,
     type ServiceCatalogItem 
 } from '../stores/serviceCatalogStore';
+import { getDefaultCurrency } from '../stores/businessProfileStore';
+import { formatCurrency } from '../utils/formatCurrency';
 
 type FormMode = 'closed' | 'create' | 'edit';
 
@@ -134,7 +136,7 @@ export function PricelistPage() {
     };
 
     const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+        return formatCurrency(price, getDefaultCurrency());
     };
 
     return (

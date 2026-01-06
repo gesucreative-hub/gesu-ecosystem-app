@@ -9,7 +9,8 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Badge } from '../components/Badge';
-import { Building2, CreditCard, FileText, Hash, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
+import { SelectDropdown } from '../components/Dropdown';
+import { Building2, CreditCard, FileText, Hash, Plus, Trash2, Save, ArrowLeft, Coins } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
 import {
     getBusinessProfile,
@@ -169,6 +170,41 @@ export function BusinessSettingsPage() {
                             onChange={(e) => handleProfileChange('taxId', e.target.value)}
                             placeholder="12.345.678.9-012.000"
                         />
+                    </div>
+                </Card>
+
+                {/* Default Currency */}
+                <Card
+                    title={
+                        <div className="flex items-center gap-2">
+                            <Coins size={18} className="text-tokens-brand-DEFAULT" />
+                            <span>{t('business:settings.currency.title', 'Default Currency')}</span>
+                        </div>
+                    }
+                >
+                    <div className="space-y-4">
+                        <div>
+                            <div className="text-sm font-medium text-tokens-fg mb-2">
+                                {t('business:settings.currency.label', 'Currency for Invoices & Contracts')}
+                            </div>
+                            <SelectDropdown
+                                value={profile.defaultCurrency || 'IDR'}
+                                onChange={(val) => handleProfileChange('defaultCurrency', val)}
+                                options={[
+                                    { value: 'IDR', label: 'IDR - Indonesian Rupiah' },
+                                    { value: 'USD', label: 'USD - US Dollar' },
+                                    { value: 'EUR', label: 'EUR - Euro' },
+                                    { value: 'SGD', label: 'SGD - Singapore Dollar' },
+                                    { value: 'MYR', label: 'MYR - Malaysian Ringgit' },
+                                    { value: 'GBP', label: 'GBP - British Pound' },
+                                    { value: 'JPY', label: 'JPY - Japanese Yen' },
+                                    { value: 'AUD', label: 'AUD - Australian Dollar' },
+                                ]}
+                            />
+                            <p className="text-xs text-tokens-muted mt-2">
+                                {t('business:settings.currency.description', 'This will be the default currency for new invoices, contracts, and pricelist items.')}
+                            </p>
+                        </div>
                     </div>
                 </Card>
 

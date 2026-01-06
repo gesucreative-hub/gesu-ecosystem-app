@@ -18,6 +18,8 @@ import {
     getCurrentMonthKey,
     type MonthlySnapshot
 } from '../services/financeSnapshotService';
+import { getDefaultCurrency } from '../stores/businessProfileStore';
+import { formatCurrency } from '../utils/formatCurrency';
 
 export function FinanceSnapshotPage() {
     const { t } = useTranslation(['finance', 'common']);
@@ -47,13 +49,9 @@ export function FinanceSnapshotPage() {
         return () => { unsub1(); unsub2(); };
     }, [loadData]);
 
-    // Currency formatting (same as invoices)
+    // Currency formatting (using business profile default currency)
     const formatPrice = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', { 
-            style: 'currency', 
-            currency: 'IDR', 
-            minimumFractionDigits: 0 
-        }).format(amount);
+        return formatCurrency(amount, getDefaultCurrency());
     };
 
     const formatDate = (iso: string) => {

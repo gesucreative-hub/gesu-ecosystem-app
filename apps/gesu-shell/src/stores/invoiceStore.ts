@@ -46,6 +46,7 @@ export interface Invoice {
     clientId: string;
     projectId: string;
     status: InvoiceStatus;
+    currency?: string;          // Currency code (e.g., 'IDR', 'USD'), defaults to business profile
     lineItems: InvoiceLineItem[];
     subtotal: number;           // Sum of all line item totals
     adjustments: number;        // Discount or additions (can be negative)

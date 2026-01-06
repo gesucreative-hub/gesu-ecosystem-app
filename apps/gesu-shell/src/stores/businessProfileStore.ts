@@ -24,6 +24,9 @@ export interface BusinessProfile {
     // Payment Methods (for invoice footers)
     paymentMethods: PaymentMethod[];
 
+    // Default Currency (for invoices, contracts, pricelist)
+    defaultCurrency: string;    // e.g., 'IDR', 'USD', 'EUR'
+
     // Numbering Rules (config, NOT generator - S6 will use these)
     invoiceNumberFormat: string;    // e.g., "GC-INV-{YY}{MM}{DD}-{####}"
     contractNumberFormat: string;   // e.g., "GCL/BRD/{MM}/{###}/{YYYY}"
@@ -84,6 +87,7 @@ function getDefaultProfile(): BusinessProfile {
         businessPhone: '',
         taxId: '',
         paymentMethods: [],
+        defaultCurrency: 'IDR',
         // Prefilled numbering formats (from user's existing invoice/contract PDFs)
         invoiceNumberFormat: 'GC-INV-{YY}{MM}{DD}-{####}',
         contractNumberFormat: 'GCL/BRD/{MM}/{###}/{YYYY}',
@@ -236,6 +240,12 @@ export function getPaymentMethods(): PaymentMethod[] {
 
 export function getDefaultPaymentMethod(): PaymentMethod | null {
     return ensureLoaded().profile.paymentMethods.find(pm => pm.isDefault) || null;
+}
+
+// --- Default Currency Helper ---
+
+export function getDefaultCurrency(): string {
+    return ensureLoaded().profile.defaultCurrency || 'IDR';
 }
 
 // --- Numbering (config only, generator is S6) ---

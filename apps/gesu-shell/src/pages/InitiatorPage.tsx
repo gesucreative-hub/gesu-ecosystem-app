@@ -97,7 +97,7 @@ function ProjectGeneratorForm({
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
     const [showTemplateEditor, setShowTemplateEditor] = useState(false);  // Phase 8: Template editor modal
     const [showClientEdit, setShowClientEdit] = useState(false);  // Client edit sidepanel
-    const [clientFormData, setClientFormData] = useState({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+    const [clientFormData, setClientFormData] = useState({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
 
     // Generator mode: 'new' = create new project, 'exist' = assign blueprint to existing folder
     // Sprint 21: Auto-select mode from URL param
@@ -456,14 +456,17 @@ function ProjectGeneratorForm({
                                                         setSelectedClientId(clientId);
                                                         // Set clientName for folder naming from selected client
                                                         const client = clients.find(c => c.id === clientId);
-                                                        setClientName(client?.name || '');
+                                                        setClientName(client?.company || client?.name || '');
                                                     }}
                                                     options={[
                                                         { value: '', label: t('initiator:placeholders.selectClient', 'Select Client...') },
-                                                        ...clients.map(c => ({
-                                                            value: c.id,
-                                                            label: c.company ? `${c.name} (${c.company})` : c.name
-                                                        }))
+                                                        ...clients.map(c => {
+                                                            const displayName = c.firstName || c.name.split(' ')[0];
+                                                            return {
+                                                                value: c.id,
+                                                                label: c.company ? `${c.company} (${displayName})` : displayName
+                                                            };
+                                                        })
                                                     ]}
                                                 />
                                             </div>
@@ -477,7 +480,8 @@ function ProjectGeneratorForm({
                                                                 const client = clients.find(c => c.id === selectedClientId);
                                                                 if (client) {
                                                                     setClientFormData({
-                                                                        name: client.name,
+                                                                        firstName: client.firstName || client.name.split(' ')[0] || '',
+                                                                        lastName: client.lastName || client.name.split(' ').slice(1).join(' ') || '',
                                                                         company: client.company,
                                                                         email: client.email,
                                                                         phone: client.phone,
@@ -797,13 +801,21 @@ function ProjectGeneratorForm({
             >
                 <div className="grid grid-cols-1 gap-6">
                     <div className="space-y-4">
-                        <Input
-                            label={t('business:clients.form.name', 'Name') + ' *'}
-                            value={clientFormData.name}
-                            onChange={(e) => setClientFormData(f => ({ ...f, name: e.target.value }))}
-                            placeholder={t('business:clients.form.namePlaceholder', 'Contact person name')}
-                            autoFocus
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <Input
+                                label={t('business:clients.form.firstName', 'Front Name') + ' *'}
+                                value={clientFormData.firstName}
+                                onChange={(e) => setClientFormData(f => ({ ...f, firstName: e.target.value }))}
+                                placeholder={t('business:clients.form.firstNamePlaceholder', 'Front Name')}
+                                autoFocus
+                            />
+                            <Input
+                                label={t('business:clients.form.lastName', 'Back Name')}
+                                value={clientFormData.lastName}
+                                onChange={(e) => setClientFormData(f => ({ ...f, lastName: e.target.value }))}
+                                placeholder={t('business:clients.form.lastNamePlaceholder', 'Back Name')}
+                            />
+                        </div>
                         <Input
                             label={t('business:clients.form.company', 'Company')}
                             value={clientFormData.company}
@@ -854,14 +866,16 @@ function ProjectGeneratorForm({
                         <Button
                             variant="primary"
                             onClick={() => {
-                                if (!clientFormData.name.trim()) {
-                                    alert({ title: t('common:alerts.error', 'Error'), message: t('business:clients.form.nameRequired', 'Client name is required'), type: 'error' });
+                                if (!clientFormData.firstName.trim()) {
+                                    alert(t('business:clients.form.nameRequired', 'Front name is required'));
                                     return;
                                 }
                                 if (selectedClientId) {
-                                    updateClient(selectedClientId, clientFormData);
-                                    // Refresh client list
-                                    setClients(listClients());
+                                    updateClient(selectedClientId, {
+                                        ...clientFormData,
+                                        name: `${clientFormData.firstName} ${clientFormData.lastName}`.trim()
+                                    });
+                                    setClients(listClients()); // Refresh list
                                     // Update displayed client name if company changed
                                     const updatedClient = listClients().find(c => c.id === selectedClientId);
                                     if (updatedClient) {
@@ -869,7 +883,7 @@ function ProjectGeneratorForm({
                                     }
                                     setShowClientEdit(false);
                                     setClientFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
-                                    alert({ title: t('common:alerts.success', 'Success'), message: t('business:clients.updated', 'Client updated successfully!'), type: 'success' });
+                                    alert(t('business:clients.updated', 'Client updated successfully!'));
                                 }
                             }}
                         >

@@ -46,7 +46,8 @@ export function ClientsPage() {
 
     // Form state
     const [formData, setFormData] = useState({
-        name: '',
+        firstName: '',
+        lastName: '',
         company: '',
         email: '',
         phone: '',
@@ -65,21 +66,26 @@ export function ClientsPage() {
     }, [searchQuery]);
 
     const resetForm = () => {
-        setFormData({ name: '', company: '', email: '', phone: '', address: '', notes: '' });
+        setFormData({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
         setShowAddForm(false);
         setEditingClient(null);
     };
 
     const handleSubmit = () => {
-        if (!formData.name.trim()) {
-            alert(t('business:clients.form.nameRequired', 'Client name is required'));
+        if (!formData.firstName.trim()) {
+            alert(t('business:clients.form.nameRequired', 'Front name is required'));
             return;
         }
 
         if (editingClient) {
             updateClient(editingClient.id, formData);
         } else {
-            createClient(formData);
+        } else {
+            // Create full name for display compatibility
+            createClient({
+                ...formData,
+                name: `${formData.firstName} ${formData.lastName}`.trim()
+            });
         }
         resetForm();
     };
@@ -87,7 +93,8 @@ export function ClientsPage() {
     const handleEdit = (client: Client) => {
         setEditingClient(client);
         setFormData({
-            name: client.name,
+            firstName: client.firstName || client.name.split(' ')[0] || '',
+            lastName: client.lastName || client.name.split(' ').slice(1).join(' ') || '',
             company: client.company,
             email: client.email,
             phone: client.phone,
@@ -175,13 +182,21 @@ export function ClientsPage() {
             >
                 <div className="grid grid-cols-1 gap-6">
                     <div className="space-y-4">
-                        <Input
-                            label={t('business:clients.form.name', 'Name') + ' *'}
-                            value={formData.name}
-                            onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                            placeholder={t('business:clients.form.namePlaceholder', 'Contact person name')}
-                            autoFocus
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label={t('business:clients.form.firstName', 'Front Name') + ' *'}
+                                value={formData.firstName}
+                                onChange={(e) => setFormData(f => ({ ...f, firstName: e.target.value }))}
+                                placeholder={t('business:clients.form.firstNamePlaceholder', 'Front Name')}
+                                autoFocus
+                            />
+                            <Input
+                                label={t('business:clients.form.lastName', 'Back Name')}
+                                value={formData.lastName}
+                                onChange={(e) => setFormData(f => ({ ...f, lastName: e.target.value }))}
+                                placeholder={t('business:clients.form.lastNamePlaceholder', 'Back Name')}
+                            />
+                        </div>
                         <Input
                             label={t('business:clients.form.company', 'Company')}
                             value={formData.company}
@@ -279,12 +294,6 @@ export function ClientsPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={(e) => { e.stopPropagation(); handleEdit(client); }}
-                                        icon={<Edit size={14} />}
-                                    />
                                     <Button
                                         size="sm"
                                         variant="ghost"

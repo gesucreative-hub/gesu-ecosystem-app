@@ -10,7 +10,9 @@ import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
 import { ArrowLeft, Building2, Mail, Phone, MapPin, FileText, FolderOpen, Unlink, Edit, Link as LinkIcon, Plus, ChevronDown } from 'lucide-react';
 import { usePersona } from '../hooks/usePersona';
-import { getClientById, type Client } from '../stores/clientStore';
+import { Input } from '../components/Input';
+import { SidePanel } from '../components/SidePanel';
+import { getClientById, updateClient, type Client } from '../stores/clientStore';
 import { getProjectsByClientId, unlinkProjectFromClient, linkProjectToClient, listProjectsByPersona, type Project } from '../stores/projectStore';
 
 export function ClientDetailPage() {
@@ -30,6 +32,8 @@ export function ClientDetailPage() {
     const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
     const [showLinkDropdown, setShowLinkDropdown] = useState(false);
     const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+    const [showEditPanel, setShowEditPanel] = useState(false);
+    const [formData, setFormData] = useState({ firstName: '', lastName: '', company: '', email: '', phone: '', address: '', notes: '' });
     const dropdownRef = useRef<HTMLDivElement>(null);  // S5: For click-outside-to-close
 
     // Load client and projects
@@ -139,7 +143,20 @@ export function ClientDetailPage() {
                     </Button>
                     <Button
                         variant="ghost"
-                        onClick={() => navigate(`/clients?edit=${client.id}`)}
+                        onClick={() => {
+                            if (client) {
+                                setFormData({
+                                    firstName: client.firstName || client.name.split(' ')[0] || '',
+                                    lastName: client.lastName || client.name.split(' ').slice(1).join(' ') || '',
+                                    company: client.company,
+                                    email: client.email,
+                                    phone: client.phone,
+                                    address: client.address,
+                                    notes: client.notes
+                                });
+                                setShowEditPanel(true);
+                            }
+                        }}
                         icon={<Edit size={16} />}
                     >
                         {t('common:buttons.edit', 'Edit')}
@@ -327,6 +344,92 @@ export function ClientDetailPage() {
                     </div>
                 )}
             </Card>
+            {/* Edit Panel */}
+            <SidePanel
+                isOpen={showEditPanel}
+                onClose={() => setShowEditPanel(false)}
+                title={t('business:clients.form.editTitle', 'Edit Client')}
+                width="600px"
+            >
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label={t('business:clients.form.firstName', 'Front Name') + ' *'}
+                                value={formData.firstName}
+                                onChange={(e) => setFormData(f => ({ ...f, firstName: e.target.value }))}
+                                placeholder={t('business:clients.form.firstNamePlaceholder', 'Front Name')}
+                                autoFocus
+                            />
+                            <Input
+                                label={t('business:clients.form.lastName', 'Back Name')}
+                                value={formData.lastName}
+                                onChange={(e) => setFormData(f => ({ ...f, lastName: e.target.value }))}
+                                placeholder={t('business:clients.form.lastNamePlaceholder', 'Back Name')}
+                            />
+                        </div>
+                        <Input
+                            label={t('business:clients.form.company', 'Company')}
+                            value={formData.company}
+                            onChange={(e) => setFormData(f => ({ ...f, company: e.target.value }))}
+                            placeholder={t('business:clients.form.companyPlaceholder', 'Company or organization')}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label={t('business:clients.form.email', 'Email')}
+                                value={formData.email}
+                                onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
+                                placeholder={t('business:clients.form.emailPlaceholder', 'email@example.com')}
+                            />
+                            <Input
+                                label={t('business:clients.form.phone', 'Phone')}
+                                value={formData.phone}
+                                onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))}
+                                placeholder={t('business:clients.form.phonePlaceholder', '+62 812 3456 789')}
+                            />
+                        </div>
+                        <Input
+                            label={t('business:clients.form.address', 'Address')}
+                            value={formData.address}
+                            onChange={(e) => setFormData(f => ({ ...f, address: e.target.value }))}
+                            placeholder={t('business:clients.form.addressPlaceholder', 'Full address')}
+                        />
+                        <div>
+                            <label className="block text-sm font-medium text-tokens-fg mb-2">{t('business:clients.form.notes', 'Notes')}</label>
+                            <textarea
+                                value={formData.notes}
+                                onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))}
+                                className="w-full h-32 px-4 py-2 bg-tokens-bg border border-tokens-border rounded-lg text-tokens-fg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-tokens-brand-DEFAULT/30"
+                                placeholder={t('business:clients.form.notesPlaceholder', 'Additional notes...')}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-4 border-t border-tokens-border">
+                        <Button variant="secondary" onClick={() => setShowEditPanel(false)}>
+                            {t('common:buttons.cancel', 'Cancel')}
+                        </Button>
+                        <Button variant="primary" onClick={() => {
+                            if (!formData.firstName.trim()) {
+                                alert(t('business:clients.form.nameRequired', 'Front name is required'));
+                                return;
+                            }
+                            if (client) {
+                                updateClient(client.id, {
+                                    ...formData,
+                                    name: `${formData.firstName} ${formData.lastName}`.trim()
+                                });
+                                // Refresh client data
+                                const updated = getClientById(client.id);
+                                if (updated) setClient(updated);
+                                setShowEditPanel(false);
+                            }
+                        }}>
+                            {t('common:buttons.update', 'Update')}
+                        </Button>
+                    </div>
+                </div>
+            </SidePanel>
         </PageContainer>
     );
 }
